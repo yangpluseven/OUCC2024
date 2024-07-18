@@ -3,6 +3,7 @@
 
 #include "type.hpp"
 #include <vector>
+#include <string>
 
 namespace ir {
 

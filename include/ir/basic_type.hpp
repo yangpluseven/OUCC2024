@@ -3,6 +3,8 @@
 
 #include "type.hpp"
 #include <exception>
+#include <string>
+
 namespace ir {
 class I1 : Type {
 public:
@@ -14,7 +16,9 @@ class I32 : Type {
 public:
   size_t getSize() override { return 32; }
   Type *baseType() { throw "UnsupportedOperation"; }
-  std::string toString() override { return "i32"; }
+  std::string toString() override {
+    return "i32";
+  }
 };
 class FLOAT : Type {
 public:

@@ -5,7 +5,7 @@
 
 namespace ir {
 
-class User : Value {
+class User : public Value {
 protected:
   std::vector<Use *> operands;
 
