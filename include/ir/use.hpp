@@ -1,30 +1,25 @@
+#ifndef IR_USE_HPP
+#define IR_USE_HPP
+#include "user.hpp"
 #include <memory>
 
 namespace ir {
 
-class User;
-class Value;
-
 class Use {
 private:
-  std::weak_ptr<User> user;
-  std::weak_ptr<Value> value;
+  User *user;
+  Value *value;
 
 public:
-  Use(std::weak_ptr<User> user, std::weak_ptr<Value> value)
-      : user(user), value(value) {}
-  Use(std::shared_ptr<User> user, std::shared_ptr<Value> value)
-      : user(std::weak_ptr<User>(user)), value(std::weak_ptr<Value>(value)){};
-  std::weak_ptr<User> getUser() { return user; }
-  std::weak_ptr<Value> getValue() { return value; }
-  void setUser(std::weak_ptr<User> user) { this->user = user; }
-  void setValue(std::weak_ptr<Value> value) { this->value = value; }
-  void setUser(std::shared_ptr<User> user) {
-    this->user = std::weak_ptr<User>(user);
+  Use(User *user, Value *value) : user(user), value(value) {}
+  ~Use() {
+    // TODO: Implement destructor
   }
-  void setValue(std::shared_ptr<Value> value) {
-    this->value = std::weak_ptr<Value>(value);
-  }
+  User *getUser() { return user; }
+  Value *getValue() { return value; }
+  void setUser(User *user) { this->user = user; }
+  void setValue(Value *value) { this->value = value; }
 };
 
 } // namespace ir
+#endif // IR_USE_HPP
