@@ -3,16 +3,19 @@
 #include <memory>
 
 namespace ir {
-class Type {
-protected:
-  Type *baseType = nullptr;
 
+class Type {
 public:
-  Type(Type *baseType) : baseType(baseType){};
+  Type() = default;
+
   virtual ~Type() {}
+
+  virtual Type *baseType() = 0;
+
   virtual size_t getSize() = 0;
-  virtual Type *baseType() { return baseType; };
+
   virtual std::string toString() = 0;
 };
+
 } // namespace ir
 #endif

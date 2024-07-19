@@ -57,39 +57,39 @@ IF(TRACE_ATN)
     ADD_DEFINITIONS(-DTRACE_ATN_SIM=1)
 ENDIF(TRACE_ATN)
 
-if (ANTLR_BUILD_CPP_TESTS)
-  include(FetchContent)
+# if (ANTLR_BUILD_CPP_TESTS)
+#   include(FetchContent)
 
-  FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/archive/e2239ee6043f73722e7aa812a459f54a28552929.zip
-  )
+#   FetchContent_Declare(
+#     googletest
+#     URL https://github.com/google/googletest/archive/e2239ee6043f73722e7aa812a459f54a28552929.zip
+#   )
 
-  if(WITH_STATIC_CRT)
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-  endif()
+#   if(WITH_STATIC_CRT)
+#     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+#   endif()
 
-  FetchContent_MakeAvailable(googletest)
+#   FetchContent_MakeAvailable(googletest)
 
-  file(GLOB libantlrcpp_TESTS
-    "${PROJECT_SOURCE_DIR}/runtime/tests/*.cpp"
-  )
+#   file(GLOB libantlrcpp_TESTS
+#     "${PROJECT_SOURCE_DIR}/runtime/tests/*.cpp"
+#   )
 
-  add_executable(
-    antlr4_tests
-    ${libantlrcpp_TESTS}
-  )
+#   add_executable(
+#     antlr4_tests
+#     ${libantlrcpp_TESTS}
+#   )
 
-  target_link_libraries(
-    antlr4_tests
-	$<IF:$<TARGET_EXISTS:antlr4_static>,antlr4_static,antlr4_shared>
-    gtest_main
-  )
+#   target_link_libraries(
+#     antlr4_tests
+# 	$<IF:$<TARGET_EXISTS:antlr4_static>,antlr4_static,antlr4_shared>
+#     gtest_main
+#   )
 
-  include(GoogleTest)
+#   include(GoogleTest)
 
-  gtest_discover_tests(antlr4_tests)
-endif()
+#   gtest_discover_tests(antlr4_tests)
+# endif()
 
 if(APPLE)
   if (TARGET antlr4_shared)

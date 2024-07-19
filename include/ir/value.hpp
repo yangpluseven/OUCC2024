@@ -24,8 +24,6 @@ public:
 
   Type *const getType() { return type; }
 
-  virtual std::string &getName() = 0;
-
   int getSize() const { return type->getSize(); };
 
   void addUse(Use *use) { uses.insert(use); }
@@ -37,7 +35,10 @@ public:
     }
     uses.clear();
   }
+
   std::unordered_set<Use *> &getUses() { return uses; }
+
+  virtual std::string &getName() = 0;
 };
 
 } // namespace ir

@@ -8,9 +8,12 @@ namespace ir {
 class Constant : public User {
 public:
   Constant(Type *type) : User(type) {}
-  virtual std::string toString() = 0;
-  virtual std::string& getName() = 0;
+
   virtual ~Constant() {}
+
+  virtual std::string toString() = 0;
+
+  virtual std::string &getName() = 0;
 };
 
 } // namespace ir

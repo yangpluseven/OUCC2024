@@ -2,16 +2,23 @@
 #define IR_ARRAY_TYPE_HPP
 
 #include "type.hpp"
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace ir {
 
 class ArrayType : Type {
-public:
+private:
+  Type *const bType;
   size_t arraySize;
+
+public:
   ArrayType(Type *baseType, size_t arraySize)
-      : Type(baseType), arraySize(arraySize) {}
+      : bType(baseType), arraySize(arraySize) {}
+
+  Type *baseType() override { return bType; }
+
+  size_t getArraySize() { return arraySize; }
 
   size_t getSize() override { return baseType()->getSize() * arraySize; }
 
@@ -44,9 +51,12 @@ public:
   }
 
   std::string toString() override {
-    return "[" + std::to_string(arraySize) + " x " + baseType()->toString() + "]";
+    return "[" + std::to_string(arraySize) + " x " + baseType()->toString() +
+           "]";
   }
+  
 };
+
 } // namespace ir
 
 #endif
