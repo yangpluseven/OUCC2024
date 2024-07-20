@@ -9,12 +9,12 @@ namespace ir {
 
 class PointerType : Type {
 private:
-  Type *const bType;
+  Type *const _bType;
 
 public:
-  PointerType(Type *baseType) : bType(baseType) {}
+  PointerType(Type *baseType) : _bType(baseType) {}
 
-  Type *baseType() override { return bType; }
+  Type *baseType() override { return _bType; }
 
   size_t getSize() override { return 64; }
 
