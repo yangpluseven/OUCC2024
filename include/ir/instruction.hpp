@@ -14,7 +14,8 @@ private:
 protected:
   int id;
 
-  Instruction(BasicBlock *block, Type *type, const std::initializer_list<Value *> &operands)
+  Instruction(BasicBlock *block, Type *type,
+              const std::initializer_list<Value *> &operands = {})
       : User(type), _block(block) {
     for (auto operand : operands) {
       add(new Use(this, operand));
