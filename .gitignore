@@ -1,5 +1,6 @@
 tests
 build
+dist
 
 ### C++ template
 # Prerequisites

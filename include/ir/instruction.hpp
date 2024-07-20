@@ -1,11 +1,10 @@
 #ifndef INSTRUCTION_HPP
 #define INSTRUCTION_HPP
 #include "user.hpp"
+#include "basic_block.hpp"
 #include <string>
 
 namespace ir {
-
-class BasicBlock;
 
 class Instruction : public User {
 private:
