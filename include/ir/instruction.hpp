@@ -1,7 +1,7 @@
 #ifndef INSTRUCTION_HPP
 #define INSTRUCTION_HPP
-#include "user.hpp"
 #include "basic_block.hpp"
+#include "user.hpp"
 #include <string>
 
 namespace ir {
@@ -14,7 +14,7 @@ private:
 protected:
   int id;
 
-  Instruction(BasicBlock *block, Type *type, std::vector<Value *> &operands)
+  Instruction(BasicBlock *block, Type *type, const std::initializer_list<Value *> &operands)
       : User(type), _block(block) {
     for (auto operand : operands) {
       add(new Use(this, operand));

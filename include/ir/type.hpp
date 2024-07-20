@@ -15,6 +15,13 @@ public:
   virtual size_t getSize() = 0;
 
   virtual std::string toString() = 0;
+
+  static Type *CheckEquality(Type *lhs, Type *rhs) {
+    if (lhs->toString() != rhs->toString())
+      throw "Unmatched types!";
+    else
+      return lhs;
+  }
 };
 
 } // namespace ir
