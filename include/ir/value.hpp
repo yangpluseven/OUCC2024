@@ -38,7 +38,7 @@ public:
 
   std::unordered_set<Use *> &getUses() { return uses; }
 
-  virtual std::string &getName() = 0;
+  virtual std::string getName() const = 0;
 };
 
 } // namespace ir

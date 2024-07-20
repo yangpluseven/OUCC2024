@@ -21,7 +21,7 @@ public:
     return type->toString();
   }
 
-  std::string& getName() override {
+  std::string getName() const override {
     // TODO
   }
 };

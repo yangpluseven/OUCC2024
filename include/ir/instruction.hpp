@@ -23,9 +23,9 @@ protected:
   }
 
 public:
-  BasicBlock *getBlock() const { return _block; }
+  BasicBlock *getBlock() { return _block; }
 
-  std::string getName() const { return "%v" + std::to_string(id); }
+  std::string getName() const override { return "%v" + std::to_string(id); }
 };
 
 int Instruction::_counter = 0;

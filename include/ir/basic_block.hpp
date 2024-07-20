@@ -62,11 +62,11 @@ public:
     return _instructions[index];
   }
 
-  int size() const { return _instructions.size(); }
+  int size() { return _instructions.size(); }
 
-  std::string getName() const { return "b" + std::to_string(_id); }
+  std::string getName() const override { return "b" + std::to_string(_id); }
 
-  std::string toString() const { return getName(); }
+  std::string toString() { return getName(); }
 
   std::vector<Instruction *>::iterator begin() { return _instructions.begin(); }
 
@@ -85,4 +85,4 @@ int BasicBlock::_counter = 0;
 
 } // namespace ir
 
-#endif // IR_BASIC_BLOCK_HPP
+#endif 
