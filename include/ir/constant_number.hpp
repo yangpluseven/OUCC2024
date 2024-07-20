@@ -27,6 +27,10 @@ public:
 
   T getValue() const { return _value; }
 
+  float floatValue() const { return static_cast<float>(_value); }
+
+  int intValue() const { return static_cast<int>(_value); }
+
   ConstantNumber &operator=(const) {
     _value = value;
     return *this;

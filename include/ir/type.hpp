@@ -1,6 +1,7 @@
 #ifndef IR_TYPE_HPP
 #define IR_TYPE_HPP
 #include <memory>
+#include <string>
 
 namespace ir {
 
