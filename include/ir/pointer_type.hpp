@@ -7,7 +7,7 @@
 
 namespace ir {
 
-class PointerType : Type {
+class PointerType : public Type {
 private:
   Type *const _bType;
 
