@@ -2,8 +2,8 @@
 #define CONSTANT_ARRAY_HPP
 
 #include "constant.hpp"
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace ir {
 
@@ -12,18 +12,21 @@ private:
   std::vector<Constant *> values;
 
 public:
-  ConstantArray(Type *type, std::vector<Constant *>&& values) : Constant(type), values(std::move(values)) {}
+  ConstantArray(Type *type, std::vector<Constant *> values)
+      : Constant(type), values(values) {}
 
   std::vector<Constant *> &getValues() { return values; }
 
   std::string toString() override {
-    // TODO values->toString()
-    return type->toString();
+    std::string result = "[";
+    for (auto value : values) {
+      result += value->toString() + ", ";
+    }
+    result += "]";
+    return type->toString() + " " + result;
   }
 
-  std::string& getName() override {
-    // TODO
-  }
+  std::string getName() override { return toString(); }
 };
 
 } // namespace ir

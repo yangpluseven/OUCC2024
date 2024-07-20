@@ -9,18 +9,18 @@ namespace ir {
 
 class ArrayType : Type {
 private:
-  Type *const bType;
-  size_t arraySize;
+  Type *const _bType;
+  size_t _arraySize;
 
 public:
   ArrayType(Type *baseType, size_t arraySize)
-      : bType(baseType), arraySize(arraySize) {}
+      : _bType(baseType), _arraySize(arraySize) {}
 
-  Type *baseType() override { return bType; }
+  Type *baseType() override { return _bType; }
 
-  size_t getArraySize() { return arraySize; }
+  size_t getArraySize() { return _arraySize; }
 
-  size_t getSize() override { return baseType()->getSize() * arraySize; }
+  size_t getSize() override { return baseType()->getSize() * _arraySize; }
 
   Type *getScalarType() {
     Type *type = this;
@@ -45,16 +45,15 @@ public:
     auto types = getArrayTypes();
     std::vector<size_t> arraySizes;
     for (auto i : types) {
-      arraySizes.push_back(i->arraySize);
+      arraySizes.push_back(i->_arraySize);
     }
     return arraySizes;
   }
 
   std::string toString() override {
-    return "[" + std::to_string(arraySize) + " x " + baseType()->toString() +
+    return "[" + std::to_string(_arraySize) + " x " + baseType()->toString() +
            "]";
   }
-  
 };
 
 } // namespace ir
