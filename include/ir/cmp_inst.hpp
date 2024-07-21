@@ -16,7 +16,7 @@ public:
 
   Cond getCond() { return cond; }
 
-  std::string toString() {
+  std::string toString() const {
     // TODO: Implement this
   }
 

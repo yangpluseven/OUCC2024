@@ -15,7 +15,7 @@ public:
 
   std::string getName() const override { return "%"+name; }
 
-  std::string toString() { return type->toString(); }
+  std::string toString() const { return type->toString(); }
 };
 
 } // namespace ir

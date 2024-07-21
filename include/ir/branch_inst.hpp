@@ -13,9 +13,9 @@ public:
              BasicBlock *ifFalse)
       : Instruction(block, BasicType::VOID, {cond, ifTrue, ifFalse}) {}
 
-  bool isConditional() { return size() == 3; }
+  bool isConditional() const { return size() == 3; }
 
-  std::string toString() {
+  std::string toString() const {
     if (isConditional()) {
       auto cond = getOperand<Value>(0);
       auto ifTrue = getOperand<BasicBlock>(1);

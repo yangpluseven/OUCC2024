@@ -14,11 +14,11 @@ public:
   static BasicType *const FLOAT;
   static BasicType *const VOID;
 
-  size_t getSize() override { return _size; }
+  size_t getSize() const override { return _size; }
 
-  std::string toString() override { return _name; }
+  std::string toString() const override { return _name; }
 
-  Type *baseType() override { throw "UnsupportedOperationException"; }
+  Type *baseType() const override { throw "UnsupportedOperationException"; }
 
 private:
   size_t _size;

@@ -14,7 +14,7 @@ public:
                     {lhs, rhs}),
         op(op) {}
 
-  std::string toString() {
+  std::string toString() const {
     auto lhs = getOperand<Value>(0);
     auto rhs = getOperand<Value>(1);
     auto type = Type::CheckEquality(lhs->getType(), rhs->getType());
@@ -23,7 +23,7 @@ public:
   }
 
 private:
-  std::string _opToString(Op v) {
+  std::string _opToString(Op v) const noexcept{
     switch (v) {
     case ADD:
       return "add";

@@ -15,7 +15,7 @@ public:
       add(new Use(this, param));
   }
 
-  std::string toString() {
+  std::string toString() const {
     std::stringstream ss;
     ss << "(";
     for (int i = 1; i < operands.size(); i++) {

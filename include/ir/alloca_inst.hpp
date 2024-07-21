@@ -10,7 +10,7 @@ public:
   AllocaInst(BasicBlock *block, Type *type)
       : Instruction(block, new PointerType(type)) {}
 
-  std::string toString() {
+  std::string toString() const {
     return getName() + " = alloca " + type->baseType()->toString();
   }
 };

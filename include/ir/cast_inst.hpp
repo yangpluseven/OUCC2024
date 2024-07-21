@@ -11,7 +11,7 @@ protected:
     add(new Use(this, operand));
   }
 
-  std::string toString() {
+  std::string toString() const{
     // TODO: Implement this
   }
 };

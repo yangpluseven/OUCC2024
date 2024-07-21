@@ -14,11 +14,11 @@ private:
 public:
   PointerType(Type *baseType) : _bType(baseType) {}
 
-  Type *baseType() override { return _bType; }
+  Type *baseType() const override { return _bType; }
 
-  size_t getSize() override { return 64; }
+  size_t getSize() const override { return 64; }
 
-  std::string toString() override { return baseType()->toString() + "*"; }
+  std::string toString() const override { return baseType()->toString() + "*"; }
 };
 
 } // namespace ir

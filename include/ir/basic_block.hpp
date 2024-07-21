@@ -66,7 +66,7 @@ public:
 
   std::string getName() const override { return "b" + std::to_string(_id); }
 
-  std::string toString() { return getName(); }
+  std::string toString() const { return getName(); }
 
   std::vector<Instruction *>::iterator begin() { return _instructions.begin(); }
 
@@ -85,4 +85,4 @@ int BasicBlock::_counter = 0;
 
 } // namespace ir
 
-#endif 
+#endif

@@ -7,7 +7,7 @@
 
 namespace ir {
 
-class ArrayType : Type {
+class ArrayType : public Type {
 private:
   Type *const _bType;
   size_t _arraySize;
@@ -16,11 +16,11 @@ public:
   ArrayType(Type *baseType, size_t arraySize)
       : _bType(baseType), _arraySize(arraySize) {}
 
-  Type *baseType() override { return _bType; }
+  Type *baseType() const override { return _bType; }
 
   size_t getArraySize() { return _arraySize; }
 
-  size_t getSize() override { return baseType()->getSize() * _arraySize; }
+  size_t getSize() const override { return baseType()->getSize() * _arraySize; }
 
   Type *getScalarType() {
     Type *type = this;
@@ -50,7 +50,7 @@ public:
     return arraySizes;
   }
 
-  std::string toString() override {
+  std::string toString() const override {
     return "[" + std::to_string(_arraySize) + " x " + baseType()->toString() +
            "]";
   }

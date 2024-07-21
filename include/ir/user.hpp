@@ -51,12 +51,12 @@ public:
 
   template <typename T, typename std::enable_if<
                             std::is_base_of<Value, T>::value>::type * = nullptr>
-  T *getLastOperand() {
+  T *getLastOperand() const {
     return getOperand(size() - 1);
   }
   template <typename T, typename std::enable_if<
                             std::is_base_of<Value, T>::value>::type * = nullptr>
-  T *getOperand(int index) {
+  T *getOperand(int index) const {
     return static_cast<T *>(get(index)->getValue());
   }
 
