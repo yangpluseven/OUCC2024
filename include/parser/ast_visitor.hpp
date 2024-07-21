@@ -22,7 +22,6 @@
 #include <stdexcept>
 #include <unordered_map>
 
-// WIP
 class SymbolTable {
 private:
   std::list<std::unordered_map<std::string, ir::Value *>> _table;
@@ -35,20 +34,20 @@ private:
     throw std::runtime_error("Undefined variable: " + name);
   }
 
-  template <typename T>
-  std::map<int, T> submap(std::map<int, T> &values, T fromKey, T toKey) {
-    std::map<int, T> result;
+  std::map<int, Number> submap(const std::map<int, Number> &values, int fromKey,
+                               int toKey) {
+    std::map<int, Number> result;
     for (auto i : values)
       if (i.first >= fromKey && i.first <= toKey)
         result[i.first] = i.second;
     return result;
   }
 
-  ir::Constant *fuseConst(ir::Type *type, std::map<int, Number> &values,
+  ir::Constant *fuseConst(ir::Type *type, const std::map<int, Number> &values,
                           int base) {
     if (dynamic_cast<ir::BasicType *>(type))
       if (values.contains(base))
-        return new ir::ConstantNumber(values[base]);
+        return new ir::ConstantNumber(values.at(base));
       else
         return new ir::ConstantNumber(IntNumber(0));
 
@@ -86,26 +85,61 @@ public:
     return func;
   }
 
-  template <typename T>
   ir::GlobalVariable *makeGlobal(bool isConst, ir::Type *type,
-                                 const std::string &name, T value) {
+                                 const std::string &name, Number value) {
     auto symbol = new ir::GlobalVariable(isConst, type, name,
-                                         new ir::ConstantNumber<T>(value));
+                                         new ir::ConstantNumber(value));
     _table.front()[name] = symbol;
     return symbol;
   }
 
-  template <typename T>
   ir::GlobalVariable *makeGlobal(bool isConst, ir::Type *type,
                                  const std::string &name,
-                                 std::map<int, T> values) {
+                                 std::map<int, Number> values) {
     auto rootType = type;
     while (auto arrayType = dynamic_cast<ir::ArrayType *>(rootType))
       rootType = arrayType->baseType();
 
     for (auto i : values) {
+      if (rootType == ir::BasicType::I32)
+        i.second = IntNumber(i.second.intValue());
+      else if (rootType == ir::BasicType::FLOAT)
+        i.second = FloatNumber(i.second.floatValue());
+      else
+        throw std::runtime_error("Unsupported type");
     }
+
+    auto symbol =
+        new ir::GlobalVariable(isConst, type, name, fuseConst(type, values, 0));
+    _table.front()[name] = symbol;
+    return symbol;
   }
+
+  ir::AllocaInst *makeLocal(ir::BasicBlock *block, ir::Type *type,
+                            const std::string &name) {
+    auto symbol = new ir::AllocaInst(block, type);
+    _table.front()[name] = symbol;
+    return symbol;
+  }
+
+  ir::AllocaInst *makeLocal(ir::BasicBlock *block, ir::Type *type,
+                            const std::string &name,
+                            const std::vector<int> &dimensions) {
+    for (int i = dimensions.size() - 1; i >= 0; i--)
+      type = new ir::ArrayType(type, dimensions[i]);
+
+    auto allocaInst = new ir::AllocaInst(block, type);
+    _table.front()[name] = allocaInst;
+    return allocaInst;
+  }
+
+  ir::Argument *makeArg(ir::Type *type, const std::string &name) {
+    auto arg = new ir::Argument(type, name);
+    _table.front()[name] = arg;
+    return arg;
+  }
+
+  void out() { _table.pop_front(); }
 };
 
 // WIP
