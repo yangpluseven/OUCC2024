@@ -1,5 +1,5 @@
-#ifndef INSTRUCTION_HPP
-#define INSTRUCTION_HPP
+#ifndef IR_INSTRUCTION_HPP
+#define IR_INSTRUCTION_HPP
 #include "basic_block.hpp"
 #include "user.hpp"
 #include <string>

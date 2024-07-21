@@ -1,15 +1,14 @@
 #ifndef FUNCTION_HPP
 #define FUNCTION_HPP
-#include "value.hpp"
-#include "basic_type.hpp"
-#include "basic_block.hpp"
 #include "argument.hpp"
-#include <vector>
-#include <string>
+#include "basic_block.hpp"
+#include "basic_type.hpp"
+#include "value.hpp"
+#include <algorithm>
 #include <iterator>
 #include <sstream>
-#include <algorithm>
-
+#include <string>
+#include <vector>
 
 namespace ir {
 
