@@ -6,9 +6,9 @@ namespace ir {
 class ConstantZero : public Constant {
   ConstantZero(Type *type) : Constant(type) {}
 
-  std::string getName() override { return "zeroinitializer"; }
+  std::string getName() const override { return "zeroinitializer"; }
 
-  std::string toString() override {
+  std::string toString() const override {
     return type->toString() + " zeroinitializer";
   }
 };

@@ -11,9 +11,9 @@ public:
 
   virtual ~Constant() {}
 
-  virtual std::string toString() = 0;
+  virtual std::string toString() const = 0;
 
-  virtual std::string getName() = 0;
+  virtual std::string getName() const = 0;
 };
 
 } // namespace ir

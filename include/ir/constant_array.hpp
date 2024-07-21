@@ -17,7 +17,7 @@ public:
 
   std::vector<Constant *> &getValues() { return values; }
 
-  std::string toString() override {
+  std::string toString() const override {
     std::string result = "[";
     for (auto value : values) {
       result += value->toString() + ", ";
@@ -26,7 +26,7 @@ public:
     return type->toString() + " " + result;
   }
 
-  std::string getName() override { return toString(); }
+  std::string getName() const override { return toString(); }
 };
 
 } // namespace ir
