@@ -1,8 +1,7 @@
 #ifndef FUNCTION_HPP
 #define FUNCTION_HPP
-#include "argument.hpp"
+
 #include "basic_block.hpp"
-#include "basic_type.hpp"
 #include "value.hpp"
 #include <algorithm>
 #include <iterator>
@@ -125,7 +124,7 @@ private:
 public:
   Argument(Type *type, std::string name) : Value(type), name(name) {}
 
-  std::string getName() const override { return "%"+name; }
+  std::string getName() const override { return "%" + name; }
 
   std::string toString() const { return type->toString(); }
 };
