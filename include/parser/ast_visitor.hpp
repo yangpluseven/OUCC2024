@@ -16,6 +16,7 @@
 #include "ir/pointer_type.hpp"
 #include "ir/type.hpp"
 #include "ir/value.hpp"
+#include "model/number.hpp"
 #include <list>
 #include <map>
 #include <stdexcept>
@@ -43,13 +44,13 @@ private:
     return result;
   }
 
-  template <typename T>
-  ir::Constant *fuseConst(ir::Type *type, std::map<int, T> &values, int base) {
+  ir::Constant *fuseConst(ir::Type *type, std::map<int, Number> &values,
+                          int base) {
     if (dynamic_cast<ir::BasicType *>(type))
       if (values.contains(base))
-        return new ir::ConstantNumber<T>(values[base]);
+        return new ir::ConstantNumber(values[base]);
       else
-        return new ir::ConstantNumber<T>(0);
+        return new ir::ConstantNumber(IntNumber(0));
 
     if (values.empty())
       return new ir ::ConstantZero(type);
@@ -92,6 +93,18 @@ public:
                                          new ir::ConstantNumber<T>(value));
     _table.front()[name] = symbol;
     return symbol;
+  }
+
+  template <typename T>
+  ir::GlobalVariable *makeGlobal(bool isConst, ir::Type *type,
+                                 const std::string &name,
+                                 std::map<int, T> values) {
+    auto rootType = type;
+    while (auto arrayType = dynamic_cast<ir::ArrayType *>(rootType))
+      rootType = arrayType->baseType();
+
+    for (auto i : values) {
+    }
   }
 };
 
