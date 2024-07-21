@@ -1,9 +1,8 @@
 #ifndef FUNCTION_HPP
 #define FUNCTION_HPP
+
 #include "value.hpp"
-#include "basic_type.hpp"
 #include "basic_block.hpp"
-#include "argument.hpp"
 #include <vector>
 #include <string>
 #include <iterator>
@@ -117,6 +116,18 @@ public:
     builder << "}\n";
     return builder.str();
   }
+};
+
+class Argument : public Value {
+private:
+  const std::string name;
+
+public:
+  Argument(Type *type, std::string name) : Value(type), name(name) {}
+
+  std::string getName() const override { return "%"+name; }
+
+  std::string toString() const { return type->toString(); }
 };
 
 } // namespace ir

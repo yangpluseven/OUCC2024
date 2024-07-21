@@ -1,6 +1,6 @@
 #ifndef IR_BASIC_BLOCK_HPP
 #define IR_BASIC_BLOCK_HPP
-#include "basic_type.hpp"
+
 #include "function.hpp"
 #include "instruction.hpp"
 #include "value.hpp"
