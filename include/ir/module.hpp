@@ -27,14 +27,14 @@ public:
   bool hasFunction() const { return !functions.empty(); }
 
   GlobalVariable *getGlobal(const std::string &name) {
-    if (globals.contains(name)) {
+    if (globals.find(name) != globals.end()) {
       return globals[name];
     } else
       return nullptr;
   }
 
   Function *getFunction(const std::string &name) {
-    if (functions.contains(name)) {
+    if (functions.find(name) != functions.end()) {
       return functions[name];
     } else
       return nullptr;

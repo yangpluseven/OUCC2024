@@ -2,20 +2,11 @@
 #define PARSER_AST_VISITOR_HPP
 
 #include "SysYBaseVisitor.h"
-#include "ir/alloca_inst.hpp"
-#include "ir/argument.hpp"
-#include "ir/array_type.hpp"
+#include "ir/instruction.hpp"
 #include "ir/basic_block.hpp"
-#include "ir/basic_type.hpp"
-#include "ir/branch_inst.hpp"
 #include "ir/constant.hpp"
-#include "ir/constant_array.hpp"
-#include "ir/constant_number.hpp"
-#include "ir/constant_zero.hpp"
 #include "ir/function.hpp"
 #include "ir/module.hpp"
-#include "ir/pointer_type.hpp"
-#include "ir/ret_inst.hpp"
 #include "ir/type.hpp"
 #include "ir/value.hpp"
 #include "model/number.hpp"
@@ -30,7 +21,7 @@ private:
 
   ir::Value *get(const std::string &name) {
     for (auto item : _table) {
-      if (item.contains(name))
+      if (item.find(name) != item.end())
         return item[name];
     }
     throw std::runtime_error("Undefined variable: " + name);
@@ -48,7 +39,7 @@ private:
   ir::Constant *fuseConst(ir::Type *type, const std::map<int, Number> &values,
                           int base) {
     if (dynamic_cast<ir::BasicType *>(type))
-      if (values.contains(base))
+      if (values.find(base) != values.end())
         return new ir::ConstantNumber(values.at(base));
       else
         return new ir::ConstantNumber(IntNumber(0));

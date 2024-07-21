@@ -1,12 +1,7 @@
 #ifndef GLOABAL_VARIABLE_HPP
 #define GLOBAL_VARIABLE_HPP
-#include "array_type.hpp"
-#include "basic_type.hpp"
+
 #include "constant.hpp"
-#include "constant_array.hpp"
-#include "constant_number.hpp"
-#include "constant_zero.hpp"
-#include "user.hpp"
 #include <string>
 
 namespace ir {
@@ -51,7 +46,7 @@ public:
 
   float getFloat() {
     if (auto castType = dynamic_cast<BasicType *>(this->type)) {
-      if (auto castValue = dynamic_cast<ConstantNumber<float> *>(this->value)) {
+      if (auto castValue = dynamic_cast<ConstantNumber *>(this->value)) {
         return castValue->floatValue();
       }
     }
@@ -71,7 +66,7 @@ public:
         throw "Unexpected value";
       }
     }
-    if (auto castValue = dynamic_cast<ConstantNumber<float> *>(curValue)) {
+    if (auto castValue = dynamic_cast<ConstantNumber *>(curValue)) {
       return castValue->floatValue();
     }
     throw "Not a float";
@@ -79,7 +74,7 @@ public:
 
   int getInt() {
     if (auto castType = dynamic_cast<BasicType *>(this->type)) {
-      if (auto castValue = dynamic_cast<ConstantNumber<int> *>(this->value)) {
+      if (auto castValue = dynamic_cast<ConstantNumber *>(this->value)) {
         return castValue->intValue();
       }
     }
@@ -102,7 +97,7 @@ public:
         throw "Unexpected value";
       }
     }
-    if (auto castValue = dynamic_cast<ConstantNumber<int> *>(curValue)) {
+    if (auto castValue = dynamic_cast<ConstantNumber *>(curValue)) {
       return castValue->intValue();
     }
     throw "Not an int";

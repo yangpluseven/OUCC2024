@@ -118,6 +118,18 @@ public:
   }
 };
 
+class Argument : public Value {
+private:
+  const std::string name;
+
+public:
+  Argument(Type *type, std::string name) : Value(type), name(name) {}
+
+  std::string getName() const override { return "%"+name; }
+
+  std::string toString() const { return type->toString(); }
+};
+
 } // namespace ir
 
 #endif // FUNCTION_HPP
