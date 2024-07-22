@@ -23,19 +23,19 @@ class ConstantNumber : public Constant {
 private:
   std::variant<int, float> _value;
 
-  static BasicType *determineType(const Number &num) {
-    if (dynamic_cast<const IntNumber *>(&num))
+  static BasicType *determineType(const model::Number &num) {
+    if (dynamic_cast<const model::IntNumber *>(&num))
       return BasicType::I32;
-    else if (dynamic_cast<const FloatNumber *>(&num))
+    else if (dynamic_cast<const model::FloatNumber *>(&num))
       return BasicType::FLOAT;
     else
       throw std::runtime_error("Unsupported value");
   }
 
-  static std::variant<int, float> convertValue(const Number &num) {
-    if (dynamic_cast<const IntNumber *>(&num))
+  static std::variant<int, float> convertValue(const model::Number &num) {
+    if (dynamic_cast<const model::IntNumber *>(&num))
       return num.intValue();
-    else if (dynamic_cast<const FloatNumber *>(&num))
+    else if (dynamic_cast<const model::FloatNumber *>(&num))
       return num.floatValue();
     else
       throw std::runtime_error("Unsupported value");
@@ -45,7 +45,7 @@ public:
   explicit ConstantNumber(bool value)
       : Constant(BasicType::I1), _value(value ? 1 : 0) {}
 
-  ConstantNumber(const Number &num)
+  ConstantNumber(const model::Number &num)
       : Constant(determineType(num)), _value(convertValue(num)) {}
 
   std::variant<int, float> getValue() const { return _value; }
@@ -73,43 +73,43 @@ public:
 
   ConstantNumber operator+(const ConstantNumber &rhs) {
     if (type == BasicType::I32)
-      return ConstantNumber(IntNumber(intValue() + rhs.intValue()));
+      return ConstantNumber(model::IntNumber(intValue() + rhs.intValue()));
     else if (type == BasicType::FLOAT)
-      return ConstantNumber(FloatNumber(floatValue() + rhs.floatValue()));
+      return ConstantNumber(model::FloatNumber(floatValue() + rhs.floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
 
   ConstantNumber operator-(const ConstantNumber &rhs) {
     if (type == BasicType::I32)
-      return ConstantNumber(IntNumber(intValue() - rhs.intValue()));
+      return ConstantNumber(model::IntNumber(intValue() - rhs.intValue()));
     else if (type == BasicType::FLOAT)
-      return ConstantNumber(FloatNumber(floatValue() - rhs.floatValue()));
+      return ConstantNumber(model::FloatNumber(floatValue() - rhs.floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
 
   ConstantNumber operator*(const ConstantNumber &rhs) {
     if (type == BasicType::I32)
-      return ConstantNumber(IntNumber(intValue() * rhs.intValue()));
+      return ConstantNumber(model::IntNumber(intValue() * rhs.intValue()));
     else if (type == BasicType::FLOAT)
-      return ConstantNumber(FloatNumber(floatValue() * rhs.floatValue()));
+      return ConstantNumber(model::FloatNumber(floatValue() * rhs.floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
 
   ConstantNumber operator/(const ConstantNumber &rhs) {
     if (type == BasicType::I32)
-      return ConstantNumber(IntNumber(intValue() + rhs.intValue()));
+      return ConstantNumber(model::IntNumber(intValue() + rhs.intValue()));
     else if (type == BasicType::FLOAT)
-      return ConstantNumber(FloatNumber(floatValue() / rhs.floatValue()));
+      return ConstantNumber(model::FloatNumber(floatValue() / rhs.floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
 
   ConstantNumber operator%(const ConstantNumber &rhs) {
     if (type == BasicType::I32)
-      return ConstantNumber(IntNumber(intValue() % rhs.intValue()));
+      return ConstantNumber(model::IntNumber(intValue() % rhs.intValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
@@ -125,9 +125,9 @@ public:
 
   ConstantNumber operator-() {
     if (type == BasicType::I32)
-      return ConstantNumber(IntNumber(-intValue()));
+      return ConstantNumber(model::IntNumber(-intValue()));
     else if (type == BasicType::FLOAT)
-      return ConstantNumber(FloatNumber(-floatValue()));
+      return ConstantNumber(model::FloatNumber(-floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }

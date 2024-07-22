@@ -97,6 +97,102 @@ void ASTVisitor::allocInitVal(
   }
 }
 
+void ASTVisitor::processValueCond(ir::Value *value) {
+  if (value != nullptr) {
+    ir::Value *cond = nullptr;
+    if (value->getType() == ir::BasicType::I1) {
+      cond = value;
+    } else if (value->getType() == ir::BasicType::I32) {
+      ir::Instruction *inst =
+          new ir::ICmpInst(_curBlock, ir::ICmpInst::NE, value,
+                           new ir::ConstantNumber(model::IntNumber(0)));
+      _curBlock->add(inst);
+      cond = inst;
+    } else if (value->getType() == ir::BasicType::FLOAT) {
+      ir::Instruction *inst =
+          new ir::FCmpInst(_curBlock, ir::FCmpInst::UNE, value,
+                           new ir::ConstantNumber(model::FloatNumber(0.0f)));
+      _curBlock->add(inst);
+      cond = inst;
+    } else {
+      throw std::runtime_error("Unsupported type: " +
+                               value->getType()->toString());
+    }
+    _curBlock->add(new ir::BranchInst(_curBlock, cond, this->_trueBlock,
+                                      this->_falseBlock));
+  }
+}
+
+ir::Type *ASTVisitor::automaticTypePromotion(ir::Type *type1, ir::Type *type2) {
+  if (type1 == ir::BasicType::I32 || type2 == ir::BasicType::I32)
+    return ir::BasicType::I32;
+  if (type1 == ir::BasicType::FLOAT || type2 == ir::BasicType::FLOAT)
+    return ir::BasicType::FLOAT;
+  return ir::BasicType::I1;
+}
+
+ir::Value *ASTVisitor::typeConversion(ir::Value *value, ir::Type *targetType) {
+  if (value->getType() == targetType)
+    return value;
+  if (auto constant = dynamic_cast<ir::ConstantNumber *>(value)) {
+    if (targetType == ir::BasicType::I32)
+      return new ir::ConstantNumber(constant->intValue());
+    else if (targetType == ir::BasicType::I1)
+      return new ir::ConstantNumber(constant->intValue() != 0);
+    else if (targetType == ir::BasicType::FLOAT)
+      return new ir::ConstantNumber(constant->floatValue());
+    else
+      throw std::runtime_error("Unsupported type: " + targetType->toString());
+  }
+  if (targetType == ir::BasicType::I1) {
+    if (value->getType() == ir::BasicType::I32) {
+      ir::Instruction *inst =
+          new ir::ICmpInst(_curBlock, ir::ICmpInst::NE, value,
+                           new ir::ConstantNumber(model::IntNumber(0)));
+      _curBlock->add(inst);
+      return inst;
+    } else if (value->getType() == ir::BasicType::FLOAT) {
+      ir::Instruction *inst =
+          new ir::FCmpInst(_curBlock, ir::FCmpInst::UNE, value,
+                           new ir::ConstantNumber(model::FloatNumber(0.0f)));
+      _curBlock->add(inst);
+      return inst;
+    } else
+      return value;
+  }
+  if (targetType == ir::BasicType::I32) {
+    if (value->getType() == ir::BasicType::I1) {
+      ir::Instruction *inst =
+          new ir::ZExtInst(_curBlock, ir::BasicType::I32, value);
+      _curBlock->add(inst);
+      return inst;
+    } else if (value->getType() == ir::BasicType::FLOAT) {
+      ir::Instruction *inst =
+          new ir::FPToSIInst(_curBlock, ir::BasicType::I32, value);
+      _curBlock->add(inst);
+      return inst;
+    } else
+      return value;
+  }
+  if (targetType == ir::BasicType::FLOAT) {
+    if (value->getType() == ir::BasicType::I1) {
+      ir::Instruction *inst =
+          new ir::ZExtInst(_curBlock, ir::BasicType::I32, value);
+      _curBlock->add(inst);
+      inst = new ir::SIToFPInst(_curBlock, ir::BasicType::FLOAT, inst);
+      _curBlock->add(inst);
+      return inst;
+    } else if (value->getType() == ir::BasicType::I32) {
+      ir::Instruction *inst =
+          new ir::SIToFPInst(_curBlock, ir::BasicType::FLOAT, value);
+      _curBlock->add(inst);
+      return inst;
+    } else
+      return value;
+  }
+  return value;
+}
+
 ASTVisitor::ASTVisitor(SysYParser::RootContext *rootAST) : _rootAST(rootAST) {
   _symbolTable->in();
   initBuiltInFuncs();

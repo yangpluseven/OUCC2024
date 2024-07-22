@@ -29,22 +29,22 @@ private:
     throw std::runtime_error("Undefined variable: " + name);
   }
 
-  std::map<int, Number> submap(const std::map<int, Number> &values, int fromKey,
+  std::map<int, model::Number> submap(const std::map<int, model::Number> &values, int fromKey,
                                int toKey) {
-    std::map<int, Number> result;
+    std::map<int, model::Number> result;
     for (auto i : values)
       if (i.first >= fromKey && i.first <= toKey)
         result[i.first] = i.second;
     return result;
   }
 
-  ir::Constant *fuseConst(ir::Type *type, const std::map<int, Number> &values,
+  ir::Constant *fuseConst(ir::Type *type, const std::map<int, model::Number> &values,
                           int base) {
     if (dynamic_cast<ir::BasicType *>(type))
       if (values.find(base) != values.end())
         return new ir::ConstantNumber(values.at(base));
       else
-        return new ir::ConstantNumber(IntNumber(0));
+        return new ir::ConstantNumber(model::IntNumber(0));
 
     if (values.empty())
       return new ir ::ConstantZero(type);
@@ -81,7 +81,7 @@ public:
   }
 
   ir::GlobalVariable *makeGlobal(bool isConst, ir::Type *type,
-                                 const std::string &name, Number value) {
+                                 const std::string &name, model::Number value) {
     auto symbol = new ir::GlobalVariable(isConst, type, name,
                                          new ir::ConstantNumber(value));
     _table.front()[name] = symbol;
@@ -90,16 +90,16 @@ public:
 
   ir::GlobalVariable *makeGlobal(bool isConst, ir::Type *type,
                                  const std::string &name,
-                                 std::map<int, Number> values) {
+                                 std::map<int, model::Number> values) {
     auto rootType = type;
     while (auto arrayType = dynamic_cast<ir::ArrayType *>(rootType))
       rootType = arrayType->baseType();
 
     for (auto i : values) {
       if (rootType == ir::BasicType::I32)
-        i.second = IntNumber(i.second.intValue());
+        i.second = model::IntNumber(i.second.intValue());
       else if (rootType == ir::BasicType::FLOAT)
-        i.second = FloatNumber(i.second.floatValue());
+        i.second = model::FloatNumber(i.second.floatValue());
       else
         throw std::runtime_error("Unsupported type");
     }

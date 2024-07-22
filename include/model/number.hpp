@@ -1,6 +1,8 @@
 #ifndef MODEL_NUMBER_HPP
 #define MODEL_NUMBER_HPP
 
+namespace model {
+
 class Number {
 public:
   virtual int intValue() const = 0;
@@ -26,5 +28,6 @@ public:
   int intValue() const override { return static_cast<int>(_value); }
   float floatValue() const override { return _value; }
 };
+} // namespace model
 
 #endif
