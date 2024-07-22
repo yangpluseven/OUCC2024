@@ -68,17 +68,58 @@ public:
 
   std::string toString() const { return getName(); }
 
-  std::vector<Instruction *>::iterator begin() { return _instructions.begin(); }
+  class Iterator {
+  private:
+    typename std::vector<Instruction *>::iterator it;
 
-  std::vector<Instruction *>::iterator end() { return _instructions.end(); }
+  public:
+    explicit Iterator(typename std::vector<Instruction *>::iterator it)
+        : it(it) {}
 
-  std::vector<Instruction *>::const_iterator begin() const {
-    return _instructions.begin();
-  }
+    Instruction *operator*() const { return *it; }
+    Iterator &operator++() {
+      ++it;
+      return *this;
+    }
 
-  std::vector<Instruction *>::const_iterator end() const {
-    return _instructions.end();
-  }
+    Iterator operator++(int) {
+      Iterator tmp = *this;
+      ++it;
+      return tmp;
+    }
+
+    bool operator==(const Iterator &rhs) const { return it == rhs.it; }
+    bool operator!=(const Iterator &rhs) const { return it != rhs.it; }
+  };
+
+  Iterator begin() { return Iterator(_instructions.begin()); }
+  Iterator end() { return Iterator(_instructions.end()); }
+
+  class ConstIterator {
+  private:
+    typename std::vector<Instruction *>::const_iterator it;
+
+  public:
+    explicit ConstIterator(
+        typename std::vector<Instruction *>::const_iterator it)
+        : it(it) {}
+
+    const Instruction *operator*() const { return *it; }
+    ConstIterator &operator++() {
+      ++it;
+      return *this;
+    }
+    ConstIterator operator++(int) {
+      ConstIterator tmp = *this;
+      ++it;
+      return tmp;
+    }
+    bool operator==(const ConstIterator &other) const { return it == other.it; }
+    bool operator!=(const ConstIterator &other) const { return it != other.it; }
+  };
+
+  ConstIterator begin() const { return ConstIterator(_instructions.begin()); }
+  ConstIterator end() const { return ConstIterator(_instructions.end()); }
 };
 
 int BasicBlock::_counter = 0;
