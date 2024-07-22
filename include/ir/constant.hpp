@@ -1,10 +1,10 @@
 #ifndef CONSTANT_HPP
 #define CONSTANT_HPP
 
-#include "value.hpp"
 #include "model/number.hpp"
-#include <variant>
+#include "value.hpp"
 #include <stdexcept>
+#include <variant>
 
 namespace ir {
 
@@ -24,17 +24,12 @@ private:
   std::variant<int, float> _value;
 
   static BasicType *determineType(const Number &num) {
-    try {
-      dynamic_cast<const IntNumber &>(num);
+    if (dynamic_cast<const IntNumber *>(&num))
       return BasicType::I32;
-    } catch (std::bad_cast &e) {
-      try {
-        dynamic_cast<const FloatNumber &>(num);
-        return BasicType::FLOAT;
-      } catch (std::bad_cast &e) {
-        throw std::runtime_error("Unsupported value");
-      }
-    }
+    else if (dynamic_cast<const FloatNumber *>(&num))
+      return BasicType::FLOAT;
+    else
+      throw std::runtime_error("Unsupported value");
   }
 
   static std::variant<int, float> convertValue(const Number &num) {

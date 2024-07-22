@@ -2,10 +2,10 @@
 #define PARSER_AST_VISITOR_HPP
 
 #include "SysYBaseVisitor.h"
-#include "ir/instruction.hpp"
 #include "ir/basic_block.hpp"
 #include "ir/constant.hpp"
 #include "ir/function.hpp"
+#include "ir/instruction.hpp"
 #include "ir/module.hpp"
 #include "ir/type.hpp"
 #include "ir/value.hpp"
@@ -107,6 +107,8 @@ public:
     _table.front()[name] = symbol;
     return symbol;
   }
+
+  size_t size() const { return _table.size(); }
 
   ir::AllocaInst *makeLocal(ir::BasicBlock *block, ir::Type *type,
                             const std::string &name) {
@@ -225,7 +227,28 @@ private:
         if (block->isEmpty() ||
             !(dynamic_cast<ir::RetInst *>(block->getLast()) ||
               dynamic_cast<ir::BranchInst *>(block->getLast())))
-          block->add(new ir::RetInst(block, func->get(i + 1)));
+          block->add(new ir::BranchInst(block, func->get(i + 1)));
+      }
+    }
+  }
+
+  void allocInitVal(std::vector<int> &dimensions,
+                    std::map<int, SysYParser::AdditiveExpContext *> &exps,
+                    int base, SysYParser::InitValContext *src) {
+    int offset = 0;
+    for (auto exp : src->initVal()) {
+      if (exp->additiveExp() == nullptr) {
+        int size = 1;
+        for (auto i = 1; i < dimensions.size(); i++)
+          size *= dimensions[i];
+        offset = (offset + size - 1) / size * size;
+        std::vector<int> newDimensions(dimensions.begin() + 1,
+                                       dimensions.end());
+        allocInitVal(newDimensions, exps, base + offset, exp);
+        offset += size;
+      } else {
+        exps[base + offset] = exp->additiveExp();
+        offset++;
       }
     }
   }
@@ -235,6 +258,53 @@ public:
     _symbolTable->in();
     initBuiltInFuncs();
     initSysCalls();
+  }
+
+  ir::Module *getModule() {
+    checkIfIsProcessed();
+    return _module;
+  }
+
+  std::any visitType(SysYParser::TypeContext *ctx) override {
+    if (ctx->getText() == "int")
+      return ir::BasicType::I32;
+    else if (ctx->getText() == "float")
+      return ir::BasicType::FLOAT;
+    else if (ctx->getText() == "void")
+      return ir::BasicType::VOID;
+    else
+      throw std::runtime_error("Unsupported type: " + ctx->getText());
+  }
+
+  std::any visitDimensions(SysYParser ::DimensionsContext *ctx) override {
+    auto dimensions = std::vector<int>();
+    for (auto exp : ctx->additiveExp()) {
+      dimensions.push_back(
+          std::any_cast<ir::ConstantNumber *>(visitAdditiveExp(exp))
+              ->intValue());
+    }
+
+    return dimensions;
+  }
+
+  std::any visitVarDecl(SysYParser::VarDeclContext *ctx) override {
+    _isConst = ctx->CONST() != nullptr;
+    return SysYBaseVisitor::visitVarDecl(ctx);
+  }
+
+  std::any visitArrayVarDef(SysYParser::ArrayVarDefContext *ctx) override {
+    auto name = ctx->Ident()->getSymbol()->getText();
+    auto dimensions =
+        std::any_cast<std::vector<int>>(visitDimensions(ctx->dimensions()));
+    auto initVal = ctx->initVal();
+    if (_isConst || _symbolTable->size() == 1) {
+      std::map<int, SysYParser::AdditiveExpContext *> exps;
+      if (initVal != nullptr)
+        allocInitVal(dimensions, exps, 0, initVal);
+      auto reverseDimensions = dimensions;
+      reverseDimensions.reserve(dimensions.size());
+      // WIP
+    }
   }
 };
 
