@@ -2,7 +2,7 @@
 // Generated from SysY.g4 by ANTLR 4.13.1
 
 
-#include "SysYLexer.h"
+#include "parser/SysYLexer.h"
 
 
 using namespace antlr4;
