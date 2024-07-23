@@ -254,3 +254,5 @@ temp/
 !libsysy.a
 !libsysy_x86.a
 pass_config.txt
+
+.vs/

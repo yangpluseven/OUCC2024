@@ -48,7 +48,14 @@ public:
   ConstantNumber(const model::Number &num)
       : Constant(determineType(num)), _value(convertValue(num)) {}
 
-  std::variant<int, float> getValue() const { return _value; }
+  model::Number *getValue() const {
+    if (type == BasicType::I32)
+      return new model::IntNumber(intValue());
+    else if (type == BasicType::FLOAT)
+      return new model::FloatNumber(floatValue());
+    else
+      throw std::runtime_error("Unexpected type");
+  }
 
   float floatValue() const { return std::get<float>(_value); }
 
@@ -66,16 +73,12 @@ public:
       throw std::runtime_error("Unexpected type");
   }
 
-  ConstantNumber &operator=(const ConstantNumber &rhs) {
-    _value = rhs.getValue();
-    return *this;
-  }
-
   ConstantNumber operator+(const ConstantNumber &rhs) {
     if (type == BasicType::I32)
       return ConstantNumber(model::IntNumber(intValue() + rhs.intValue()));
     else if (type == BasicType::FLOAT)
-      return ConstantNumber(model::FloatNumber(floatValue() + rhs.floatValue()));
+      return ConstantNumber(
+          model::FloatNumber(floatValue() + rhs.floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
@@ -84,7 +87,8 @@ public:
     if (type == BasicType::I32)
       return ConstantNumber(model::IntNumber(intValue() - rhs.intValue()));
     else if (type == BasicType::FLOAT)
-      return ConstantNumber(model::FloatNumber(floatValue() - rhs.floatValue()));
+      return ConstantNumber(
+          model::FloatNumber(floatValue() - rhs.floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
@@ -93,7 +97,8 @@ public:
     if (type == BasicType::I32)
       return ConstantNumber(model::IntNumber(intValue() * rhs.intValue()));
     else if (type == BasicType::FLOAT)
-      return ConstantNumber(model::FloatNumber(floatValue() * rhs.floatValue()));
+      return ConstantNumber(
+          model::FloatNumber(floatValue() * rhs.floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
@@ -102,7 +107,8 @@ public:
     if (type == BasicType::I32)
       return ConstantNumber(model::IntNumber(intValue() + rhs.intValue()));
     else if (type == BasicType::FLOAT)
-      return ConstantNumber(model::FloatNumber(floatValue() / rhs.floatValue()));
+      return ConstantNumber(
+          model::FloatNumber(floatValue() / rhs.floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
@@ -199,7 +205,8 @@ public:
     if (type == BasicType::I32)
       return new ConstantNumber(model::IntNumber(intValue() + rhs->intValue()));
     else if (type == BasicType::FLOAT)
-      return new ConstantNumber(model::FloatNumber(floatValue() + rhs->floatValue()));
+      return new ConstantNumber(
+          model::FloatNumber(floatValue() + rhs->floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
@@ -208,7 +215,8 @@ public:
     if (type == BasicType::I32)
       return new ConstantNumber(model::IntNumber(intValue() - rhs->intValue()));
     else if (type == BasicType::FLOAT)
-      return new ConstantNumber(model::FloatNumber(floatValue() - rhs->floatValue()));
+      return new ConstantNumber(
+          model::FloatNumber(floatValue() - rhs->floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
@@ -217,7 +225,8 @@ public:
     if (type == BasicType::I32)
       return new ConstantNumber(model::IntNumber(intValue() * rhs->intValue()));
     else if (type == BasicType::FLOAT)
-      return new ConstantNumber(model::FloatNumber(floatValue() * rhs->floatValue()));
+      return new ConstantNumber(
+          model::FloatNumber(floatValue() * rhs->floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }
@@ -226,7 +235,8 @@ public:
     if (type == BasicType::I32)
       return new ConstantNumber(model::IntNumber(intValue() / rhs->intValue()));
     else if (type == BasicType::FLOAT)
-      return new ConstantNumber(model::FloatNumber(floatValue() / rhs->floatValue()));
+      return new ConstantNumber(
+          model::FloatNumber(floatValue() / rhs->floatValue()));
     else
       throw std::runtime_error("Unsupported type");
   }

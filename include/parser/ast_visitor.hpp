@@ -5,6 +5,7 @@
 #include "ir/basic_block.hpp"
 #include "ir/constant.hpp"
 #include "ir/function.hpp"
+#include "ir/global_variable.hpp"
 #include "ir/instruction.hpp"
 #include "ir/module.hpp"
 #include "ir/type.hpp"
@@ -29,8 +30,8 @@ private:
     throw std::runtime_error("Undefined variable: " + name);
   }
 
-  std::map<int, model::Number> submap(const std::map<int, model::Number> &values, int fromKey,
-                               int toKey) {
+  std::map<int, model::Number>
+  submap(const std::map<int, model::Number> &values, int fromKey, int toKey) {
     std::map<int, model::Number> result;
     for (auto i : values)
       if (i.first >= fromKey && i.first <= toKey)
@@ -38,7 +39,8 @@ private:
     return result;
   }
 
-  ir::Constant *fuseConst(ir::Type *type, const std::map<int, model::Number> &values,
+  ir::Constant *fuseConst(ir::Type *type,
+                          const std::map<int, model::Number> &values,
                           int base) {
     if (dynamic_cast<ir::BasicType *>(type))
       if (values.find(base) != values.end())
@@ -190,7 +192,7 @@ public:
   std::any visitArrayVarDef(SysYParser::ArrayVarDefContext *ctx) override;
 
   std::any visitFuncDef(SysYParser::FuncDefContext *ctx) override;
-  
+
   std::any visitFuncArg(SysYParser::FuncArgContext *ctx) override;
 
   std::any visitBlockStmt(SysYParser::BlockStmtContext *ctx) override;
@@ -208,6 +210,7 @@ public:
   std::any visitContinueStmt(SysYParser::ContinueStmtContext *ctx) override;
 
   std::any visitRetStmt(SysYParser::RetStmtContext *ctx) override;
+  //
 
   std::any visitLVal(SysYParser::LValContext *ctx) override;
 
@@ -231,8 +234,8 @@ public:
 
   std::any visitAdditiveExp(SysYParser::AdditiveExpContext *ctx) override;
 
-  std::any visitMultiplicativeExp(SysYParser::MultiplicativeExpContext *ctx) override;
-
+  std::any
+  visitMultiplicativeExp(SysYParser::MultiplicativeExpContext *ctx) override;
 };
 } // namespace parser
 

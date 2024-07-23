@@ -239,9 +239,24 @@ std::any ASTVisitor::visitArrayVarDef(SysYParser::ArrayVarDefContext *ctx) {
     if (initVal != nullptr)
       allocInitVal(dimensions, exps, 0, initVal);
     auto reverseDimensions = dimensions;
-    reverseDimensions.reserve(dimensions.size());
-    // WIP
+    std::reverse(reverseDimensions.begin(), reverseDimensions.end());
+    auto type = _curType;
+    for (auto i : reverseDimensions) {
+      type = new ir::ArrayType(type, i);
+    }
+
+    std::map<int, model::Number> values;
+    for (const auto &entry : exps) {
+      int index = entry.first;
+      auto exp = entry.second;
+      auto result = std::any_cast<ir::ConstantNumber *>(visitAdditiveExp(exp));
+      values[index] = *result->getValue();
+    }
+
+    _module->addGlobal(_symbolTable->makeGlobal(_isConst, type, name, values));
+    return nullptr;
   }
+  // WIP
 }
 
 } // namespace parser
