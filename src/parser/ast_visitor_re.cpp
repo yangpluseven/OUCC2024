@@ -22,7 +22,7 @@ ASTVisitor::visitMultiplicativeExp(SysYParser::MultiplicativeExpContext *ctx) {
         iterVal = number1->rem(number2);
       } else {
         throw std::runtime_error("Invalid operation: " +
-                                     ctx->children[i * 2 - 1]->getText());
+                                 ctx->children[i * 2 - 1]->getText());
       }
       continue;
     }
@@ -47,7 +47,7 @@ ASTVisitor::visitMultiplicativeExp(SysYParser::MultiplicativeExpContext *ctx) {
       tmp = ir::BinaryOperator::SREM;
     } else {
       throw std::runtime_error("Invalid operation: " +
-                                   ctx->children[1]->getText());
+                               ctx->children[1]->getText());
     }
     ir::Instruction *inst =
         new ir::BinaryOperator(_curBlock, tmp, iterVal, nextVal);
@@ -69,17 +69,40 @@ std::any ASTVisitor::visitAdditiveExp(SysYParser::AdditiveExpContext *ctx) {
     nextVal = typeConversion(nextVal, targetType);
     auto number1 = dynamic_cast<ir::ConstantNumber *>(iterVal);
     auto number2 = dynamic_cast<ir::ConstantNumber *>(nextVal);
-    if (number1 && number2) {
+    if (number1 != nullptr && number2 != nullptr) {
       if (ctx->children[i * 2 - 1]->getText() == "+") {
         iterVal = number1->add(number2);
       } else if (ctx->children[i * 2 - 1]->getText() == "-") {
         iterVal = number1->sub(number2);
-      } else {
+      } else
         throw std::runtime_error("Invalid operation: " +
-                                     ctx->children[i * 2 - 1]->getText());
-      }
+                                 ctx->children[i * 2 - 1]->getText());
+      continue;
     }
-  }
-}
+    auto txt = ctx->children[i * 2 - 1]->getText();
+    ir::BinaryOperator::Op op;
+    if (txt == "+")
+      if (targetType == ir::BasicType::I32)
+        op = ir::BinaryOperator::ADD;
+      else if (targetType == ir::BasicType::FLOAT)
+        op = ir::BinaryOperator::FADD;
+      else
+        throw std::runtime_error("Invalid type" + targetType->toString());
+    else if (txt == "-")
+      if (targetType == ir::BasicType::I32)
+        op = ir::BinaryOperator::SUB;
+      else if (targetType == ir::BasicType::FLOAT)
+        op = ir::BinaryOperator::FSUB;
+      else
+        throw std::runtime_error("Invalid type" + targetType->toString());
+    else
+      throw std::runtime_error("Invalid operation: " + txt);
 
+    auto inst = new ir::BinaryOperator(_curBlock, op, iterVal, nextVal);
+
+    _curBlock->add(inst);
+    iterVal = inst;
+  }
+  return iterVal;
+}
 } // namespace parser

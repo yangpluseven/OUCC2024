@@ -15,13 +15,9 @@ Instruction::Instruction(BasicBlock *block, Type *type,
   id = _counter++;
 }
 
-BasicBlock *Instruction::getBlock() {
-  return _block;
-}
+BasicBlock *Instruction::getBlock() { return _block; }
 
-std::string Instruction::getName() const {
-  return "%v" + std::to_string(id);
-}
+std::string Instruction::getName() const { return "%v" + std::to_string(id); }
 
 AllocaInst::AllocaInst(BasicBlock *block, Type *type)
     : Instruction(block, new PointerType(type)) {}
@@ -37,9 +33,7 @@ BranchInst::BranchInst(BasicBlock *block, Value *cond, BasicBlock *ifTrue,
                        BasicBlock *ifFalse)
     : Instruction(block, BasicType::VOID, {cond, ifTrue, ifFalse}) {}
 
-bool BranchInst::isConditional() const {
-  return size() == 3;
-}
+bool BranchInst::isConditional() const { return size() == 3; }
 
 std::string BranchInst::toString() const {
   if (isConditional()) {
@@ -90,7 +84,7 @@ Type *GetElementPtrInst::_calcType(Value *value, int indexSize) {
 }
 
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
-                                      std::initializer_list<Value *> indexes)
+                                     std::initializer_list<Value *> indexes)
     : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
   for (auto index : indexes)
     add(new Use(this, index));
@@ -284,8 +278,12 @@ std::string CmpInst::_condToString(Cond v) const {
 FCmpInst::FCmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs)
     : CmpInst(block, cond, lhs, rhs) {}
 
+std::string FCmpInst::toString() const { return CmpInst::toString("fcmp"); }
+
 ICmpInst::ICmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs)
     : CmpInst(block, cond, lhs, rhs) {}
+
+std::string ICmpInst::toString() const { return CmpInst::toString("icmp"); }
 
 CastInst::CastInst(BasicBlock *block, Type *type, Value *operand)
     : Instruction(block, type, {operand}) {
@@ -301,16 +299,32 @@ std::string CastInst::toString(const std::string &class_name) const {
 BitCastInst::BitCastInst(BasicBlock *block, Type *type, Value *operand)
     : CastInst(block, type, operand) {}
 
+std::string BitCastInst::toString() const {
+  return CastInst::toString("bitcast");
+}
+
 FPToSIInst::FPToSIInst(BasicBlock *block, Type *type, Value *operand)
     : CastInst(block, type, operand) {}
+
+std::string FPToSIInst::toString() const {
+  return CastInst::toString("fptosi");
+}
 
 SExtInst::SExtInst(BasicBlock *block, Type *type, Value *operand)
     : CastInst(block, type, operand) {}
 
+std::string SExtInst::toString() const { return CastInst::toString("sext"); }
+
 SIToFPInst::SIToFPInst(BasicBlock *block, Type *type, Value *operand)
     : CastInst(block, type, operand) {}
 
+std::string SIToFPInst::toString() const {
+  return CastInst::toString("sitofp");
+}
+
 ZExtInst::ZExtInst(BasicBlock *block, Type *type, Value *operand)
     : CastInst(block, type, operand) {}
+
+std::string ZExtInst::toString() const { return CastInst::toString("zext"); }
 
 } // namespace ir
