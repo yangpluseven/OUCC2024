@@ -256,7 +256,39 @@ std::any ASTVisitor::visitArrayVarDef(SysYParser::ArrayVarDefContext *ctx) {
     _module->addGlobal(_symbolTable->makeGlobal(_isConst, type, name, values));
     return nullptr;
   }
-  // WIP
-}
+  auto allocaInst =
+      _symbolTable->makeLocal(_entryBlock, _curType, name, dimensions);
+  _entryBlock->add(allocaInst);
+  if (initVal != nullptr) {
+    std::map<int, SysYParser::AdditiveExpContext *> exps;
+    allocInitVal(dimensions, exps, 0, initVal);
+    auto bitCastInst = new ir::BitCastInst(
+        _curBlock, new ir::PointerType(ir::BasicType::I32), allocaInst);
+    _curBlock->add(bitCastInst);
+    int x = 4;
+    for (auto i : dimensions)
+      x *= i;
+
+    _curBlock->add(new ir::CallInst(
+        _curBlock, _symbolTable->getFunc("memset"),
+        {bitCastInst, new ir::ConstantNumber(model::IntNumber(0)),
+         new ir::ConstantNumber(model::IntNumber(x))}));
+
+    for (const auto &entry : exps) {
+      auto value = typeConversion(visitAdditiveExp(entry.second), _curType);
+      auto ptr = allocaInst;
+      for (int j = 0; j.dimensions.size(); j++) {
+        int x = 1;
+        for (auto k = j + 1; k < dimensions.size(); k++)
+          x *= dimensions[k];
+        int index = entry.first / x % dimensions[j];
+        auto inst = new ir::GetElementPtrInst(
+            _curBlock, ptr,
+            {new ir::ConstantNumber(model::IntNumber(0)),
+             new ir::ConstantNumber(model::IntNumber(index))});
+        //WIP
+      }
+    }
+  }
 
 } // namespace parser
