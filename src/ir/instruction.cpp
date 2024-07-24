@@ -1,4 +1,5 @@
 #include "ir/instruction.hpp"
+#include "ir/global_variable.hpp"
 #include <stdexcept>
 
 namespace ir {

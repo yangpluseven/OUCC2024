@@ -2,9 +2,7 @@
 #define IR_INSTRUCTION_HPP
 
 #include "basic_block.hpp"
-#include "global_variable.hpp"
 #include "value.hpp"
-#include <sstream>
 #include <string>
 #include <unordered_map>
 

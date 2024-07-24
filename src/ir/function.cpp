@@ -1,4 +1,5 @@
 #include "ir/function.hpp"
+#include <algorithm>
 
 namespace ir {
 

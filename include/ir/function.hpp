@@ -3,7 +3,6 @@
 
 #include "basic_block.hpp"
 #include "value.hpp"
-#include <algorithm>
 #include <iterator>
 #include <sstream>
 #include <string>

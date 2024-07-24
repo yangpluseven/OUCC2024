@@ -4,7 +4,6 @@
 #include "model/number.hpp"
 #include "value.hpp"
 #include <stdexcept>
-#include <variant>
 #include <vector>
 
 namespace ir {

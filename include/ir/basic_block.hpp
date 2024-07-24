@@ -4,7 +4,6 @@
 #include "function.hpp"
 #include "instruction.hpp"
 #include "value.hpp"
-#include <stdexcept>
 #include <string>
 #include <vector>
 
