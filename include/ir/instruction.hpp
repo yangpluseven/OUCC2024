@@ -107,53 +107,61 @@ class CmpInst : public Instruction {
 public:
   enum Cond { EQ, NE, SGT, SGE, SLT, SLE, OEQ, OGT, OGE, OLT, OLE, UNE };
   CmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs);
-  Cond getCond();
-  virtual std::string toString() const = 0;
+  Cond getCond() const;
+  virtual std::string toString(const std::string &class_name) const;
 
 private:
   Cond cond;
-  std::string _condToString(Cond v);
+  std::string _condToString(Cond v) const;
 };
 
 class FCmpInst : public CmpInst {
 public:
   FCmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs);
+  std::string toString() const;
 };
 
 class ICmpInst : public CmpInst {
 public:
   ICmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs);
+  std::string toString() const;
 };
 
 class CastInst : public Instruction {
 protected:
   CastInst(BasicBlock *block, Type *type, Value *operand);
-  virtual std::string toString() const = 0;
+
+  virtual std::string toString(const std::string &class_name) const;
 };
 
 class BitCastInst : public CastInst {
 public:
   BitCastInst(BasicBlock *block, Type *type, Value *operand);
+  std::string toString() const;
 };
 
 class FPToSIInst : public CastInst {
 public:
   FPToSIInst(BasicBlock *block, Type *type, Value *operand);
+  std::string toString() const;
 };
 
 class SExtInst : public CastInst {
 public:
   SExtInst(BasicBlock *block, Type *type, Value *operand);
+  std::string toString() const;
 };
 
 class SIToFPInst : public CastInst {
 public:
   SIToFPInst(BasicBlock *block, Type *type, Value *operand);
+  std::string toString() const;
 };
 
 class ZExtInst : public CastInst {
 public:
   ZExtInst(BasicBlock *block, Type *type, Value *operand);
+  std::string toString() const;
 };
 
 } // namespace ir

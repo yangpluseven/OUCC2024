@@ -32,11 +32,14 @@ private:
 
   std::map<int, model::Number>
   submap(const std::map<int, model::Number> &values, int fromKey, int toKey) {
-    std::map<int, model::Number> result;
-    for (auto i : values)
-      if (i.first >= fromKey && i.first <= toKey)
-        result[i.first] = i.second;
-    return result;
+    std::map<int, model::Number> sub;
+    auto lower = values.lower_bound(fromKey);
+    auto upper = values.upper_bound(toKey);
+
+    for (; lower != upper; lower++)
+      sub.insert(*lower);
+
+    return sub;
   }
 
   ir::Constant *fuseConst(ir::Type *type,
@@ -46,7 +49,7 @@ private:
       if (values.find(base) != values.end())
         return new ir::ConstantNumber(values.at(base));
       else
-        return new ir::ConstantNumber(model::IntNumber(0));
+        return new ir::ConstantNumber(model::Number(0));
 
     if (values.empty())
       return new ir ::ConstantZero(type);
@@ -99,9 +102,9 @@ public:
 
     for (auto i : values) {
       if (rootType == ir::BasicType::I32)
-        i.second = model::IntNumber(i.second.intValue());
+        i.second = model::Number(i.second.intValue());
       else if (rootType == ir::BasicType::FLOAT)
-        i.second = model::FloatNumber(i.second.floatValue());
+        i.second = model::Number(i.second.floatValue());
       else
         throw std::runtime_error("Unsupported type");
     }

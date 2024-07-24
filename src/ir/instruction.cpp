@@ -239,15 +239,18 @@ CmpInst::CmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs)
   add(new Use(this, rhs));
 }
 
-CmpInst::Cond CmpInst::getCond() {
-  return cond;
+CmpInst::Cond CmpInst::getCond() const { return cond; }
+
+std::string CmpInst::toString(const std::string &class_name) const {
+  auto cond = getCond();
+  auto op1 = getOperand<Value>(0);
+  auto op2 = getOperand<Value>(1);
+  auto type = Type::CheckEquality(op1->getType(), op2->getType());
+  return getName() + " = " + class_name + " " + _condToString(cond) + " " +
+         type->toString() + " " + op1->getName() + ", " + op2->getName();
 }
 
-std::string CmpInst::toString() const {
-  return "TODO";
-}
-
-std::string CmpInst::_condToString(Cond v) {
+std::string CmpInst::_condToString(Cond v) const {
   switch (v) {
   case EQ:
     return "eq";
@@ -289,8 +292,10 @@ CastInst::CastInst(BasicBlock *block, Type *type, Value *operand)
   add(new Use(this, operand));
 }
 
-std::string CastInst::toString() const {
-  return "TODO";
+std::string CastInst::toString(const std::string &class_name) const {
+  auto operand = getOperand<Value>(0);
+  return getName() + " = " + class_name + " " + operand->getType()->toString() +
+         " " + operand->getName() + " to " + type->toString();
 }
 
 BitCastInst::BitCastInst(BasicBlock *block, Type *type, Value *operand)
