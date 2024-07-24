@@ -196,8 +196,8 @@ ConstantNumber *ConstantNumber::exor(ConstantNumber *rhs) {
 
 ConstantNumber *ConstantNumber::neg() { return new ConstantNumber(-*this); }
 
-ConstantNumber *ConstantNumber::lnot(ConstantNumber *rhs) {
-  return new ConstantNumber(!*rhs);
+ConstantNumber *ConstantNumber::lnot() {
+  return new ConstantNumber(!*this);
 }
 
 ConstantNumber *ConstantNumber::eq(ConstantNumber *rhs) {

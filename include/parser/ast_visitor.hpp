@@ -213,7 +213,6 @@ public:
   std::any visitContinueStmt(SysYParser::ContinueStmtContext *ctx) override;
 
   std::any visitRetStmt(SysYParser::RetStmtContext *ctx) override;
-  //
 
   std::any visitLVal(SysYParser::LValContext *ctx) override;
 

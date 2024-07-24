@@ -23,6 +23,7 @@ protected:
 
   Instruction(BasicBlock *block, Type *type,
               const std::initializer_list<Value *> &operands = {});
+  Instruction(BasicBlock *block, Type *type, std::vector<Value *> &operands);
 
 public:
   BasicBlock *getBlock();
@@ -48,6 +49,7 @@ class CallInst : public Instruction {
 public:
   CallInst(BasicBlock *block, Function *func,
            std::initializer_list<Value *> params);
+  CallInst(BasicBlock *block, Function *func, std::vector<Value *> &params);
   std::string toString() const;
 };
 
@@ -58,6 +60,8 @@ private:
 public:
   GetElementPtrInst(BasicBlock *block, Value *ptr,
                     std::initializer_list<Value *> indexes = {});
+  GetElementPtrInst(BasicBlock *block, Value *ptr,
+                    std::vector<Value *> &indexes);
   std::string toString();
 };
 

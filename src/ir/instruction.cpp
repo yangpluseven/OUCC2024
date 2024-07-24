@@ -15,6 +15,15 @@ Instruction::Instruction(BasicBlock *block, Type *type,
   id = _counter++;
 }
 
+Instruction::Instruction(BasicBlock *block, Type *type,
+                         std::vector<Value *> &operands)
+    : User(type), _block(block) {
+  for (auto operand : operands) {
+    add(new Use(this, operand));
+  }
+  id = _counter++;
+}
+
 BasicBlock *Instruction::getBlock() { return _block; }
 
 std::string Instruction::getName() const { return "%v" + std::to_string(id); }
@@ -54,6 +63,13 @@ CallInst::CallInst(BasicBlock *block, Function *func,
     add(new Use(this, param));
 }
 
+CallInst::CallInst(BasicBlock *block, Function *func,
+                   std::vector<Value *> &params)
+    : Instruction(block, func->getType(), {func}) {
+  for (auto param : params)
+    add(new Use(this, param));
+}
+
 std::string CallInst::toString() const {
   std::stringstream ss;
   ss << "(";
@@ -85,6 +101,13 @@ Type *GetElementPtrInst::_calcType(Value *value, int indexSize) {
 
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
                                      std::initializer_list<Value *> indexes)
+    : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
+  for (auto index : indexes)
+    add(new Use(this, index));
+}
+
+GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
+                                     std::vector<Value *> &indexes)
     : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
   for (auto index : indexes)
     add(new Use(this, index));

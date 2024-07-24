@@ -58,7 +58,7 @@ public:
   ConstantNumber *rem(ConstantNumber *rhs);
   ConstantNumber *exor(ConstantNumber *rhs);
   ConstantNumber *neg();
-  ConstantNumber *lnot(ConstantNumber *rhs);
+  ConstantNumber *lnot();
   ConstantNumber *eq(ConstantNumber *rhs);
   ConstantNumber *ne(ConstantNumber *rhs);
   ConstantNumber *gt(ConstantNumber *rhs);

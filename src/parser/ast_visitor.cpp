@@ -499,14 +499,462 @@ std::any ASTVisitor::visitContinueStmt(SysYParser::ContinueStmtContext *ctx) {
 }
 
 std::any ASTVisitor::visitRetStmt(SysYParser::RetStmtContext *ctx) {
-  if(ctx->additiveExp()==nullptr){
+  if (ctx->additiveExp() == nullptr) {
     _curBlock->add(new ir::BranchInst(_curBlock, _retBlock));
     return nullptr;
   }
-  auto retVal = std::any_cast<ir::Value *>(visitAdditiveExp(ctx->additiveExp()));
+  auto retVal =
+      std::any_cast<ir::Value *>(visitAdditiveExp(ctx->additiveExp()));
   retVal = typeConversion(retVal, _curFunc->getType());
   _curBlock->add(new ir::StoreInst(_curBlock, retVal, _curRetVal));
   _curBlock->add(new ir::BranchInst(_curBlock, _retBlock));
   return nullptr;
 }
+
+std::any
+ASTVisitor::visitMultiplicativeExp(SysYParser::MultiplicativeExpContext *ctx) {
+  ir::Value *iterVal =
+      std::any_cast<ir::Value *>(ASTVisitor::visitUnaryExp(ctx->unaryExp(0)));
+  for (int i = 1; i < ctx->unaryExp().size(); i++) {
+    ir::Value *nextVal =
+        std::any_cast<ir::Value *>(ASTVisitor::visitUnaryExp(ctx->unaryExp(i)));
+    ir::Type *targetType = ASTVisitor::automaticTypePromotion(
+        iterVal->getType(), nextVal->getType());
+    auto number1 = dynamic_cast<ir::ConstantNumber *>(iterVal);
+    auto number2 = dynamic_cast<ir::ConstantNumber *>(nextVal);
+    auto txt = ctx->children[i * 2 - 1]->getText();
+    if (number1 && number2) {
+      if (txt == "*") {
+        iterVal = number1->mul(number2);
+      } else if (txt == "/") {
+        iterVal = number1->div(number2);
+      } else if (txt == "%") {
+        iterVal = number1->rem(number2);
+      } else {
+        throw std::runtime_error("Invalid operation: " + txt);
+      }
+      continue;
+    }
+    ir::BinaryOperator::Op tmp;
+    if (txt == "*") {
+      if (targetType == ir::BasicType::I32) {
+        tmp = ir::BinaryOperator::MUL;
+      } else if (targetType == ir::BasicType::FLOAT) {
+        tmp = ir::BinaryOperator::FMUL;
+      } else {
+        throw std::runtime_error("Invalid type" + targetType->toString());
+      }
+    } else if (txt == "/") {
+      if (targetType == ir::BasicType::I32) {
+        tmp = ir::BinaryOperator::SDIV;
+      } else if (targetType == ir::BasicType::FLOAT) {
+        tmp = ir::BinaryOperator::FDIV;
+      } else {
+        throw std::runtime_error("Invalid type" + targetType->toString());
+      }
+    } else if (txt == "%") {
+      tmp = ir::BinaryOperator::SREM;
+    } else {
+      throw std::runtime_error("Invalid operation: " +
+                               ctx->children[1]->getText());
+    }
+    ir::Instruction *inst =
+        new ir::BinaryOperator(_curBlock, tmp, iterVal, nextVal);
+    _curBlock->add(inst);
+    iterVal = inst;
+  }
+  return iterVal;
+}
+
+std::any ASTVisitor::visitAdditiveExp(SysYParser::AdditiveExpContext *ctx) {
+  ir::Value *iterVal = std::any_cast<ir::Value *>(
+      ASTVisitor::visitMultiplicativeExp(ctx->multiplicativeExp(0)));
+  for (int i = 1; i < ctx->multiplicativeExp().size(); i++) {
+    ir::Value *nextVal = std::any_cast<ir::Value *>(
+        ASTVisitor::visitMultiplicativeExp(ctx->multiplicativeExp(i)));
+    ir::Type *targetType = ASTVisitor::automaticTypePromotion(
+        iterVal->getType(), nextVal->getType());
+    iterVal = typeConversion(iterVal, targetType);
+    nextVal = typeConversion(nextVal, targetType);
+    auto number1 = dynamic_cast<ir::ConstantNumber *>(iterVal);
+    auto number2 = dynamic_cast<ir::ConstantNumber *>(nextVal);
+    auto txt = ctx->children[i * 2 - 1]->getText();
+    if (number1 != nullptr && number2 != nullptr) {
+      if (txt == "+") {
+        iterVal = number1->add(number2);
+      } else if (txt == "-") {
+        iterVal = number1->sub(number2);
+      } else
+        throw std::runtime_error("Invalid operation: " + txt);
+      continue;
+    }
+    ir::BinaryOperator::Op op;
+    if (txt == "+") {
+      if (targetType == ir::BasicType::I32) {
+        op = ir::BinaryOperator::ADD;
+      } else if (targetType == ir::BasicType::FLOAT) {
+        op = ir::BinaryOperator::FADD;
+      } else {
+        throw std::runtime_error("Invalid type" + targetType->toString());
+      }
+    } else if (txt == "-") {
+      if (targetType == ir::BasicType::I32) {
+        op = ir::BinaryOperator::SUB;
+      } else if (targetType == ir::BasicType::FLOAT) {
+        op = ir::BinaryOperator::FSUB;
+      } else {
+        throw std::runtime_error("Invalid type" + targetType->toString());
+      }
+    } else {
+      throw std::runtime_error("Invalid operation: " +
+                               ctx->children[1]->getText());
+    }
+    auto inst = new ir::BinaryOperator(_curBlock, op, iterVal, nextVal);
+
+    _curBlock->add(inst);
+    iterVal = inst;
+  }
+  return iterVal;
+}
+
+std::any ASTVisitor::visitRelationalExp(SysYParser::RelationalExpContext *ctx) {
+  ir::Value *iterVal = std::any_cast<ir::Value *>(
+      ASTVisitor::visitAdditiveExp(ctx->additiveExp(0)));
+  for (int i = 1; i < ctx->additiveExp().size(); i++) {
+    ir::Value *nextVal = std::any_cast<ir::Value *>(
+        ASTVisitor::visitAdditiveExp(ctx->additiveExp(i)));
+    ir::Type *targetType = ASTVisitor::automaticTypePromotion(
+        iterVal->getType(), nextVal->getType());
+    iterVal = typeConversion(iterVal, targetType);
+    nextVal = typeConversion(nextVal, targetType);
+    ir::Instruction *inst;
+    auto txt = ctx->children[i * 2 - 1]->getText();
+    if (txt == "<") {
+      if (targetType == ir::BasicType::I32) {
+        inst = new ir::ICmpInst(_curBlock, ir::ICmpInst::SLT, iterVal, nextVal);
+      } else if (targetType == ir::BasicType::FLOAT) {
+        inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::OLT, iterVal, nextVal);
+      } else {
+        throw std::runtime_error("Invalid type" + targetType->toString());
+      }
+    } else if (txt == ">") {
+      if (targetType == ir::BasicType::I32) {
+        inst = new ir::ICmpInst(_curBlock, ir::ICmpInst::SGT, iterVal, nextVal);
+      } else if (targetType == ir::BasicType::FLOAT) {
+        inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::OGT, iterVal, nextVal);
+      } else {
+        throw std::runtime_error("Invalid type" + targetType->toString());
+      }
+    } else if (txt == "<=") {
+      if (targetType == ir::BasicType::I32) {
+        inst = new ir::ICmpInst(_curBlock, ir::ICmpInst::SLE, iterVal, nextVal);
+      } else if (targetType == ir::BasicType::FLOAT) {
+        inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::OLE, iterVal, nextVal);
+      } else {
+        throw std::runtime_error("Invalid type" + targetType->toString());
+      }
+    } else if (txt == ">=") {
+      if (targetType == ir::BasicType::I32) {
+        inst = new ir::ICmpInst(_curBlock, ir::ICmpInst::SGE, iterVal, nextVal);
+      } else if (targetType == ir::BasicType::FLOAT) {
+        inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::OGE, iterVal, nextVal);
+      } else {
+        throw std::runtime_error("Invalid type" + targetType->toString());
+      }
+    } else {
+      throw std::runtime_error("Invalid operation: " +
+                               ctx->children[1]->getText());
+    }
+    _curBlock->add(inst);
+    iterVal = inst;
+  }
+  return iterVal;
+}
+
+std::any ASTVisitor::visitEqualityExp(SysYParser::EqualityExpContext *ctx) {
+  ir::Value *iterVal = std::any_cast<ir::Value *>(
+      ASTVisitor::visitRelationalExp(ctx->relationalExp(0)));
+  for (int i = 1; i < ctx->relationalExp().size(); i++) {
+    ir::Value *nextVal = std::any_cast<ir::Value *>(
+        ASTVisitor::visitRelationalExp(ctx->relationalExp(i)));
+    ir::Type *targetType = ASTVisitor::automaticTypePromotion(
+        iterVal->getType(), nextVal->getType());
+    iterVal = typeConversion(iterVal, targetType);
+    nextVal = typeConversion(nextVal, targetType);
+    ir::Instruction *inst;
+    auto txt = ctx->children[i * 2 - 1]->getText();
+    if (txt == "==") {
+      if (targetType == ir::BasicType::I32) {
+        inst = new ir::ICmpInst(_curBlock, ir::ICmpInst::EQ, iterVal, nextVal);
+      } else if (targetType == ir::BasicType::FLOAT) {
+        inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::OEQ, iterVal, nextVal);
+      } else {
+        throw std::runtime_error("Invalid type" + targetType->toString());
+      }
+    } else if (txt == "!=") {
+      if (targetType == ir::BasicType::I32) {
+        inst = new ir::ICmpInst(_curBlock, ir::ICmpInst::NE, iterVal, nextVal);
+      } else if (targetType == ir::BasicType::FLOAT) {
+        inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::UNE, iterVal, nextVal);
+      } else {
+        throw std::runtime_error("Invalid type" + targetType->toString());
+      }
+    } else {
+      throw std::runtime_error("Invalid operation: " +
+                               ctx->children[1]->getText());
+    }
+    _curBlock->add(inst);
+    iterVal = inst;
+  }
+  return iterVal;
+}
+
+std::any ASTVisitor::visitLandExp(SysYParser::LandExpContext *ctx) {
+  std::vector<ir::BasicBlock *> blocks;
+  blocks.push_back(_curBlock);
+  for (int i = 0; i < ctx->equalityExp().size() - 1; i++) {
+    ir::BasicBlock *block = new ir::BasicBlock(_curFunc);
+    _curFunc->insertAfter(blocks.back(), block);
+    blocks.push_back(block);
+  }
+  ir::BasicBlock *trueBlock = this->_trueBlock;
+  ir::BasicBlock *falseBlock = this->_falseBlock;
+  for (int i = 0; i < ctx->equalityExp().size() - 1; i++) {
+    this->_curBlock = blocks[i];
+    this->_trueBlock = blocks[i + 1];
+    this->_falseBlock = falseBlock;
+    ir::Value *value = std::any_cast<ir::Value *>(
+        ASTVisitor::visitEqualityExp(ctx->equalityExp(i)));
+    processValueCond(value);
+  }
+  this->_curBlock = blocks.back();
+  this->_trueBlock = trueBlock;
+  this->_falseBlock = falseBlock;
+  ir::Value *value = std::any_cast<ir::Value *>(
+      ASTVisitor::visitEqualityExp(ctx->equalityExp().back()));
+  processValueCond(value);
+  return nullptr;
+}
+
+std::any ASTVisitor::visitLorExp(SysYParser::LorExpContext *ctx) {
+  std::vector<ir::BasicBlock *> blocks;
+  blocks.push_back(_curBlock);
+  for (int i = 0; i < ctx->landExp().size() - 1; i++) {
+    ir::BasicBlock *block = new ir::BasicBlock(_curFunc);
+    _curFunc->insertAfter(blocks.back(), block);
+    blocks.push_back(block);
+  }
+  ir::BasicBlock *trueBlock = this->_trueBlock;
+  ir::BasicBlock *falseBlock = this->_falseBlock;
+  for (int i = 0; i < ctx->landExp().size() - 1; i++) {
+    this->_curBlock = blocks[i];
+    this->_trueBlock = trueBlock;
+    this->_falseBlock = blocks[i + 1];
+    ir::Value *value =
+        std::any_cast<ir::Value *>(ASTVisitor::visitLandExp(ctx->landExp(i)));
+    processValueCond(value);
+  }
+  this->_curBlock = blocks.back();
+  this->_trueBlock = trueBlock;
+  this->_falseBlock = falseBlock;
+  ir::Value *value = std::any_cast<ir::Value *>(
+      ASTVisitor::visitLandExp(ctx->landExp().back()));
+  processValueCond(value);
+  return nullptr;
+}
+
+std::any ASTVisitor::visitNumberExp(SysYParser::NumberExpContext *ctx) {
+  if (ctx->IntConst()) {
+    return new ir::ConstantNumber(
+        model::Number(std::stoi(ctx->IntConst()->getText())));
+  }
+  if (ctx->FloatConst()) {
+    return new ir::ConstantNumber(
+        model::Number(std::stof(ctx->FloatConst()->getText())));
+  }
+  throw std::runtime_error("Invalid number: " + ctx->getText());
+}
+
+std::any ASTVisitor::visitFuncCallExp(SysYParser::FuncCallExpContext *ctx) {
+  ir::Function *func =
+      _symbolTable->getFunc(ctx->Ident()->getSymbol()->getText());
+  std::vector<ir::Value *> args;
+  for (int i = 0; i < ctx->additiveExp().size(); i++) {
+    SysYParser::AdditiveExpContext *exp = ctx->additiveExp()[i];
+    ir::Value *arg =
+        std::any_cast<ir::Value *>(ASTVisitor::visitAdditiveExp(exp));
+    ir::Type *type;
+    if (dynamic_cast<ir::BasicType *>(func->getArgs()[i]->getType()) &&
+        func->getArgs()[i]->getType() == ir::BasicType::FLOAT) {
+      type = ir::BasicType::FLOAT;
+    } else {
+      type = ir::BasicType::I32;
+    }
+    arg = typeConversion(arg, type);
+    args.push_back(arg);
+  }
+  ir::Instruction *inst = new ir::CallInst(_curBlock, func, args);
+  _curBlock->add(inst);
+  return inst;
+}
+
+std::any ASTVisitor::visitArrayVarExp(SysYParser::ArrayVarExpContext *ctx) {
+  ir::Value *ptr = _symbolTable->getData(ctx->Ident()->getSymbol()->getText());
+  bool isFirstDim = false;
+  if (auto arg = dynamic_cast<ir::Argument *>(ptr)) {
+    isFirstDim = true;
+    ptr = _argToAllocaMap[arg];
+    ir::Instruction *inst = new ir::LoadInst(_curBlock, ptr);
+    ptr = inst;
+    _curBlock->add(inst);
+  }
+  for (SysYParser::AdditiveExpContext *dim : ctx->additiveExp()) {
+    ir::Value *index =
+        std::any_cast<ir::Value *>(ASTVisitor::visitAdditiveExp(dim));
+    index = typeConversion(index, ir::BasicType::I32);
+    ir::Instruction *inst =
+        isFirstDim ? new ir::GetElementPtrInst(_curBlock, ptr, {index})
+                   : new ir::GetElementPtrInst(
+                         _curBlock, ptr,
+                         {new ir::ConstantNumber(model::Number(0)), index});
+    _curBlock->add(inst);
+    ptr = inst;
+    isFirstDim = false;
+  }
+  if (auto arr = dynamic_cast<ir::ArrayType *>(ptr->getType()->baseType())) {
+    return ptr;
+  }
+  ir::Instruction *inst = new ir::LoadInst(_curBlock, ptr);
+  _curBlock->add(inst);
+  return inst;
+}
+
+std::any ASTVisitor::visitScalarVarExp(SysYParser::ScalarVarExpContext *ctx) {
+  ir::Value *ptr = _symbolTable->getData(ctx->Ident()->getSymbol()->getText());
+  if (auto arg = dynamic_cast<ir::Argument *>(ptr)) {
+    ptr = _argToAllocaMap[arg];
+  }
+  ir::Type *type = ptr->getType();
+  if (auto glob = dynamic_cast<ir::GlobalVariable *>(ptr)) {
+    if (glob->isConst() && glob->isSingle()) {
+      return glob->getValue();
+    }
+    type = new ir::PointerType(type);
+  }
+  if (auto arr = dynamic_cast<ir::ArrayType *>(type->baseType())) {
+    std::vector<ir::Value *> indices(arr->getArraySizes().size(),
+                                     new ir::ConstantNumber(model::Number(0)));
+    ir::Instruction *inst = new ir::GetElementPtrInst(_curBlock, ptr, indices);
+    _curBlock->add(inst);
+    return inst;
+  }
+  ir::Instruction *inst = new ir::LoadInst(_curBlock, ptr);
+  _curBlock->add(inst);
+  return inst;
+}
+
+std::any ASTVisitor::visitUnaryExp(SysYParser::UnaryExpContext *ctx) {
+  int childCount = ctx->children.size(); // TODO check 'getChildCount()'
+  if (childCount == 2) {
+    ir::Value *value =
+        std::any_cast<ir::Value *>(ASTVisitor::visitUnaryExp(ctx->unaryExp()));
+    auto txt = ctx->children[0]->getText();
+    auto t = value->getType();
+    if (auto number = dynamic_cast<ir::ConstantNumber *>(value)) {
+      if (txt == "+") {
+        return number;
+      } else if (txt == "-") {
+        return number->neg();
+      } else if (txt == "!") {
+        return number->lnot();
+      } else {
+        throw std::runtime_error("Invalid unary operator: " + txt);
+      }
+    }
+    if (txt == "+") {
+      return value;
+    } else if (txt == "-") {
+      ir::Instruction *inst;
+      if (t == ir::BasicType::I1) {
+        inst = new ir::SExtInst(_curBlock, ir::BasicType::I32, value);
+      } else if (t == ir::BasicType::I32) {
+        inst = new ir::BinaryOperator(_curBlock, ir::BinaryOperator::SUB,
+                                      new ir::ConstantNumber(model::Number(0)),
+                                      value);
+      } else if (t == ir::BasicType::FLOAT) {
+        inst = new ir::BinaryOperator(
+            _curBlock, ir::BinaryOperator::FSUB,
+            new ir::ConstantNumber(model::Number(0.0f)), value);
+      } else {
+        throw std::runtime_error("Invalid unary operator: " + txt);
+      }
+      _curBlock->add(inst);
+      return inst;
+    } else if (txt == "!") {
+      ir::Instruction *inst;
+      if (t == ir::BasicType::I1) {
+        inst = new ir::BinaryOperator(_curBlock, ir::BinaryOperator::XOR, value,
+                                      new ir::ConstantNumber(true));
+      } else if (t == ir::BasicType::I32) {
+        inst == new ir::ICmpInst(_curBlock, ir::ICmpInst::EQ, value,
+                                 new ir::ConstantNumber(model::Number(0)));
+      } else if (t == ir::BasicType::FLOAT) {
+        inst == new ir::FCmpInst(_curBlock, ir::FCmpInst::OEQ, value,
+                                 new ir::ConstantNumber(model::Number(0.0f)));
+      } else {
+        throw std::runtime_error("Invalid unary operator: " + txt);
+      }
+      _curBlock->add(inst);
+      return inst;
+    } else {
+      throw std::runtime_error("Invalid unary operator: " + txt);
+    }
+  } else if (childCount == 3) {
+    return std::any_cast<ir::Value *>(
+        ASTVisitor::visitAdditiveExp(ctx->additiveExp()));
+  } else {
+    return std::any_cast<ir::Value *>(SysYBaseVisitor::visitUnaryExp(ctx));
+  }
+}
+
+std::any ASTVisitor::visitLVal(SysYParser::LValContext *ctx) {
+  ir::Value *ptr = _symbolTable->getData(ctx->Ident()->getSymbol()->getText());
+  bool isArg = false;
+  if (auto arg = dynamic_cast<ir::Argument *>(ptr)) {
+    isArg = true;
+    ptr = _argToAllocaMap[arg];
+  }
+  if (ctx->additiveExp().size() == 0) {
+    return ptr;
+  }
+  auto pType = dynamic_cast<ir::PointerType *>(ptr->getType());
+  auto bType = dynamic_cast<ir::BasicType *>(pType->baseType());
+  if (pType && bType) {
+    ir::Instruction *inst = new ir::LoadInst(_curBlock, ptr);
+    ptr = inst;
+    _curBlock->add(inst);
+  }
+  std::vector<SysYParser::AdditiveExpContext *> ctxs = ctx->additiveExp();
+  std::vector<ir::Value *> dims;
+  std::transform(ctxs.begin(), ctxs.end(), std::back_inserter(dims),
+                 [&](SysYParser::AdditiveExpContext *ctx) {
+                   return std::any_cast<ir::Value *>(
+                       ASTVisitor::visitAdditiveExp(ctx));
+                 }); // TODO check 'transform'
+  bool isFirst = true;
+  for (ir::Value *dim : dims) {
+    ir::Instruction *inst;
+    if (isArg && isFirst) {
+      inst = new ir::GetElementPtrInst(_curBlock, ptr, {dim});
+    } else {
+      inst = new ir::GetElementPtrInst(
+          _curBlock, ptr, {new ir::ConstantNumber(model::Number(0)), dim});
+    }
+    _curBlock->add(inst);
+    ptr = inst;
+    isFirst = false;
+  }
+  return ptr;
+}
+
 } // namespace parser
