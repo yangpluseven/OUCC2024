@@ -1,32 +1,43 @@
 #ifndef MODEL_NUMBER_HPP
 #define MODEL_NUMBER_HPP
 
+#include <variant>
+
 namespace model {
 
 class Number {
-public:
-  virtual int intValue() const = 0;
-  virtual float floatValue() const = 0;
-};
-
-class IntNumber : public Number {
 private:
-  int _value;
+  std::variant<int, float> _value;
 
 public:
-  IntNumber(int value) : _value(value) {}
-  int intValue() const override { return _value; }
-  float floatValue() const override { return static_cast<float>(_value); }
-};
+  int intValue() const {
+    if (std::holds_alternative<int>(_value))
+      return std::get<int>(_value);
+    else
+      return static_cast<int>(std::get<float>(_value));
+  }
 
-class FloatNumber : public Number {
-private:
-  float _value;
+  float floatValue() const {
+    if (std::holds_alternative<int>(_value))
+      return static_cast<float>(std::get<int>(_value));
+    else
+      return std::get<float>(_value);
+  }
 
-public:
-  FloatNumber(float value) : _value(value) {}
-  int intValue() const override { return static_cast<int>(_value); }
-  float floatValue() const override { return _value; }
+  std::variant<int, float> getValue() const { return _value; }
+
+  Number(int value) : _value(value) {}
+  Number(float value) : _value(value) {}
+  Number(const Number &other) : _value(other._value) {}
+  Number(Number &&other) : _value(std::move(other._value)) {}
+  Number &operator=(const Number &other) {
+    _value = other._value;
+    return *this;
+  }
+  Number &operator=(Number &&other) {
+    _value = std::move(other._value);
+    return *this;
+  }
 };
 } // namespace model
 

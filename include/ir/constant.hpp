@@ -21,16 +21,17 @@ public:
 
 class ConstantNumber : public Constant {
 private:
-  std::variant<int, float> _value;
+  model::Number _value;
 
   static BasicType *determineType(const model::Number &num);
-  static std::variant<int, float> convertValue(const model::Number &num);
 
 public:
   explicit ConstantNumber(bool value);
   ConstantNumber(const model::Number &num);
+  ConstantNumber(const ConstantNumber &other);
+  ConstantNumber(ConstantNumber &&other) noexcept;
 
-  model::Number *getValue() const;
+  model::Number getValue() const;
   float floatValue() const;
   int intValue() const;
 

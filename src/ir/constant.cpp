@@ -7,19 +7,11 @@ Constant::Constant(Type *type) : User(type) {}
 Constant::~Constant() {}
 
 BasicType *ConstantNumber::determineType(const model::Number &num) {
-  if (dynamic_cast<const model::IntNumber *>(&num))
+  auto value = num.getValue();
+  if (std::holds_alternative<int>(value))
     return BasicType::I32;
-  else if (dynamic_cast<const model::FloatNumber *>(&num))
+  else if (std::holds_alternative<float>(value))
     return BasicType::FLOAT;
-  else
-    throw std::runtime_error("Unsupported value");
-}
-
-std::variant<int, float> ConstantNumber::convertValue(const model::Number &num) {
-  if (dynamic_cast<const model::IntNumber *>(&num))
-    return num.intValue();
-  else if (dynamic_cast<const model::FloatNumber *>(&num))
-    return num.floatValue();
   else
     throw std::runtime_error("Unsupported value");
 }
@@ -28,20 +20,19 @@ ConstantNumber::ConstantNumber(bool value)
     : Constant(BasicType::I1), _value(value ? 1 : 0) {}
 
 ConstantNumber::ConstantNumber(const model::Number &num)
-    : Constant(determineType(num)), _value(convertValue(num)) {}
+    : Constant(determineType(num)), _value(num) {}
 
-model::Number *ConstantNumber::getValue() const {
-  if (type == BasicType::I32)
-    return new model::IntNumber(intValue());
-  else if (type == BasicType::FLOAT)
-    return new model::FloatNumber(floatValue());
-  else
-    throw std::runtime_error("Unexpected type");
-}
+ConstantNumber::ConstantNumber(const ConstantNumber &other)
+    : Constant(other.type), _value(other._value) {}
 
-float ConstantNumber::floatValue() const { return std::get<float>(_value); }
+ConstantNumber::ConstantNumber(ConstantNumber &&other) noexcept
+    : Constant(other.type), _value(std::move(other._value)) {}
 
-int ConstantNumber::intValue() const { return std::get<int>(_value); }
+model::Number ConstantNumber::getValue() const { return _value; }
+
+float ConstantNumber::floatValue() const { return _value.floatValue(); }
+
+int ConstantNumber::intValue() const { return _value.intValue(); }
 
 std::string ConstantNumber::getName() const {
   if (type == BasicType::I1)
@@ -57,54 +48,50 @@ std::string ConstantNumber::getName() const {
 
 ConstantNumber ConstantNumber::operator+(const ConstantNumber &rhs) {
   if (type == BasicType::I32)
-    return ConstantNumber(model::IntNumber(intValue() + rhs.intValue()));
+    return ConstantNumber(model::Number(intValue() + rhs.intValue()));
   else if (type == BasicType::FLOAT)
-    return ConstantNumber(
-        model::FloatNumber(floatValue() + rhs.floatValue()));
+    return ConstantNumber(model::Number(floatValue() + rhs.floatValue()));
   else
     throw std::runtime_error("Unsupported type");
 }
 
 ConstantNumber ConstantNumber::operator-(const ConstantNumber &rhs) {
   if (type == BasicType::I32)
-    return ConstantNumber(model::IntNumber(intValue() - rhs.intValue()));
+    return ConstantNumber(model::Number(intValue() - rhs.intValue()));
   else if (type == BasicType::FLOAT)
-    return ConstantNumber(
-        model::FloatNumber(floatValue() - rhs.floatValue()));
+    return ConstantNumber(model::Number(floatValue() - rhs.floatValue()));
   else
     throw std::runtime_error("Unsupported type");
 }
 
 ConstantNumber ConstantNumber::operator*(const ConstantNumber &rhs) {
   if (type == BasicType::I32)
-    return ConstantNumber(model::IntNumber(intValue() * rhs.intValue()));
+    return ConstantNumber(model::Number(intValue() * rhs.intValue()));
   else if (type == BasicType::FLOAT)
-    return ConstantNumber(
-        model::FloatNumber(floatValue() * rhs.floatValue()));
+    return ConstantNumber(model::Number(floatValue() * rhs.floatValue()));
   else
     throw std::runtime_error("Unsupported type");
 }
 
 ConstantNumber ConstantNumber::operator/(const ConstantNumber &rhs) {
   if (type == BasicType::I32)
-    return ConstantNumber(model::IntNumber(intValue() / rhs.intValue()));
+    return ConstantNumber(model::Number(intValue() / rhs.intValue()));
   else if (type == BasicType::FLOAT)
-    return ConstantNumber(
-        model::FloatNumber(floatValue() / rhs.floatValue()));
+    return ConstantNumber(model::Number(floatValue() / rhs.floatValue()));
   else
     throw std::runtime_error("Unsupported type");
 }
 
 ConstantNumber ConstantNumber::operator%(const ConstantNumber &rhs) {
   if (type == BasicType::I32)
-    return ConstantNumber(model::IntNumber(intValue() % rhs.intValue()));
+    return ConstantNumber(model::Number(intValue() % rhs.intValue()));
   else
     throw std::runtime_error("Unsupported type");
 }
 
 ConstantNumber ConstantNumber::operator^(const ConstantNumber &rhs) {
   if (type == BasicType::I32)
-    return ConstantNumber(model::IntNumber(intValue() ^ rhs.intValue()));
+    return ConstantNumber(model::Number(intValue() ^ rhs.intValue()));
   else if (type == BasicType::I1)
     return ConstantNumber((intValue() ^ rhs.intValue()) != 0);
   else
@@ -113,9 +100,9 @@ ConstantNumber ConstantNumber::operator^(const ConstantNumber &rhs) {
 
 ConstantNumber ConstantNumber::operator-() {
   if (type == BasicType::I32)
-    return ConstantNumber(model::IntNumber(-intValue()));
+    return ConstantNumber(model::Number(-intValue()));
   else if (type == BasicType::FLOAT)
-    return ConstantNumber(model::FloatNumber(-floatValue()));
+    return ConstantNumber(model::Number(-floatValue()));
   else
     throw std::runtime_error("Unsupported type");
 }
@@ -184,131 +171,57 @@ ConstantNumber ConstantNumber::operator<=(const ConstantNumber &rhs) {
 }
 
 ConstantNumber *ConstantNumber::add(ConstantNumber *rhs) {
-  if (type == BasicType::I32)
-    return new ConstantNumber(model::IntNumber(intValue() + rhs->intValue()));
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(
-        model::FloatNumber(floatValue() + rhs->floatValue()));
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(*this + *rhs);
 }
 
 ConstantNumber *ConstantNumber::sub(ConstantNumber *rhs) {
-  if (type == BasicType::I32)
-    return new ConstantNumber(model::IntNumber(intValue() - rhs->intValue()));
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(
-        model::FloatNumber(floatValue() - rhs->floatValue()));
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(*this - *rhs);
 }
 
 ConstantNumber *ConstantNumber::mul(ConstantNumber *rhs) {
-  if (type == BasicType::I32)
-    return new ConstantNumber(model::IntNumber(intValue() * rhs->intValue()));
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(
-        model::FloatNumber(floatValue() * rhs->floatValue()));
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(*this * *rhs);
 }
 
 ConstantNumber *ConstantNumber::div(ConstantNumber *rhs) {
-  if (type == BasicType::I32)
-    return new ConstantNumber(model::IntNumber(intValue() / rhs->intValue()));
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(
-        model::FloatNumber(floatValue() / rhs->floatValue()));
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(*this / *rhs);
 }
 
 ConstantNumber *ConstantNumber::rem(ConstantNumber *rhs) {
-  if (type == BasicType::I32)
-    return new ConstantNumber(model::IntNumber(intValue() % rhs->intValue()));
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(*this % *rhs);
 }
 
 ConstantNumber *ConstantNumber::exor(ConstantNumber *rhs) {
-  if (type == BasicType::I32)
-    return new ConstantNumber(model::IntNumber(intValue() ^ rhs->intValue()));
-  else if (type == BasicType::I1)
-    return new ConstantNumber((intValue() ^ rhs->intValue()) != 0);
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(*this ^ *rhs);
 }
 
-ConstantNumber *ConstantNumber::neg() {
-  if (type == BasicType::I32)
-    return new ConstantNumber(model::IntNumber(-intValue()));
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(model::FloatNumber(-floatValue()));
-  else
-    throw std::runtime_error("Unsupported type");
-}
+ConstantNumber *ConstantNumber::neg() { return new ConstantNumber(-*this); }
 
 ConstantNumber *ConstantNumber::lnot(ConstantNumber *rhs) {
-  if (type == BasicType::I32 || type == BasicType::I1)
-    return new ConstantNumber(intValue() == 0);
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(floatValue() == 0.0f);
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(!*rhs);
 }
 
 ConstantNumber *ConstantNumber::eq(ConstantNumber *rhs) {
-  if (type == BasicType::I32 || type == BasicType::I1)
-    return new ConstantNumber(intValue() == rhs->intValue());
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(floatValue() == rhs->floatValue());
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(intValue() == rhs->intValue());
 }
 
 ConstantNumber *ConstantNumber::ne(ConstantNumber *rhs) {
-  if (type == BasicType::I32 || type == BasicType::I1)
-    return new ConstantNumber(intValue() != rhs->intValue());
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(floatValue() != rhs->floatValue());
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(intValue() != rhs->intValue());
 }
 
 ConstantNumber *ConstantNumber::gt(ConstantNumber *rhs) {
-  if (type == BasicType::I32 || type == BasicType::I1)
-    return new ConstantNumber(intValue() > rhs->intValue());
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(floatValue() > rhs->floatValue());
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(intValue() > rhs->intValue());
 }
 
 ConstantNumber *ConstantNumber::ge(ConstantNumber *rhs) {
-  if (type == BasicType::I32 || type == BasicType::I1)
-    return new ConstantNumber(intValue() >= rhs->intValue());
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(floatValue() >= rhs->floatValue());
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(intValue() >= rhs->intValue());
 }
 
 ConstantNumber *ConstantNumber::lt(ConstantNumber *rhs) {
-  if (type == BasicType::I32 || type == BasicType::I1)
-    return new ConstantNumber(intValue() < rhs->intValue());
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(floatValue() < rhs->floatValue());
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(intValue() < rhs->intValue());
 }
 
 ConstantNumber *ConstantNumber::le(ConstantNumber *rhs) {
-  if (type == BasicType::I32 || type == BasicType::I1)
-    return new ConstantNumber(intValue() <= rhs->intValue());
-  else if (type == BasicType::FLOAT)
-    return new ConstantNumber(floatValue() <= rhs->floatValue());
-  else
-    throw std::runtime_error("Unsupported type");
+  return new ConstantNumber(intValue() <= rhs->intValue());
 }
 
 std::string ConstantNumber::toString() const {

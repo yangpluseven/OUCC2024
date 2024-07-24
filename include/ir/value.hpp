@@ -58,11 +58,11 @@ public:
 
   template <typename T, typename std::enable_if<
                             std::is_base_of<Value, T>::value>::type * = nullptr>
-T *getOperand(int index) const;
+  T *getOperand(int index) const;
 
   template <typename T, typename std::enable_if<
                             std::is_base_of<Value, T>::value>::type * = nullptr>
-T *getLastOperand() const;
+  T *getLastOperand() const;
 
   bool isEmpty() const;
   void set(int index, Use *use);
