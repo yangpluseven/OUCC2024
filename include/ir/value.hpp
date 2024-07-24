@@ -57,10 +57,15 @@ public:
   Use *get(int index) const;
   template <typename T, typename std::enable_if<
                             std::is_base_of<Value, T>::value>::type * = nullptr>
-  T *getOperand(int index) const;
+  T *getOperand(int index) const {
+    return static_cast<T *>(get(index)->getValue());
+  }
+
   template <typename T, typename std::enable_if<
                             std::is_base_of<Value, T>::value>::type * = nullptr>
-  T *getLastOperand() const;
+  T *getLastOperand() const {
+    return getOperand<T>(size() - 1);
+  }
   bool isEmpty() const;
   void set(int index, Use *use);
 };

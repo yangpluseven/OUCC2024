@@ -56,18 +56,6 @@ Use *User::get(int index) const {
   return operands[index];
 }
 
-template <typename T,
-          typename std::enable_if<std::is_base_of<Value, T>::value>::type *>
-T *User::getOperand(int index) const {
-  return static_cast<T *>(get(index)->getValue());
-}
-
-template <typename T,
-          typename std::enable_if<std::is_base_of<Value, T>::value>::type *>
-T *User::getLastOperand() const {
-  return getOperand<T>(size() - 1);
-}
-
 bool User::isEmpty() const { return operands.empty(); }
 
 void User::set(int index, Use *use) {
