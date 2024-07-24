@@ -1,8 +1,9 @@
-#ifndef GLOABAL_VARIABLE_HPP
+#ifndef GLOBAL_VARIABLE_HPP
 #define GLOBAL_VARIABLE_HPP
 
 #include "constant.hpp"
 #include <string>
+#include <vector>
 
 namespace ir {
 
@@ -13,107 +14,30 @@ private:
   Constant *value;
 
 public:
-  GlobalVariable(bool isConst, Type *type, std::string name, Constant *value)
-      : Value(type), _name(name), _isConst(isConst), value(value) {}
+  GlobalVariable(bool isConst, Type *type, std::string name, Constant *value);
 
-  bool isConst() const { return _isConst; }
+  bool isConst() const;
 
-  std::vector<int> getDimensions() {
-    std::vector<int> dimensions;
-    Type *curType = this->type;
-    while (auto arrayType = dynamic_cast<ArrayType *>(curType)) {
-      dimensions.push_back(arrayType->getArraySize());
-      curType = arrayType->baseType();
-    }
-    return dimensions;
-  }
+  std::vector<int> getDimensions();
 
-  bool isSingle() {
-    if (auto castType = dynamic_cast<BasicType *>(this->type)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
+  bool isSingle();
 
-  bool isInBss() {
-    if (auto castValue = dynamic_cast<ConstantZero *>(this->value)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
+  bool isInBss();
 
-  float getFloat() {
-    if (auto castType = dynamic_cast<BasicType *>(this->type)) {
-      if (auto castValue = dynamic_cast<ConstantNumber *>(this->value)) {
-        return castValue->floatValue();
-      }
-    }
-    throw "Not a float";
-  }
+  float getFloat();
+  float getFloat(int index);
 
-  float getFloat(int index) {
-    std::vector<int> dimensions = getDimensions();
-    Constant *curValue = value;
-    for (int dimension : dimensions) {
-      if (auto constantArray = dynamic_cast<ConstantArray *>(curValue)) {
-        curValue = constantArray->getValues()[index / dimension];
-        index = index % dimension;
-      } else if (auto constantZero = dynamic_cast<ConstantZero *>(curValue)) {
-        return 0;
-      } else {
-        throw "Unexpected value";
-      }
-    }
-    if (auto castValue = dynamic_cast<ConstantNumber *>(curValue)) {
-      return castValue->floatValue();
-    }
-    throw "Not a float";
-  }
+  int getInt();
+  int getInt(int index);
 
-  int getInt() {
-    if (auto castType = dynamic_cast<BasicType *>(this->type)) {
-      if (auto castValue = dynamic_cast<ConstantNumber *>(this->value)) {
-        return castValue->intValue();
-      }
-    }
-    throw "Not an int";
-  }
+  Constant *getValue();
 
-  int getInt(int index) {
-    std::vector<int> dimensions = getDimensions();
-    dimensions.erase(dimensions.begin());
-    dimensions.push_back(1);
-    Constant *curValue = value;
-    for (int i = 0; i < dimensions.size(); i++) {
-      int dimension = dimensions[i];
-      if (auto constantArray = dynamic_cast<ConstantArray *>(curValue)) {
-        curValue = constantArray->getValues()[index / dimension];
-        index = index % dimension;
-      } else if (auto constantZero = dynamic_cast<ConstantZero *>(curValue)) {
-        return 0;
-      } else {
-        throw "Unexpected value";
-      }
-    }
-    if (auto castValue = dynamic_cast<ConstantNumber *>(curValue)) {
-      return castValue->intValue();
-    }
-    throw "Not an int";
-  }
+  std::string getName() const override;
+  std::string getRawName() const;
 
-  Constant *getValue() { return value; }
-
-  std::string getName() const override { return "@" + _name; }
-
-  std::string getRawName() const { return _name; }
-
-  std::string toString() const {
-    return getName() + " = global " + value->toString();
-  }
+  std::string toString() const;
 };
 
 } // namespace ir
 
-#endif // GLOABAL_VARIABLE_HPP
+#endif // GLOBAL_VARIABLE_HPP

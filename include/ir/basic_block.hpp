@@ -5,8 +5,12 @@
 #include "instruction.hpp"
 #include "value.hpp"
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace ir {
+
+class Instruction;
 
 class BasicBlock : public Value {
 private:
@@ -16,84 +20,36 @@ private:
   std::vector<Instruction *> _instructions;
 
 public:
-  BasicBlock(Function *func)
-      : Value(BasicType::VOID), _function(func), _id(_counter++) {}
+  BasicBlock(Function *func);
 
-  bool isEmpty() const { return _instructions.empty(); }
+  bool isEmpty() const;
+  Instruction *getLast() const;
+  void add(Instruction *inst);
+  void add(int index, Instruction *inst);
+  void addAll(int index, const std::vector<Instruction *> &newInsts);
+  Instruction *remove(int index);
+  Instruction *get(int index) const;
+  int size();
 
-  Instruction *getLast() const {
-    if (!_instructions.empty()) {
-      return _instructions.back();
-    } else {
-      throw std::out_of_range("No _instructions in the BasicBlock");
-    }
-  }
-
-  void add(Instruction *inst) { _instructions.push_back(inst); }
-
-  void add(int index, Instruction *inst) {
-    if (index < 0 || index > _instructions.size()) {
-      throw std::out_of_range("Index out of range");
-    }
-    _instructions.insert(_instructions.begin() + index, inst);
-  }
-
-  void addAll(int index, const std::vector<Instruction *> &newInsts) {
-    if (index < 0 || index > _instructions.size()) {
-      throw std::out_of_range("Index out of range");
-    }
-    _instructions.insert(_instructions.begin() + index, newInsts.begin(),
-                         newInsts.end());
-  }
-
-  Instruction *remove(int index) {
-    if (index < 0 || index >= _instructions.size()) {
-      throw std::out_of_range("Index out of range");
-    }
-    Instruction *removedInst = _instructions[index];
-    _instructions.erase(_instructions.begin() + index);
-    return removedInst;
-  }
-
-  Instruction *get(int index) const {
-    if (index < 0 || index >= _instructions.size()) {
-      throw std::out_of_range("Index out of range");
-    }
-    return _instructions[index];
-  }
-
-  int size() { return _instructions.size(); }
-
-  std::string getName() const override { return "b" + std::to_string(_id); }
-
-  std::string toString() const { return getName(); }
+  std::string getName() const override;
+  std::string toString() const;
 
   class Iterator {
   private:
     typename std::vector<Instruction *>::iterator it;
 
   public:
-    explicit Iterator(typename std::vector<Instruction *>::iterator it)
-        : it(it) {}
+    explicit Iterator(typename std::vector<Instruction *>::iterator it);
 
-    Instruction *operator*() const { return *it; }
-    Iterator &operator++() {
-      ++it;
-      return *this;
-    }
-
-    Iterator operator++(int) {
-      Iterator tmp = *this;
-      ++it;
-      return tmp;
-    }
-
-    bool operator==(const Iterator &rhs) const { return it == rhs.it; }
-    bool operator!=(const Iterator &rhs) const { return it != rhs.it; }
+    Instruction *operator*() const;
+    Iterator &operator++();
+    Iterator operator++(int);
+    bool operator==(const Iterator &rhs) const;
+    bool operator!=(const Iterator &rhs) const;
   };
 
-  Iterator begin() { return Iterator(_instructions.begin()); }
-  Iterator end() { return Iterator(_instructions.end()); }
+  Iterator begin();
+  Iterator end();
 
   class ConstIterator {
   private:
@@ -101,29 +57,19 @@ public:
 
   public:
     explicit ConstIterator(
-        typename std::vector<Instruction *>::const_iterator it)
-        : it(it) {}
+        typename std::vector<Instruction *>::const_iterator it);
 
-    const Instruction *operator*() const { return *it; }
-    ConstIterator &operator++() {
-      ++it;
-      return *this;
-    }
-    ConstIterator operator++(int) {
-      ConstIterator tmp = *this;
-      ++it;
-      return tmp;
-    }
-    bool operator==(const ConstIterator &other) const { return it == other.it; }
-    bool operator!=(const ConstIterator &other) const { return it != other.it; }
+    const Instruction *operator*() const;
+    ConstIterator &operator++();
+    ConstIterator operator++(int);
+    bool operator==(const ConstIterator &other) const;
+    bool operator!=(const ConstIterator &other) const;
   };
 
-  ConstIterator begin() const { return ConstIterator(_instructions.begin()); }
-  ConstIterator end() const { return ConstIterator(_instructions.end()); }
+  ConstIterator begin() const;
+  ConstIterator end() const;
 };
-
-int BasicBlock::_counter = 0;
 
 } // namespace ir
 
-#endif
+#endif // IR_BASIC_BLOCK_HPP

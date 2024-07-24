@@ -11,6 +11,19 @@
 
 namespace ir {
 
+class BasicBlock;
+
+class Argument : public Value {
+private:
+  const std::string name;
+
+public:
+  Argument(Type *type, std::string name);
+
+  std::string getName() const override;
+  std::string toString() const;
+};
+
 class Function : public Value {
 private:
   std::string name;
@@ -18,115 +31,39 @@ private:
   std::vector<BasicBlock *> blocks;
 
 public:
-  Function(Type *type, const std::string &name) : Value(type), name(name) {}
+  Function(Type *type, const std::string &name);
 
-  bool isDeclare() const { return blocks.empty(); }
+  bool isDeclare() const;
 
-  Function *addArg(Argument *arg) {
-    args.push_back(arg);
-    return this;
-  }
+  Function *addArg(Argument *arg);
 
-  bool add(BasicBlock *block) {
-    blocks.push_back(block);
-    return true;
-  }
+  bool add(BasicBlock *block);
 
-  void add(int index, BasicBlock *block) {
-    blocks.insert(blocks.begin() + index, block);
-  }
+  void add(int index, BasicBlock *block);
 
-  bool add(int index, const std::vector<BasicBlock *> &newBlocks) {
-    blocks.insert(blocks.begin() + index, newBlocks.begin(), newBlocks.end());
-    return true;
-  }
+  bool add(int index, const std::vector<BasicBlock *> &newBlocks);
 
-  BasicBlock *remove(int index) {
-    BasicBlock *removed = blocks[index];
-    blocks.erase(blocks.begin() + index);
-    return removed;
-  }
+  BasicBlock *remove(int index);
 
-  int size() const { return blocks.size(); }
+  int size() const;
 
-  BasicBlock *get(int index) const { return blocks[index]; }
+  BasicBlock *get(int index) const;
 
-  BasicBlock *getFirst() const { return blocks.front(); }
+  BasicBlock *getFirst() const;
 
-  void insertAfter(BasicBlock *base, BasicBlock *block) {
-    auto it = std::find(blocks.begin(), blocks.end(), base);
-    if (it != blocks.end()) {
-      blocks.insert(it + 1, block);
-    }
-  }
+  void insertAfter(BasicBlock *base, BasicBlock *block);
 
-  std::vector<BasicBlock *>::iterator begin() { return blocks.begin(); }
+  std::vector<BasicBlock *>::iterator begin();
+  std::vector<BasicBlock *>::iterator end();
+  std::vector<BasicBlock *>::const_iterator begin() const;
+  std::vector<BasicBlock *>::const_iterator end() const;
+  std::vector<BasicBlock *>::const_iterator cbegin() const;
+  std::vector<BasicBlock *>::const_iterator cend() const;
 
-  std::vector<BasicBlock *>::iterator end() { return blocks.end(); }
-
-  std::vector<BasicBlock *>::const_iterator begin() const {
-    return blocks.begin();
-  }
-
-  std::vector<BasicBlock *>::const_iterator end() const { return blocks.end(); }
-
-  std::vector<BasicBlock *>::const_iterator cbegin() const {
-    return blocks.cbegin();
-  }
-
-  std::vector<BasicBlock *>::const_iterator cend() const {
-    return blocks.cend();
-  }
-
-  std::string getName() const override { return "@" + name; }
-
-  std::string getRawName() const { return name; }
-
-  std::vector<Argument *> getArgs() const { return args; }
-
-  std::string toString() const {
-    bool isDeclare = blocks.empty();
-    std::ostringstream builder;
-    std::ostringstream joiner;
-    joiner << "(";
-    for (size_t i = 0; i < args.size(); ++i) {
-      if (i > 0)
-        joiner << ", ";
-      if (isDeclare)
-        joiner << args[i]->getType()->toString();
-      else
-        joiner << args[i]->toString();
-    }
-    joiner << ")";
-    if (isDeclare)
-      builder << "declare ";
-    else
-      builder << "define ";
-    builder << type->toString() << " " << getName() << joiner.str();
-    if (isDeclare)
-      return builder.str() + "\n";
-    builder << " {\n";
-    for (const auto &block : blocks) {
-      builder << block->toString() << ":\n";
-      for (const auto &inst : *block) {
-        builder << "  " << inst->getName() << "\n";
-      }
-    }
-    builder << "}\n";
-    return builder.str();
-  }
-};
-
-class Argument : public Value {
-private:
-  const std::string name;
-
-public:
-  Argument(Type *type, std::string name) : Value(type), name(name) {}
-
-  std::string getName() const override { return "%" + name; }
-
-  std::string toString() const { return type->toString(); }
+  std::string getName() const override;
+  std::string getRawName() const;
+  std::vector<Argument *> getArgs() const;
+  std::string toString() const;
 };
 
 } // namespace ir

@@ -2,9 +2,9 @@
 // Generated from SysY.g4 by ANTLR 4.13.1
 
 
-#include "SysYVisitor.h"
+#include "parser/SysYVisitor.h"
 
-#include "SysYParser.h"
+#include "parser/SysYParser.h"
 
 
 using namespace antlrcpp;

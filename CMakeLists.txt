@@ -1,15 +1,25 @@
 cmake_minimum_required(VERSION 3.10)
-project(oucc VERSION 0.1)
 
-option(ANTLR_BUILD_TESTS OFF)
+# 设置项目名称
+project(MyProject)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/runtime/antlr4-cpp-runtime-4.13.1)
+# 设置 C++ 标准
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/**)
+# 包含头文件目录
+include_directories(include)
+include_directories(runtime/antlr4-cpp-runtime-4.13.1/runtime/src)
 
-set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/**)
-file(GLOB SOURCES "${SOURCE_DIR}/*.cpp")
+# 添加子目录
+add_subdirectory(runtime/antlr4-cpp-runtime-4.13.1)
 
-add_executable(oucc ${SOURCES})
+# 收集源文件
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE HEADERS "include/**/*.hpp")
 
-target_link_libraries(oucc antlr4-cpp-runtime)
+# 添加可执行文件
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+
+# 链接 antlr4 运行时
+target_link_libraries(${PROJECT_NAME} antlr4_shared)

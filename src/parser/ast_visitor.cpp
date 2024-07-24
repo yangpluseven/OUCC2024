@@ -105,13 +105,13 @@ void ASTVisitor::processValueCond(ir::Value *value) {
     } else if (value->getType() == ir::BasicType::I32) {
       ir::Instruction *inst =
           new ir::ICmpInst(_curBlock, ir::ICmpInst::NE, value,
-                           new ir::ConstantNumber(model::IntNumber(0)));
+                           new ir::ConstantNumber(model::Number(0)));
       _curBlock->add(inst);
       cond = inst;
     } else if (value->getType() == ir::BasicType::FLOAT) {
       ir::Instruction *inst =
           new ir::FCmpInst(_curBlock, ir::FCmpInst::UNE, value,
-                           new ir::ConstantNumber(model::FloatNumber(0.0f)));
+                           new ir::ConstantNumber(model::Number(0.0f)));
       _curBlock->add(inst);
       cond = inst;
     } else {
@@ -148,13 +148,13 @@ ir::Value *ASTVisitor::typeConversion(ir::Value *value, ir::Type *targetType) {
     if (value->getType() == ir::BasicType::I32) {
       ir::Instruction *inst =
           new ir::ICmpInst(_curBlock, ir::ICmpInst::NE, value,
-                           new ir::ConstantNumber(model::IntNumber(0)));
+                           new ir::ConstantNumber(model::Number(0)));
       _curBlock->add(inst);
       return inst;
     } else if (value->getType() == ir::BasicType::FLOAT) {
       ir::Instruction *inst =
           new ir::FCmpInst(_curBlock, ir::FCmpInst::UNE, value,
-                           new ir::ConstantNumber(model::FloatNumber(0.0f)));
+                           new ir::ConstantNumber(model::Number(0.0f)));
       _curBlock->add(inst);
       return inst;
     } else
@@ -250,7 +250,7 @@ std::any ASTVisitor::visitArrayVarDef(SysYParser::ArrayVarDefContext *ctx) {
       int index = entry.first;
       auto exp = entry.second;
       auto result = std::any_cast<ir::ConstantNumber *>(visitAdditiveExp(exp));
-      values[index] = *result->getValue();
+      values.insert(std::make_pair(index, result->getValue()));
     }
 
     _module->addGlobal(_symbolTable->makeGlobal(_isConst, type, name, values));

@@ -4,8 +4,10 @@
 #include "function.hpp"
 #include "global_variable.hpp"
 #include <unordered_map>
+#include <vector>
 
 namespace ir {
+
 class Module {
 private:
   std::unordered_map<std::string, GlobalVariable *> globals;
@@ -13,49 +15,20 @@ private:
 
 public:
   Module() = default;
-  
-  void addGlobal(GlobalVariable *global) {
-    globals[global->getName()] = global;
-  }
 
-  void addFunction(Function *function) {
-    functions[function->getName()] = function;
-  }
+  void addGlobal(GlobalVariable *global);
+  void addFunction(Function *function);
 
-  bool hasGlobal() const { return !globals.empty(); }
+  bool hasGlobal() const;
+  bool hasFunction() const;
 
-  bool hasFunction() const { return !functions.empty(); }
+  GlobalVariable *getGlobal(const std::string &name);
+  Function *getFunction(const std::string &name);
 
-  GlobalVariable *getGlobal(const std::string &name) {
-    if (globals.find(name) != globals.end()) {
-      return globals[name];
-    } else
-      return nullptr;
-  }
-
-  Function *getFunction(const std::string &name) {
-    if (functions.find(name) != functions.end()) {
-      return functions[name];
-    } else
-      return nullptr;
-  }
-
-  std::vector<GlobalVariable *> getGlobals() {
-    std::vector<GlobalVariable *> result;
-    for (auto &global : globals) {
-      result.push_back(global.second);
-    }
-    return result;
-  }
-
-  std::vector<Function *> getFunctions() {
-    std::vector<Function *> result;
-    for (auto &function : functions) {
-      result.push_back(function.second);
-    }
-    return result;
-  }
+  std::vector<GlobalVariable *> getGlobals();
+  std::vector<Function *> getFunctions();
 };
+
 } // namespace ir
 
-#endif
+#endif // IR_MODULE_HPP
