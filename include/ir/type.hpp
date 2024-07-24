@@ -62,8 +62,8 @@ public:
   size_t getArraySize();
   size_t getSize() const override;
   Type *getScalarType();
-  std::vector<ArrayType *> &getArrayTypes();
-  std::vector<size_t> &getArraySizes();
+  std::vector<ArrayType *> getArrayTypes();
+  std::vector<size_t> getArraySizes();
   std::string toString() const override;
 };
 

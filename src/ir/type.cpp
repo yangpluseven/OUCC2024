@@ -53,7 +53,7 @@ Type *ArrayType::getScalarType() {
   return type;
 }
 
-std::vector<ArrayType *> &ArrayType::getArrayTypes() {
+std::vector<ArrayType *> ArrayType::getArrayTypes() {
   std::vector<ArrayType *> arrayTypes;
   Type *type = this;
   while (auto arrayType = dynamic_cast<ArrayType *>(type)) {
@@ -63,7 +63,7 @@ std::vector<ArrayType *> &ArrayType::getArrayTypes() {
   return arrayTypes;
 }
 
-std::vector<size_t> &ArrayType::getArraySizes() {
+std::vector<size_t> ArrayType::getArraySizes() {
   std::vector<size_t> arraySizes;
   auto types = getArrayTypes();
   for (auto i : types) {

@@ -156,7 +156,7 @@ private:
   bool _isProcessed = false;
   bool _isConst;
   ir::Function *_curFunc;
-  ir::Value *_curValue;
+  ir::Value *_curRetVal;
   ir::Type *_curType;
   ir::BasicBlock *_entryBlock, *_retBlock, *_curBlock, *_trueBlock,
       *_falseBlock;
