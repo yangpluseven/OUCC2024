@@ -49,7 +49,7 @@ Use *User::remove(Value *value) {
   return nullptr;
 }
 
-Use *User::get(int index) {
+Use *User::get(int index) const {
   if (index < 0 || index >= operands.size()) {
     return nullptr;
   }
@@ -59,7 +59,7 @@ Use *User::get(int index) {
 template <typename T, typename std::enable_if<
                           std::is_base_of<Value, T>::value>::type * = nullptr>
 T *User::getOperand(int index) const {
-  return static_cast<T *>(operands[index]->getValue());
+  return static_cast<T *>(get(index)->getValue());
 }
 
 template <typename T, typename std::enable_if<

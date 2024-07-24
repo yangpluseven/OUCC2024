@@ -243,6 +243,10 @@ CmpInst::Cond CmpInst::getCond() {
   return cond;
 }
 
+std::string CmpInst::toString() const {
+  return "TODO";
+}
+
 std::string CmpInst::_condToString(Cond v) {
   switch (v) {
   case EQ:
@@ -283,6 +287,10 @@ ICmpInst::ICmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs)
 CastInst::CastInst(BasicBlock *block, Type *type, Value *operand)
     : Instruction(block, type, {operand}) {
   add(new Use(this, operand));
+}
+
+std::string CastInst::toString() const {
+  return "TODO";
 }
 
 BitCastInst::BitCastInst(BasicBlock *block, Type *type, Value *operand)
