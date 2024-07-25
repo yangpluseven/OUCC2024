@@ -65,13 +65,13 @@ void ASTVisitor::checkIfIsProcessed() {
 }
 
 void ASTVisitor::formatLLVM() {
-  for (auto func : _module->getFunctions()) {
+  for (auto const func : _module->getFunctions()) {
     if (func->isDeclare())
       continue;
     for (int i = 0; i < func->size(); i++) {
-      auto block = func->get(i);
+      auto const block = func->get(i);
       for (int j = 0; j < block->size() - 1; j++) {
-        auto terminal = block->get(i);
+        auto terminal = block->get(j);
         if (dynamic_cast<ir::BranchInst *>(terminal) ||
             dynamic_cast<ir::RetInst *>(terminal)) {
           while (block->size() > j + 1)
@@ -333,8 +333,8 @@ std::any ASTVisitor::visitFuncDef(SysYParser::FuncDefContext *ctx) {
   } else
     throw std::runtime_error("Unsupported type: " +
                              _curFunc->getType()->toString());
-  _curBlock = _entryBlock;
-  _curFunc->add(_retBlock);
+  _curBlock = new ir::BasicBlock(_curFunc);
+  _curFunc->add(_curBlock);
   for (auto argCtx : ctx->funcArg()) {
     auto arg = dynamic_cast<ir::Argument *>(std::any_cast<ir::Value *>(
         visitFuncArg(argCtx)));
@@ -426,7 +426,7 @@ std::any ASTVisitor::visitScalarVarDef(SysYParser::ScalarVarDefContext *ctx) {
     value = typeConversion(value, _curType);
     _curBlock->add(new ir::StoreInst(_curBlock, value, allocaInst));
   }
-  std::make_any<ir::Value *>(nullptr);
+  return std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitIfElseStmt(SysYParser::IfElseStmtContext *ctx) {
@@ -453,7 +453,7 @@ std::any ASTVisitor::visitIfElseStmt(SysYParser::IfElseStmtContext *ctx) {
         dynamic_cast<ir::RetInst *>(_curBlock->getLast()) != nullptr))
     _curBlock->add(new ir::BranchInst(_curBlock, ifEndBlock));
   _curBlock = ifEndBlock;
-  std::make_any<ir::Value *>(nullptr);
+  return std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitIfStmt(SysYParser::IfStmtContext *ctx) {
@@ -472,7 +472,7 @@ std::any ASTVisitor::visitIfStmt(SysYParser::IfStmtContext *ctx) {
         dynamic_cast<ir::RetInst *>(_curBlock->getLast()) != nullptr))
     _curBlock->add(new ir::BranchInst(_curBlock, falseBlock));
   _curBlock = falseBlock;
-  std::make_any<ir::Value *>(nullptr);
+  return std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitWhileStmt(SysYParser::WhileStmtContext *ctx) {
@@ -502,23 +502,23 @@ std::any ASTVisitor::visitWhileStmt(SysYParser::WhileStmtContext *ctx) {
   _curBlock = endBlock;
   _continueStack.pop_front();
   _breakStack.pop_front();
-  std::make_any<ir::Value *>(nullptr);
+  return std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitBreakStmt(SysYParser::BreakStmtContext *ctx) {
   _curBlock->add(new ir::BranchInst(_curBlock, _breakStack.front()));
-  std::make_any<ir::Value *>(nullptr);
+  return std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitContinueStmt(SysYParser::ContinueStmtContext *ctx) {
   _curBlock->add(new ir::BranchInst(_curBlock, _continueStack.front()));
-  std::make_any<ir::Value *>(nullptr);
+  return std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitRetStmt(SysYParser::RetStmtContext *ctx) {
   if (ctx->additiveExp() == nullptr) {
     _curBlock->add(new ir::BranchInst(_curBlock, _retBlock));
-    std::make_any<ir::Value *>(nullptr);
+    return std::make_any<ir::Value *>(nullptr);
   }
   auto retVal =
       std::any_cast<ir::Value *>(visitAdditiveExp(ctx->additiveExp()));

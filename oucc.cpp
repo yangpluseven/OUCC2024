@@ -9,32 +9,66 @@ using namespace parser;
 using namespace antlr4;
 using namespace ir;
 
-any test1() {
-  return BasicType::I32;
+void emitLLVM(const string &filename, Module *module) {
+  ofstream writer(filename);
+  if (!writer.is_open()) {
+    throw std::runtime_error("Cannot open file: " + filename);
+  }
+
+  for (const auto &global : module->getGlobals()) {
+    writer << global->toString() << '\n';
+  }
+
+  if (module->hasGlobal()) {
+    writer << '\n';
+  }
+
+  auto functions = module->getFunctions();
+  sort(functions.begin(), functions.end(),
+       [](const Function *func1, const Function *func2) {
+         if (func1->isDeclare() != func2->isDeclare()) {
+           return func1->isDeclare() < func2->isDeclare();
+         }
+         return func1->getName() < func2->getName();
+       });
+
+  for (const auto &func : functions) {
+    writer << func->toString() << '\n';
+  }
+
+  writer.close();
+  if (writer.fail()) {
+    throw std::runtime_error("Cannot write to file: " + filename);
+  }
 }
 
-any test2() {
-  return make_any<Type *>(BasicType::I32);
-}
+string a =
+    "int addFunc(int a, int b) {"
+    "  return a + b;"
+    "}"
+    "int minusFunc(int a, int b) {"
+    "  return a - b;"
+    "}"
+    "int main() {"
+    "  int a;"
+    "  return addFunc(2, 1);"
+    "}";
+string b =
+    "int minusFunc(int a, int b) {"
+    "  return a - b;"
+    "}"
+    "int main() {"
+    "  return minusFunc(2, 1);"
+    "}";
 
 int main() {
-  ANTLRInputStream input("int addFunc(int a, int b) {"
-                         "  return a + b;"
-                         "}"
-                         "int main() {"
-                         "  return addFunc(1, 2);"
-                         "}");
+  ANTLRInputStream input(a);
   SysYLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
   SysYParser parser(&tokens);
   SysYParser::RootContext *root = parser.root();
   ASTVisitor visitor(root);
   Module *module = visitor.getModule();
-
-
-  // BasicType *t1 = any_cast<BasicType *>(test1());
-  // Type *tt1 = static_cast<Type *>(t1);
-  // Type *t2 = any_cast<Type *>(test2());
-  // cout << t2->toString() << endl;
+  emitLLVM("test.ll", module);
   return 0;
 }

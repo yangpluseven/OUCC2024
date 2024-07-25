@@ -73,7 +73,7 @@ std::string Function::getRawName() const { return name; }
 std::vector<Argument *> Function::getArgs() const { return args; }
 
 std::string Function::toString() const {
-  bool isDeclare = blocks.empty();
+  bool const isDeclare = blocks.empty();
   std::ostringstream builder;
   std::ostringstream joiner;
   joiner << "(";
