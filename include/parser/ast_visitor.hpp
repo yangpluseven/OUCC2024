@@ -22,7 +22,7 @@ class SymbolTable {
 private:
   std::list<std::unordered_map<std::string, ir::Value *>> _table;
 
-  ir::Value *get(const std::string &name) {
+  ir::Value *get(const std::string &name) const {
     for (auto item : _table) {
       if (item.find(name) != item.end())
         return item[name];
@@ -30,13 +30,13 @@ private:
     throw std::runtime_error("Undefined variable: " + name);
   }
 
-  std::map<int, model::Number>
+  static std::map<int, model::Number>
   submap(const std::map<int, model::Number> &values, int fromKey, int toKey) {
     std::map<int, model::Number> sub;
     auto lower = values.lower_bound(fromKey);
     auto upper = values.upper_bound(toKey);
 
-    for (; lower != upper; lower++)
+    for (; lower != upper; ++lower)
       sub.insert(*lower);
 
     return sub;
@@ -52,7 +52,7 @@ private:
         return new ir::ConstantNumber(model::Number(0));
 
     if (values.empty())
-      return new ir ::ConstantZero(type);
+      return new ir::ConstantZero(type);
 
     auto arrayType = dynamic_cast<ir::ArrayType *>(type);
     int size = 1;
@@ -159,7 +159,7 @@ private:
   ir::Value *_curRetVal;
   ir::Type *_curType;
   ir::BasicBlock *_entryBlock, *_retBlock, *_curBlock, *_trueBlock,
-      *_falseBlock;
+                 *_falseBlock;
 
   void initBuiltInFuncs();
 
@@ -175,18 +175,18 @@ private:
 
   void processValueCond(ir::Value *value);
 
-  ir::Type *automaticTypePromotion(ir::Type *type1, ir::Type *type2);
+  ir::Value *typeConversion(ir::Value *value, ir::Type *targetType) const;
 
-  ir::Value *typeConversion(ir::Value *value, ir::Type *targetType);
+  static ir::Type *automaticTypePromotion(ir::Type *type1, ir::Type *type2);
 
 public:
-  ASTVisitor(SysYParser::RootContext *rootAST);
+  explicit ASTVisitor(SysYParser::RootContext *rootAST);
 
   ir::Module *getModule();
 
   std::any visitType(SysYParser::TypeContext *ctx) override;
 
-  std::any visitDimensions(SysYParser ::DimensionsContext *ctx) override;
+  std::any visitDimensions(SysYParser::DimensionsContext *ctx) override;
 
   std::any visitVarDecl(SysYParser::VarDeclContext *ctx) override;
 

@@ -9,13 +9,27 @@ using namespace parser;
 using namespace antlr4;
 using namespace ir;
 
+any test1() {
+  return BasicType::I32;
+}
+
+any test2() {
+  return make_any<Type *>(BasicType::I32);
+}
+
 int main() {
-  ANTLRInputStream input("int main() { int a = 1; return a; }");
+  ANTLRInputStream input("int main() { reutnr 0; }");
   SysYLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
   SysYParser parser(&tokens);
   SysYParser::RootContext *root = parser.root();
   ASTVisitor visitor(root);
   Module *module = visitor.getModule();
+
+
+  // BasicType *t1 = any_cast<BasicType *>(test1());
+  // Type *tt1 = static_cast<Type *>(t1);
+  // Type *t2 = any_cast<Type *>(test2());
+  // cout << t2->toString() << endl;
   return 0;
 }
