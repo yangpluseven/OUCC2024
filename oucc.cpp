@@ -18,7 +18,12 @@ any test2() {
 }
 
 int main() {
-  ANTLRInputStream input("int main() { return 0; }");
+  ANTLRInputStream input("int addFunc(int a, int b) {"
+                         "  return a + b;"
+                         "}"
+                         "int main() {"
+                         "  return addFunc(1, 2);"
+                         "}");
   SysYLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
   SysYParser parser(&tokens);
