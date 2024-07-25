@@ -525,7 +525,7 @@ std::any ASTVisitor::visitRetStmt(SysYParser::RetStmtContext *ctx) {
   retVal = typeConversion(retVal, _curFunc->getType());
   _curBlock->add(new ir::StoreInst(_curBlock, retVal, _curRetVal));
   _curBlock->add(new ir::BranchInst(_curBlock, _retBlock));
-  std::make_any<ir::Value *>(nullptr);
+  return std::make_any<ir::Value *>(nullptr);
 }
 
 std::any
@@ -934,7 +934,6 @@ std::any ASTVisitor::visitUnaryExp(SysYParser::UnaryExpContext *ctx) {
     return visitAdditiveExp(ctx->additiveExp());
   } else {
     auto res = SysYBaseVisitor::visitUnaryExp(ctx);
-    std::cout << res.type().name();
     return res; //TODO
   }
 }
