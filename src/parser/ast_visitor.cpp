@@ -231,7 +231,8 @@ std::any ASTVisitor::visitDimensions(SysYParser::DimensionsContext *ctx) {
   auto dimensions = std::vector<int>();
   for (auto exp : ctx->additiveExp()) {
     dimensions.push_back(
-        std::any_cast<ir::ConstantNumber *>(visitAdditiveExp(exp))->intValue());
+        dynamic_cast<ir::ConstantNumber *>(std::any_cast<ir::Value *>(
+            visitAdditiveExp(exp)))->intValue());
   }
   return std::make_any<std::vector<int>>(dimensions);
 }
@@ -261,12 +262,13 @@ std::any ASTVisitor::visitArrayVarDef(SysYParser::ArrayVarDefContext *ctx) {
     for (const auto &entry : exps) {
       int index = entry.first;
       auto exp = entry.second;
-      auto result = std::any_cast<ir::ConstantNumber *>(visitAdditiveExp(exp));
+      auto result = dynamic_cast<ir::ConstantNumber *>(std::any_cast<ir::Value
+        *>(visitAdditiveExp(exp)));
       values.insert(std::make_pair(index, result->getValue()));
     }
 
     _module->addGlobal(_symbolTable->makeGlobal(_isConst, type, name, values));
-    return nullptr;
+    return std::make_any<ir::Value *>(nullptr);
   }
   auto allocaInst =
       _symbolTable->makeLocal(_entryBlock, _curType, name, dimensions);
@@ -305,7 +307,7 @@ std::any ASTVisitor::visitArrayVarDef(SysYParser::ArrayVarDefContext *ctx) {
       _curBlock->add(new ir::StoreInst(_curBlock, value, ptr));
     }
   }
-  return nullptr;
+  return std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitFuncDef(SysYParser::FuncDefContext *ctx) {
@@ -334,7 +336,8 @@ std::any ASTVisitor::visitFuncDef(SysYParser::FuncDefContext *ctx) {
   _curBlock = _entryBlock;
   _curFunc->add(_retBlock);
   for (auto argCtx : ctx->funcArg()) {
-    auto arg = std::any_cast<ir::Argument *>(visitFuncArg(argCtx));
+    auto arg = dynamic_cast<ir::Argument *>(std::any_cast<ir::Value *>(
+        visitFuncArg(argCtx)));
     _curFunc->addArg(arg);
     auto allocaInst =
         _symbolTable->makeLocal(_entryBlock, arg->getType(), arg->getName());
@@ -359,7 +362,7 @@ std::any ASTVisitor::visitFuncDef(SysYParser::FuncDefContext *ctx) {
   _curFunc->add(_retBlock);
   _module->addFunction(_curFunc);
   _symbolTable->out();
-  return nullptr;
+  return std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitFuncArg(SysYParser::FuncArgContext *ctx) {
@@ -370,11 +373,12 @@ std::any ASTVisitor::visitFuncArg(SysYParser::FuncArgContext *ctx) {
     std::reverse(reversed_ctx.begin(), reversed_ctx.end());
     for (auto exp : reversed_ctx)
       type = new ir::ArrayType(
-          type, std::any_cast<ir::ConstantNumber *>(visitAdditiveExp(exp))
+          type, dynamic_cast<ir::ConstantNumber *>(std::any_cast<ir::Value *>(
+              visitAdditiveExp(exp)))
           ->intValue());
     type = new ir::PointerType(type);
   }
-  return std::make_any<ir::Argument *>(
+  return std::make_any<ir::Value *>(
       _symbolTable->makeArg(type, ctx->Ident()->getSymbol()->getText()));
 }
 
@@ -387,7 +391,7 @@ std::any ASTVisitor::visitBlockStmt(SysYParser::BlockStmtContext *ctx) {
       break;
   }
   _symbolTable->out();
-  return nullptr;
+  return std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitAssignStmt(SysYParser::AssignStmtContext *ctx) {
@@ -399,7 +403,7 @@ std::any ASTVisitor::visitAssignStmt(SysYParser::AssignStmtContext *ctx) {
   else
     value = typeConversion(value, type->baseType());
   _curBlock->add(new ir::StoreInst(_curBlock, value, ptr));
-  return nullptr;
+  return std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitScalarVarDef(SysYParser::ScalarVarDefContext *ctx) {
@@ -407,12 +411,12 @@ std::any ASTVisitor::visitScalarVarDef(SysYParser::ScalarVarDefContext *ctx) {
   if (_isConst || _symbolTable->size() == 1) {
     auto value = model::Number(0);
     if (ctx->additiveExp() != nullptr)
-      value = dynamic_cast<ir::ConstantNumber *>(std::any_cast<ir::Value*>(
+      value = dynamic_cast<ir::ConstantNumber *>(std::any_cast<ir::Value *>(
               visitAdditiveExp(ctx->additiveExp())))
           ->getValue();
     _module->addGlobal(
         _symbolTable->makeGlobal(_isConst, _curType, name, value));
-    return nullptr;
+    std::make_any<ir::Value *>(nullptr);
   }
   auto allocaInst = _symbolTable->makeLocal(_entryBlock, _curType, name);
   _entryBlock->add(allocaInst);
@@ -422,7 +426,7 @@ std::any ASTVisitor::visitScalarVarDef(SysYParser::ScalarVarDefContext *ctx) {
     value = typeConversion(value, _curType);
     _curBlock->add(new ir::StoreInst(_curBlock, value, allocaInst));
   }
-  return nullptr;
+  std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitIfElseStmt(SysYParser::IfElseStmtContext *ctx) {
@@ -449,7 +453,7 @@ std::any ASTVisitor::visitIfElseStmt(SysYParser::IfElseStmtContext *ctx) {
         dynamic_cast<ir::RetInst *>(_curBlock->getLast()) != nullptr))
     _curBlock->add(new ir::BranchInst(_curBlock, ifEndBlock));
   _curBlock = ifEndBlock;
-  return nullptr;
+  std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitIfStmt(SysYParser::IfStmtContext *ctx) {
@@ -468,7 +472,7 @@ std::any ASTVisitor::visitIfStmt(SysYParser::IfStmtContext *ctx) {
         dynamic_cast<ir::RetInst *>(_curBlock->getLast()) != nullptr))
     _curBlock->add(new ir::BranchInst(_curBlock, falseBlock));
   _curBlock = falseBlock;
-  return nullptr;
+  std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitWhileStmt(SysYParser::WhileStmtContext *ctx) {
@@ -498,30 +502,30 @@ std::any ASTVisitor::visitWhileStmt(SysYParser::WhileStmtContext *ctx) {
   _curBlock = endBlock;
   _continueStack.pop_front();
   _breakStack.pop_front();
-  return nullptr;
+  std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitBreakStmt(SysYParser::BreakStmtContext *ctx) {
   _curBlock->add(new ir::BranchInst(_curBlock, _breakStack.front()));
-  return nullptr;
+  std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitContinueStmt(SysYParser::ContinueStmtContext *ctx) {
   _curBlock->add(new ir::BranchInst(_curBlock, _continueStack.front()));
-  return nullptr;
+  std::make_any<ir::Value *>(nullptr);
 }
 
 std::any ASTVisitor::visitRetStmt(SysYParser::RetStmtContext *ctx) {
   if (ctx->additiveExp() == nullptr) {
     _curBlock->add(new ir::BranchInst(_curBlock, _retBlock));
-    return nullptr;
+    std::make_any<ir::Value *>(nullptr);
   }
   auto retVal =
       std::any_cast<ir::Value *>(visitAdditiveExp(ctx->additiveExp()));
   retVal = typeConversion(retVal, _curFunc->getType());
   _curBlock->add(new ir::StoreInst(_curBlock, retVal, _curRetVal));
   _curBlock->add(new ir::BranchInst(_curBlock, _retBlock));
-  return nullptr;
+  std::make_any<ir::Value *>(nullptr);
 }
 
 std::any
@@ -778,12 +782,12 @@ std::any ASTVisitor::visitLorExp(SysYParser::LorExpContext *ctx) {
 
 std::any ASTVisitor::visitNumberExp(SysYParser::NumberExpContext *ctx) {
   if (ctx->IntConst()) {
-    return new ir::ConstantNumber(
-        model::Number(std::stoi(ctx->IntConst()->getText())));
+    return std::make_any<ir::Value *>(new ir::ConstantNumber(
+        model::Number(std::stoi(ctx->IntConst()->getText()))));
   }
   if (ctx->FloatConst()) {
-    return new ir::ConstantNumber(
-        model::Number(std::stof(ctx->FloatConst()->getText())));
+    return std::make_any<ir::Value *>(new ir::ConstantNumber(
+        model::Number(std::stof(ctx->FloatConst()->getText()))));
   }
   throw std::runtime_error("Invalid number: " + ctx->getText());
 }
@@ -889,7 +893,7 @@ std::any ASTVisitor::visitUnaryExp(SysYParser::UnaryExpContext *ctx) {
       return std::make_any<ir::Value *>(result);
     }
     if (txt == "+") {
-      return value;
+      return std::make_any<ir::Value *>(value);
     } else if (txt == "-") {
       ir::Instruction *inst;
       if (t == ir::BasicType::I1) {
@@ -927,11 +931,11 @@ std::any ASTVisitor::visitUnaryExp(SysYParser::UnaryExpContext *ctx) {
       throw std::runtime_error("Invalid unary operator: " + txt);
     }
   } else if (childCount == 3) {
-    return ASTVisitor::visitAdditiveExp(ctx->additiveExp());
+    return visitAdditiveExp(ctx->additiveExp());
   } else {
     auto res = SysYBaseVisitor::visitUnaryExp(ctx);
     std::cout << res.type().name();
-    return std::any(SysYBaseVisitor::visitUnaryExp(ctx)); //TODO
+    return res; //TODO
   }
 }
 
