@@ -29,6 +29,8 @@ BasicBlock *Instruction::getBlock() { return _block; }
 
 std::string Instruction::getName() const { return "%v" + std::to_string(id); }
 
+std::string Instruction::toString() const { return getName(); }
+
 AllocaInst::AllocaInst(BasicBlock *block, Type *type)
     : Instruction(block, new PointerType(type)) {}
 
@@ -114,7 +116,7 @@ GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
     add(new Use(this, index));
 }
 
-std::string GetElementPtrInst::toString() {
+std::string GetElementPtrInst::toString() const {
   auto ptr = getOperand<Value>(0);
   auto tempPtr = new PointerType(ptr->getType());
   std::stringstream ss;
@@ -142,7 +144,7 @@ LoadInst::LoadInst(BasicBlock *block, Value *ptr)
                       : ptr->getType()->baseType(),
                   {ptr}) {}
 
-std::string LoadInst::toString() {
+std::string LoadInst::toString() const {
   auto ptr = getOperand<Value>(0);
   return getName() + " = load " + type->toString() + ", " +
          (dynamic_cast<GlobalVariable *>(ptr)
@@ -174,14 +176,14 @@ void PHINode::setBlockValue(int index, BasicBlock *block) {
     throw std::runtime_error("Failed to get the use from this index.");
 }
 
-std::string PHINode::toString() {
+std::string PHINode::toString() const {
   std::stringstream ss;
   for (int i = 0; i < operands.size(); i++) {
     if (i != 0)
       ss << ", ";
 
     ss << "[" << operands[i]->getValue()->getName() << ", "
-       << useBlockMap[operands[i]]->toString() << "]";
+       << useBlockMap.at(operands[i])->toString() << "]";
   }
   return getName() + " = phi " + type->toString() + " " + ss.str();
 }
@@ -191,7 +193,7 @@ RetInst::RetInst(BasicBlock *block) : Instruction(block, BasicType::VOID) {}
 RetInst::RetInst(BasicBlock *block, Value *retValue)
     : Instruction(block, BasicType::VOID, {retValue}) {}
 
-std::string RetInst::toString() {
+std::string RetInst::toString() const {
   if (isEmpty())
     return "ret void";
   auto retValue = getOperand<Value>(0);
@@ -201,7 +203,7 @@ std::string RetInst::toString() {
 StoreInst::StoreInst(BasicBlock *block, Value *value, Value *pointer)
     : Instruction(block, BasicType::VOID, {value, pointer}) {}
 
-std::string StoreInst::toString() {
+std::string StoreInst::toString() const {
   auto value = getOperand<Value>(0);
   auto pointer = getOperand<Value>(1);
   if (auto globalVar = dynamic_cast<GlobalVariable *>(pointer)) {
