@@ -9,7 +9,7 @@ int Instruction::_counter = 0;
 
 Instruction::Instruction(BasicBlock *block, Type *type,
                          const std::initializer_list<Value *> &operands)
-    : User(type), _block(block) {
+  : User(type), _block(block) {
   for (auto operand : operands) {
     add(new Use(this, operand));
   }
@@ -18,7 +18,7 @@ Instruction::Instruction(BasicBlock *block, Type *type,
 
 Instruction::Instruction(BasicBlock *block, Type *type,
                          std::vector<Value *> &operands)
-    : User(type), _block(block) {
+  : User(type), _block(block) {
   for (auto operand : operands) {
     add(new Use(this, operand));
   }
@@ -32,18 +32,21 @@ std::string Instruction::getName() const { return "%v" + std::to_string(id); }
 std::string Instruction::toString() const { return getName(); }
 
 AllocaInst::AllocaInst(BasicBlock *block, Type *type)
-    : Instruction(block, new PointerType(type)) {}
+  : Instruction(block, new PointerType(type)) {
+}
 
 std::string AllocaInst::toString() const {
   return getName() + " = alloca " + type->baseType()->toString();
 }
 
 BranchInst::BranchInst(BasicBlock *block, BasicBlock *dest)
-    : Instruction(block, BasicType::VOID, {dest}) {}
+  : Instruction(block, BasicType::VOID, {dest}) {
+}
 
 BranchInst::BranchInst(BasicBlock *block, Value *cond, BasicBlock *ifTrue,
                        BasicBlock *ifFalse)
-    : Instruction(block, BasicType::VOID, {cond, ifTrue, ifFalse}) {}
+  : Instruction(block, BasicType::VOID, {cond, ifTrue, ifFalse}) {
+}
 
 bool BranchInst::isConditional() const { return size() == 3; }
 
@@ -61,14 +64,14 @@ std::string BranchInst::toString() const {
 
 CallInst::CallInst(BasicBlock *block, Function *func,
                    std::initializer_list<Value *> params)
-    : Instruction(block, func->getType(), {func}) {
+  : Instruction(block, func->getType(), {func}) {
   for (auto param : params)
     add(new Use(this, param));
 }
 
 CallInst::CallInst(BasicBlock *block, Function *func,
                    std::vector<Value *> &params)
-    : Instruction(block, func->getType(), {func}) {
+  : Instruction(block, func->getType(), {func}) {
   for (auto param : params)
     add(new Use(this, param));
 }
@@ -92,7 +95,7 @@ std::string CallInst::toString() const {
          func->getName() + ss.str();
 }
 
-Type *GetElementPtrInst::_calcType(Value *value, int indexSize) {
+Type *GetElementPtrInst::_calcType(Value *value, size_t indexSize) {
   auto type = value->getType();
   if (dynamic_cast<GlobalVariable *>(type))
     type = new PointerType(type);
@@ -104,14 +107,14 @@ Type *GetElementPtrInst::_calcType(Value *value, int indexSize) {
 
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
                                      std::initializer_list<Value *> indexes)
-    : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
+  : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
   for (auto index : indexes)
     add(new Use(this, index));
 }
 
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
                                      std::vector<Value *> &indexes)
-    : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
+  : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
   for (auto index : indexes)
     add(new Use(this, index));
 }
@@ -121,13 +124,14 @@ std::string GetElementPtrInst::toString() const {
   auto tempPtr = new PointerType(ptr->getType());
   std::stringstream ss;
   ss << getName() << " = getelementptr "
-     << (dynamic_cast<GlobalVariable *>(ptr)
-             ? ptr->getType()->toString()
-             : ptr->getType()->baseType()->toString())
-     << ", "
-     << (dynamic_cast<GlobalVariable *>(ptr) ? tempPtr->toString()
-                                             : ptr->getType()->toString())
-     << " " << ptr->getName();
+      << (dynamic_cast<GlobalVariable *>(ptr)
+            ? ptr->getType()->toString()
+            : ptr->getType()->baseType()->toString())
+      << ", "
+      << (dynamic_cast<GlobalVariable *>(ptr)
+            ? tempPtr->toString()
+            : ptr->getType()->toString())
+      << " " << ptr->getName();
   delete tempPtr;
   for (int i = 1; i < size(); i++) {
     auto operand = getOperand<Value>(i);
@@ -138,22 +142,24 @@ std::string GetElementPtrInst::toString() const {
 }
 
 LoadInst::LoadInst(BasicBlock *block, Value *ptr)
-    : Instruction(block,
-                  dynamic_cast<GlobalVariable *>(ptr)
-                      ? ptr->getType()
-                      : ptr->getType()->baseType(),
-                  {ptr}) {}
+  : Instruction(block,
+                dynamic_cast<GlobalVariable *>(ptr)
+                  ? ptr->getType()
+                  : ptr->getType()->baseType(),
+                {ptr}) {
+}
 
 std::string LoadInst::toString() const {
   auto ptr = getOperand<Value>(0);
   return getName() + " = load " + type->toString() + ", " +
          (dynamic_cast<GlobalVariable *>(ptr)
-              ? (new PointerType(ptr->getType()))->toString()
-              : ptr->getType()->toString()) +
+            ? (new PointerType(ptr->getType()))->toString()
+            : ptr->getType()->toString()) +
          " " + ptr->getName();
 }
 
-PHINode::PHINode(BasicBlock *block, Type *type) : Instruction(block, type) {}
+PHINode::PHINode(BasicBlock *block, Type *type) : Instruction(block, type) {
+}
 
 void PHINode::add(BasicBlock *block, Use *use) {
   User::add(use);
@@ -183,15 +189,17 @@ std::string PHINode::toString() const {
       ss << ", ";
 
     ss << "[" << operands[i]->getValue()->getName() << ", "
-       << useBlockMap.at(operands[i])->toString() << "]";
+        << useBlockMap.at(operands[i])->toString() << "]";
   }
   return getName() + " = phi " + type->toString() + " " + ss.str();
 }
 
-RetInst::RetInst(BasicBlock *block) : Instruction(block, BasicType::VOID) {}
+RetInst::RetInst(BasicBlock *block) : Instruction(block, BasicType::VOID) {
+}
 
 RetInst::RetInst(BasicBlock *block, Value *retValue)
-    : Instruction(block, BasicType::VOID, {retValue}) {}
+  : Instruction(block, BasicType::VOID, {retValue}) {
+}
 
 std::string RetInst::toString() const {
   if (isEmpty())
@@ -201,7 +209,8 @@ std::string RetInst::toString() const {
 }
 
 StoreInst::StoreInst(BasicBlock *block, Value *value, Value *pointer)
-    : Instruction(block, BasicType::VOID, {value, pointer}) {}
+  : Instruction(block, BasicType::VOID, {value, pointer}) {
+}
 
 std::string StoreInst::toString() const {
   auto value = getOperand<Value>(0);
@@ -215,8 +224,9 @@ std::string StoreInst::toString() const {
 }
 
 BinaryOperator::BinaryOperator(BasicBlock *block, Op op, Value *lhs, Value *rhs)
-    : Instruction(block, Type::CheckEquality(lhs->getType(), rhs->getType())),
-      op(op) {}
+  : Instruction(block, Type::CheckEquality(lhs->getType(), rhs->getType()), {lhs, rhs}),
+    op(op) {
+}
 
 std::string BinaryOperator::toString() const {
   auto lhs = getOperand<Value>(0);
@@ -226,7 +236,7 @@ std::string BinaryOperator::toString() const {
          lhs->getName() + ", " + rhs->getName();
 }
 
-std::string BinaryOperator::_opToString(Op v) const noexcept {
+std::string BinaryOperator::_opToString(Op v) noexcept {
   switch (v) {
   case ADD:
     return "add";
@@ -254,15 +264,16 @@ std::string BinaryOperator::_opToString(Op v) const noexcept {
 }
 
 CmpInst::CmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs)
-    : Instruction(block, BasicType::I1), cond(cond) {
+  : Instruction(block, BasicType::I1), cond(cond) {
   add(new Use(this, lhs));
   add(new Use(this, rhs));
 }
 
 CmpInst::Cond CmpInst::getCond() const { return cond; }
 
-std::string CmpInst::toString(const std::string &class_name) const {
+std::string CmpInst::toString() const {
   auto cond = getCond();
+  auto class_name = getClassName();
   auto op1 = getOperand<Value>(0);
   auto op2 = getOperand<Value>(1);
   auto type = Type::CheckEquality(op1->getType(), op2->getType());
@@ -270,7 +281,12 @@ std::string CmpInst::toString(const std::string &class_name) const {
          type->toString() + " " + op1->getName() + ", " + op2->getName();
 }
 
-std::string CmpInst::_condToString(Cond v) const {
+std::string CmpInst::getClassName() const {
+  return "incomplete{CmpInst}";
+}
+
+
+std::string CmpInst::_condToString(Cond v) {
   switch (v) {
   case EQ:
     return "eq";
@@ -302,55 +318,69 @@ std::string CmpInst::_condToString(Cond v) const {
 }
 
 FCmpInst::FCmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs)
-    : CmpInst(block, cond, lhs, rhs) {}
+  : CmpInst(block, cond, lhs, rhs) {
+}
 
-std::string FCmpInst::toString() const { return CmpInst::toString("fcmp"); }
+std::string FCmpInst::getClassName() const { return "fcmp"; }
 
 ICmpInst::ICmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs)
-    : CmpInst(block, cond, lhs, rhs) {}
+  : CmpInst(block, cond, lhs, rhs) {
+}
 
-std::string ICmpInst::toString() const { return CmpInst::toString("icmp"); }
+std::string ICmpInst::getClassName() const { return "icmp"; }
 
 CastInst::CastInst(BasicBlock *block, Type *type, Value *operand)
-    : Instruction(block, type, {operand}) {
+  : Instruction(block, type, {operand}) {
   add(new Use(this, operand));
 }
 
-std::string CastInst::toString(const std::string &class_name) const {
+std::string CastInst::toString() const {
   auto operand = getOperand<Value>(0);
+  auto class_name = getClassName();
   return getName() + " = " + class_name + " " + operand->getType()->toString() +
          " " + operand->getName() + " to " + type->toString();
 }
 
-BitCastInst::BitCastInst(BasicBlock *block, Type *type, Value *operand)
-    : CastInst(block, type, operand) {}
+std::string CastInst::getClassName() const {
+  return "incomplete{CastInst}";
+}
 
-std::string BitCastInst::toString() const {
-  return CastInst::toString("bitcast");
+BitCastInst::BitCastInst(BasicBlock *block, Type *type, Value *operand)
+  : CastInst(block, type, operand) {
+}
+
+std::string BitCastInst::getClassName() const {
+    return "bitcast";
 }
 
 FPToSIInst::FPToSIInst(BasicBlock *block, Type *type, Value *operand)
-    : CastInst(block, type, operand) {}
+  : CastInst(block, type, operand) {
+}
 
-std::string FPToSIInst::toString() const {
-  return CastInst::toString("fptosi");
+std::string FPToSIInst::getClassName() const {
+    return "fptosi";
 }
 
 SExtInst::SExtInst(BasicBlock *block, Type *type, Value *operand)
-    : CastInst(block, type, operand) {}
+  : CastInst(block, type, operand) {
+}
 
-std::string SExtInst::toString() const { return CastInst::toString("sext"); }
+std::string SExtInst::getClassName() const {
+    return "sext";
+}
 
 SIToFPInst::SIToFPInst(BasicBlock *block, Type *type, Value *operand)
-    : CastInst(block, type, operand) {}
+  : CastInst(block, type, operand) {
+}
 
-std::string SIToFPInst::toString() const {
-  return CastInst::toString("sitofp");
+std::string SIToFPInst::getClassName() const {
+    return "sitofp";
 }
 
 ZExtInst::ZExtInst(BasicBlock *block, Type *type, Value *operand)
-    : CastInst(block, type, operand) {}
+  : CastInst(block, type, operand) {
+}
 
-std::string ZExtInst::toString() const { return CastInst::toString("zext"); }
+std::string ZExtInst::getClassName() const { return "zext"; }
 
 } // namespace ir

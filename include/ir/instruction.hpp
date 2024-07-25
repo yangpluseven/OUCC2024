@@ -54,7 +54,7 @@ public:
 
 class GetElementPtrInst : public Instruction {
 private:
-  static Type *_calcType(Value *value, int indexSize);
+  static Type *_calcType(Value *value, size_t indexSize);
 
 public:
   GetElementPtrInst(BasicBlock *block, Value *ptr,
@@ -84,7 +84,7 @@ public:
 
 class RetInst : public Instruction {
 public:
-  RetInst(BasicBlock *block);
+  explicit RetInst(BasicBlock *block);
   RetInst(BasicBlock *block, Value *retValue);
   std::string toString() const override;
 };
@@ -98,75 +98,76 @@ public:
 class BinaryOperator : public Instruction {
 public:
   enum Op { ADD, FADD, SUB, FSUB, MUL, FMUL, SDIV, FDIV, SREM, XOR };
+
   const Op op;
   BinaryOperator(BasicBlock *block, Op op, Value *lhs, Value *rhs);
   std::string toString() const override;
 
 private:
-  std::string _opToString(Op v) const noexcept;
+  static std::string _opToString(Op v) noexcept;
 };
 
 class CmpInst : public Instruction {
 public:
   enum Cond { EQ, NE, SGT, SGE, SLT, SLE, OEQ, OGT, OGE, OLT, OLE, UNE };
+
   CmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs);
   Cond getCond() const;
-  virtual std::string toString(const std::string &class_name) const;
-  virtual std::string toString() const override;
+  std::string toString() const override;
+  virtual std::string getClassName() const;
 
 private:
   Cond cond;
-  std::string _condToString(Cond v) const;
+  static std::string _condToString(Cond v);
 };
 
 class FCmpInst : public CmpInst {
 public:
   FCmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs);
-  std::string toString() const override;
+  std::string getClassName() const override;
 };
 
 class ICmpInst : public CmpInst {
 public:
   ICmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs);
-  std::string toString() const override;
+  std::string getClassName() const override;
 };
 
 class CastInst : public Instruction {
 protected:
   CastInst(BasicBlock *block, Type *type, Value *operand);
-
-  virtual std::string toString(const std::string &class_name) const;
-  virtual std::string toString() const override;
+  std::string toString() const override;
+  virtual std::string getClassName() const;
 };
 
 class BitCastInst : public CastInst {
 public:
   BitCastInst(BasicBlock *block, Type *type, Value *operand);
-  std::string toString() const override;
+  std::string getClassName() const override;
 };
 
 class FPToSIInst : public CastInst {
 public:
   FPToSIInst(BasicBlock *block, Type *type, Value *operand);
-  std::string toString() const override;
+  std::string getClassName() const override;
 };
 
 class SExtInst : public CastInst {
 public:
   SExtInst(BasicBlock *block, Type *type, Value *operand);
-  std::string toString() const override;
+  std::string getClassName() const override;
 };
 
 class SIToFPInst : public CastInst {
 public:
   SIToFPInst(BasicBlock *block, Type *type, Value *operand);
-  std::string toString() const override;
+  std::string getClassName() const override;
 };
 
 class ZExtInst : public CastInst {
 public:
   ZExtInst(BasicBlock *block, Type *type, Value *operand);
-  std::string toString() const override;
+  std::string getClassName() const override;
 };
 
 } // namespace ir

@@ -97,7 +97,7 @@ std::string Function::toString() const {
   for (const auto &block : blocks) {
     builder << block->toString() << ":\n";
     for (const auto &inst : *block) {
-      builder << "  " << inst->getName() << "\n";
+      builder << "  " << inst->toString() << "\n";
     }
   }
   builder << "}\n";

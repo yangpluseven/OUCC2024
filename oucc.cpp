@@ -62,7 +62,7 @@ string b =
     "}";
 
 int main() {
-  ANTLRInputStream input(a);
+  ANTLRInputStream input(b);
   SysYLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
   SysYParser parser(&tokens);
