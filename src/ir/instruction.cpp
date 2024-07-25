@@ -216,11 +216,11 @@ std::string StoreInst::toString() const {
   auto value = getOperand<Value>(0);
   auto pointer = getOperand<Value>(1);
   if (auto globalVar = dynamic_cast<GlobalVariable *>(pointer)) {
-    return "store " + value->getType()->toString() + value->getName() + ", " +
-           globalVar->getType()->toString() + pointer->getName();
+    return "store " + value->getType()->toString() + " " + value->getName() + ", " +
+           globalVar->getType()->toString() + " " + pointer->getName();
   }
-  return "store " + value->getType()->toString() + value->getName() + ", " +
-         pointer->getType()->toString() + pointer->getName();
+  return "store " + value->getType()->toString() + " " + value->getName() + ", " +
+         pointer->getType()->toString() + " " + pointer->getName();
 }
 
 BinaryOperator::BinaryOperator(BasicBlock *block, Op op, Value *lhs, Value *rhs)

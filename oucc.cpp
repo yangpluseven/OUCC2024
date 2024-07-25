@@ -60,9 +60,14 @@ string b =
     "int main() {"
     "  return minusFunc(2, 1);"
     "}";
+string c =
+    "int main() {"
+    "  int a;"
+    "  return 0;"
+    "}";
 
 int main() {
-  ANTLRInputStream input(b);
+  ANTLRInputStream input(a);
   SysYLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
   SysYParser parser(&tokens);

@@ -217,14 +217,16 @@ ir::Module *ASTVisitor::getModule() {
 }
 
 std::any ASTVisitor::visitType(SysYParser::TypeContext *ctx) {
-  if (ctx->getText() == "int")
-    return std::make_any<ir::Type *>(ir::BasicType::I32);
-  else if (ctx->getText() == "float")
-    return std::make_any<ir::Type *>(ir::BasicType::FLOAT);
-  else if (ctx->getText() == "void")
-    return std::make_any<ir::Type *>(ir::BasicType::VOID);
+  auto txt = ctx->getText();
+  if (txt == "int")
+    _curType = ir::BasicType::I32;
+  else if (txt == "float")
+    _curType = ir::BasicType::FLOAT;
+  else if (txt == "void")
+    _curType = ir::BasicType::VOID;
   else
-    throw std::runtime_error("Unsupported type: " + ctx->getText());
+    throw std::runtime_error("Unsupported type: " + txt);
+  return std::make_any<ir::Type *>(_curType);
 }
 
 std::any ASTVisitor::visitDimensions(SysYParser::DimensionsContext *ctx) {
