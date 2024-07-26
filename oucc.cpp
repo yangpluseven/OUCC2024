@@ -61,13 +61,22 @@ string b =
     "  return minusFunc(2, 1);"
     "}";
 string c =
+    "int mul(int base, int n) {"
+    "  if (n == 0) {"
+    "    return base;"
+    "  }"
+    "  return mul(base, n - 1) + base;"
+    "}"
     "int main() {"
-    "  int a;"
-    "  return 0;"
+    "  int a = 0, b = 1;"
+    "  if (a < 1) {"
+    "    a = a * 5;"
+    "  }"
+    "  return a + b + mul(2, 3);"
     "}";
 
 int main() {
-  ANTLRInputStream input(a);
+  ANTLRInputStream input(c);
   SysYLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
   SysYParser parser(&tokens);
