@@ -26,7 +26,7 @@ private:
 
 public:
   explicit ConstantNumber(bool value);
-  ConstantNumber(const model::Number &num);
+  explicit ConstantNumber(const model::Number &num);
   ConstantNumber(const ConstantNumber &other);
   ConstantNumber(ConstantNumber &&other) noexcept;
 

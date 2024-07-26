@@ -14,6 +14,7 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE HEADERS "include/*.hpp")
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS}
-        oucc.cpp)
+        oucc.cpp
+)
 
 target_link_libraries(${PROJECT_NAME} antlr4_static)

@@ -29,9 +29,10 @@ class Value {
 private:
   std::unordered_set<Use *> uses;
 
-public:
+protected:
   Type *const type;
 
+public:
   Value(Type *type);
   virtual ~Value();
   Type *const getType();
@@ -55,17 +56,19 @@ public:
   Use *remove(int index);
   Use *remove(Value *value);
   Use *get(int index) const;
+
   template <typename T, typename std::enable_if<
-                            std::is_base_of<Value, T>::value>::type * = nullptr>
+              std::is_base_of<Value, T>::value>::type * = nullptr>
   T *getOperand(int index) const {
     return static_cast<T *>(get(index)->getValue());
   }
 
   template <typename T, typename std::enable_if<
-                            std::is_base_of<Value, T>::value>::type * = nullptr>
+              std::is_base_of<Value, T>::value>::type * = nullptr>
   T *getLastOperand() const {
     return getOperand<T>(size() - 1);
   }
+
   bool isEmpty() const;
   void set(int index, Use *use);
 };

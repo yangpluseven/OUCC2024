@@ -25,8 +25,8 @@ public:
   GlobalVariable *getGlobal(const std::string &name);
   Function *getFunction(const std::string &name);
 
-  std::vector<GlobalVariable *> getGlobals();
-  std::vector<Function *> getFunctions();
+  std::vector<GlobalVariable *> getGlobals() const;
+  std::vector<Function *> getFunctions() const;
 };
 
 } // namespace ir

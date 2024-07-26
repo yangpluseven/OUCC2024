@@ -24,7 +24,7 @@ Function *Module::getFunction(const std::string &name) {
   return it != functions.end() ? it->second : nullptr;
 }
 
-std::vector<GlobalVariable *> Module::getGlobals() {
+std::vector<GlobalVariable *> Module::getGlobals() const {
   std::vector<GlobalVariable *> result;
   for (auto &global : globals) {
     result.push_back(global.second);
@@ -32,7 +32,7 @@ std::vector<GlobalVariable *> Module::getGlobals() {
   return result;
 }
 
-std::vector<Function *> Module::getFunctions() {
+std::vector<Function *> Module::getFunctions() const {
   std::vector<Function *> result;
   for (auto &function : functions) {
     result.push_back(function.second);
