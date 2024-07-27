@@ -1,10 +1,11 @@
 #include "ir/function.hpp"
 #include <algorithm>
+#include <utility>
 
 namespace ir {
 
-Function::Function(Type *type, const std::string &name)
-    : Value(type), name(name) {}
+Function::Function(Type *type, std::string name)
+    : Value(type), name(std::move(name)) {}
 
 bool Function::isDeclare() const { return blocks.empty(); }
 
@@ -33,13 +34,13 @@ BasicBlock *Function::remove(int index) {
   return removed;
 }
 
-int Function::size() const { return blocks.size(); }
+size_t Function::size() const { return blocks.size(); }
 
 BasicBlock *Function::get(int index) const { return blocks[index]; }
 
 BasicBlock *Function::getFirst() const { return blocks.front(); }
 
-void Function::insertAfter(BasicBlock *base, BasicBlock *block) {
+void Function::insertAfter(const BasicBlock *base, BasicBlock *block) {
   auto it = std::find(blocks.begin(), blocks.end(), base);
   if (it != blocks.end()) {
     blocks.insert(it + 1, block);
@@ -104,7 +105,7 @@ std::string Function::toString() const {
   return builder.str();
 }
 
-Argument::Argument(Type *type, std::string name) : Value(type), name(name) {}
+Argument::Argument(Type *type, std::string name) : Value(type), name(std::move(name)) {}
 
 std::string Argument::getName() const { return "%" + name; }
 

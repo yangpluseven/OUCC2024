@@ -30,7 +30,7 @@ private:
   std::vector<BasicBlock *> blocks;
 
 public:
-  Function(Type *type, const std::string &name);
+  Function(Type *type, std::string name);
 
   bool isDeclare() const;
 
@@ -44,13 +44,13 @@ public:
 
   BasicBlock *remove(int index);
 
-  int size() const;
+  size_t size() const;
 
   BasicBlock *get(int index) const;
 
   BasicBlock *getFirst() const;
 
-  void insertAfter(BasicBlock *base, BasicBlock *block);
+  void insertAfter(const BasicBlock *base, BasicBlock *block);
 
   std::vector<BasicBlock *>::iterator begin();
   std::vector<BasicBlock *>::iterator end();

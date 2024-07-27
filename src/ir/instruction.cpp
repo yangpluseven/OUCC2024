@@ -259,7 +259,7 @@ std::string BinaryOperator::_opToString(Op v) noexcept {
   case XOR:
     return "xor";
   default:
-    throw std::runtime_error("OutOfRangeException");
+    return "incomplete{_opToString}";
   };
 }
 
@@ -313,7 +313,7 @@ std::string CmpInst::_condToString(Cond v) {
   case UNE:
     return "une";
   default:
-    throw std::runtime_error("OutOfRangeException");
+      return "incomplete{_condToString}";
   };
 }
 

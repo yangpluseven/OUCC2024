@@ -418,7 +418,7 @@ std::any ASTVisitor::visitScalarVarDef(SysYParser::ScalarVarDefContext *ctx) {
           ->getValue();
     _module->addGlobal(
         _symbolTable->makeGlobal(_isConst, _curType, name, value));
-    std::make_any<ir::Value *>(nullptr);
+    return std::make_any<ir::Value *>(nullptr);
   }
   auto allocaInst = _symbolTable->makeLocal(_entryBlock, _curType, name);
   _entryBlock->add(allocaInst);
@@ -960,9 +960,9 @@ std::any ASTVisitor::visitLVal(SysYParser::LValContext *ctx) {
   std::vector<SysYParser::AdditiveExpContext *> ctxs = ctx->additiveExp();
   std::vector<ir::Value *> dims;
   std::transform(ctxs.begin(), ctxs.end(), std::back_inserter(dims),
-                 [&](SysYParser::AdditiveExpContext *ctx) {
+                 [&](SysYParser::AdditiveExpContext *ctx_) {
                    return std::any_cast<ir::Value *>(
-                       ASTVisitor::visitAdditiveExp(ctx));
+                       ASTVisitor::visitAdditiveExp(ctx_));
                  }); // TODO check 'transform'
   bool isFirst = true;
   for (ir::Value *dim : dims) {

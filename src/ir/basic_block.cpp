@@ -5,7 +5,8 @@ namespace ir {
 int BasicBlock::_counter = 0;
 
 BasicBlock::BasicBlock(Function *func)
-    : Value(BasicType::VOID), _function(func), _id(_counter++) {}
+  : Value(BasicType::VOID), _function(func), _id(_counter++) {
+}
 
 bool BasicBlock::isEmpty() const { return _instructions.empty(); }
 
@@ -50,14 +51,15 @@ Instruction *BasicBlock::get(int index) const {
   return _instructions[index];
 }
 
-int BasicBlock::size() { return _instructions.size(); }
+size_t BasicBlock::size() { return _instructions.size(); }
 
 std::string BasicBlock::getName() const { return "b" + std::to_string(_id); }
 
 std::string BasicBlock::toString() const { return getName(); }
 
-BasicBlock::Iterator::Iterator(typename std::vector<Instruction *>::iterator it)
-    : it(it) {}
+BasicBlock::Iterator::Iterator(std::vector<Instruction *>::iterator it)
+  : it(it) {
+}
 
 Instruction *BasicBlock::Iterator::operator*() const { return *it; }
 
@@ -87,8 +89,9 @@ BasicBlock::Iterator BasicBlock::begin() {
 BasicBlock::Iterator BasicBlock::end() { return Iterator(_instructions.end()); }
 
 BasicBlock::ConstIterator::ConstIterator(
-    typename std::vector<Instruction *>::const_iterator it)
-    : it(it) {}
+    std::vector<Instruction *>::const_iterator it)
+  : it(it) {
+}
 
 const Instruction *BasicBlock::ConstIterator::operator*() const { return *it; }
 

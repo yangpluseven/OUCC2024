@@ -19,7 +19,7 @@ private:
   std::vector<Instruction *> _instructions;
 
 public:
-  BasicBlock(Function *func);
+  explicit BasicBlock(Function *func);
 
   bool isEmpty() const;
   Instruction *getLast() const;
@@ -28,17 +28,17 @@ public:
   void addAll(int index, const std::vector<Instruction *> &newInsts);
   Instruction *remove(int index);
   Instruction *get(int index) const;
-  int size();
+  size_t size();
 
   std::string getName() const override;
   std::string toString() const;
 
   class Iterator {
   private:
-    typename std::vector<Instruction *>::iterator it;
+    std::vector<Instruction *>::iterator it;
 
   public:
-    explicit Iterator(typename std::vector<Instruction *>::iterator it);
+    explicit Iterator(std::vector<Instruction *>::iterator it);
 
     Instruction *operator*() const;
     Iterator &operator++();
@@ -52,11 +52,11 @@ public:
 
   class ConstIterator {
   private:
-    typename std::vector<Instruction *>::const_iterator it;
+    std::vector<Instruction *>::const_iterator it;
 
   public:
     explicit ConstIterator(
-        typename std::vector<Instruction *>::const_iterator it);
+        std::vector<Instruction *>::const_iterator it);
 
     const Instruction *operator*() const;
     ConstIterator &operator++();

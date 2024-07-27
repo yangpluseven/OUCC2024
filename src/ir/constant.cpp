@@ -1,10 +1,13 @@
 #include "ir/constant.hpp"
 
+#include <utility>
+
 namespace ir {
 
-Constant::Constant(Type *type) : User(type) {}
+Constant::Constant(Type *type) : User(type) {
+}
 
-Constant::~Constant() {}
+Constant::~Constant() = default;
 
 BasicType *ConstantNumber::determineType(const model::Number &num) {
   auto value = num.getValue();
@@ -17,16 +20,20 @@ BasicType *ConstantNumber::determineType(const model::Number &num) {
 }
 
 ConstantNumber::ConstantNumber(bool value)
-    : Constant(BasicType::I1), _value(value ? 1 : 0) {}
+  : Constant(BasicType::I1), _value(value ? 1 : 0) {
+}
 
 ConstantNumber::ConstantNumber(const model::Number &num)
-    : Constant(determineType(num)), _value(num) {}
+  : Constant(determineType(num)), _value(num) {
+}
 
 ConstantNumber::ConstantNumber(const ConstantNumber &other)
-    : Constant(other.type), _value(other._value) {}
+  : Constant(other.type), _value(other._value) {
+}
 
 ConstantNumber::ConstantNumber(ConstantNumber &&other) noexcept
-    : Constant(other.type), _value(std::move(other._value)) {}
+  : Constant(other.type), _value(std::move(other._value)) {
+}
 
 model::Number ConstantNumber::getValue() const { return _value; }
 
@@ -46,7 +53,7 @@ std::string ConstantNumber::getName() const {
     throw std::runtime_error("Unexpected type");
 }
 
-ConstantNumber ConstantNumber::operator+(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator+(const ConstantNumber &rhs) const {
   if (type == BasicType::I32)
     return ConstantNumber(model::Number(intValue() + rhs.intValue()));
   else if (type == BasicType::FLOAT)
@@ -55,7 +62,7 @@ ConstantNumber ConstantNumber::operator+(const ConstantNumber &rhs) {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator-(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator-(const ConstantNumber &rhs) const {
   if (type == BasicType::I32)
     return ConstantNumber(model::Number(intValue() - rhs.intValue()));
   else if (type == BasicType::FLOAT)
@@ -64,7 +71,7 @@ ConstantNumber ConstantNumber::operator-(const ConstantNumber &rhs) {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator*(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator*(const ConstantNumber &rhs) const {
   if (type == BasicType::I32)
     return ConstantNumber(model::Number(intValue() * rhs.intValue()));
   else if (type == BasicType::FLOAT)
@@ -73,7 +80,7 @@ ConstantNumber ConstantNumber::operator*(const ConstantNumber &rhs) {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator/(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator/(const ConstantNumber &rhs) const {
   if (type == BasicType::I32)
     return ConstantNumber(model::Number(intValue() / rhs.intValue()));
   else if (type == BasicType::FLOAT)
@@ -82,14 +89,14 @@ ConstantNumber ConstantNumber::operator/(const ConstantNumber &rhs) {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator%(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator%(const ConstantNumber &rhs) const {
   if (type == BasicType::I32)
     return ConstantNumber(model::Number(intValue() % rhs.intValue()));
   else
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator^(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator^(const ConstantNumber &rhs) const {
   if (type == BasicType::I32)
     return ConstantNumber(model::Number(intValue() ^ rhs.intValue()));
   else if (type == BasicType::I1)
@@ -98,7 +105,7 @@ ConstantNumber ConstantNumber::operator^(const ConstantNumber &rhs) {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator-() {
+ConstantNumber ConstantNumber::operator-() const {
   if (type == BasicType::I32)
     return ConstantNumber(model::Number(-intValue()));
   else if (type == BasicType::FLOAT)
@@ -107,7 +114,7 @@ ConstantNumber ConstantNumber::operator-() {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator!() {
+ConstantNumber ConstantNumber::operator!() const {
   if (type == BasicType::I1 || type == BasicType::I32)
     return ConstantNumber(intValue() == 0);
   else if (type == BasicType::FLOAT)
@@ -116,7 +123,7 @@ ConstantNumber ConstantNumber::operator!() {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator==(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator==(const ConstantNumber &rhs) const {
   if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(intValue() == rhs.intValue());
   else if (type == BasicType::FLOAT)
@@ -125,7 +132,7 @@ ConstantNumber ConstantNumber::operator==(const ConstantNumber &rhs) {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator!=(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator!=(const ConstantNumber &rhs) const {
   if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(intValue() != rhs.intValue());
   else if (type == BasicType::FLOAT)
@@ -134,7 +141,7 @@ ConstantNumber ConstantNumber::operator!=(const ConstantNumber &rhs) {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator>(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator>(const ConstantNumber &rhs) const {
   if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(intValue() > rhs.intValue());
   else if (type == BasicType::FLOAT)
@@ -143,7 +150,7 @@ ConstantNumber ConstantNumber::operator>(const ConstantNumber &rhs) {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator>=(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator>=(const ConstantNumber &rhs) const {
   if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(intValue() >= rhs.intValue());
   else if (type == BasicType::FLOAT)
@@ -152,7 +159,7 @@ ConstantNumber ConstantNumber::operator>=(const ConstantNumber &rhs) {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator<(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator<(const ConstantNumber &rhs) const {
   if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(intValue() < rhs.intValue());
   else if (type == BasicType::FLOAT)
@@ -161,7 +168,7 @@ ConstantNumber ConstantNumber::operator<(const ConstantNumber &rhs) {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber ConstantNumber::operator<=(const ConstantNumber &rhs) {
+ConstantNumber ConstantNumber::operator<=(const ConstantNumber &rhs) const {
   if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(intValue() <= rhs.intValue());
   else if (type == BasicType::FLOAT)
@@ -170,57 +177,59 @@ ConstantNumber ConstantNumber::operator<=(const ConstantNumber &rhs) {
     throw std::runtime_error("Unsupported type");
 }
 
-ConstantNumber *ConstantNumber::add(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::add(const ConstantNumber *rhs) const {
   return new ConstantNumber(*this + *rhs);
 }
 
-ConstantNumber *ConstantNumber::sub(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::sub(const ConstantNumber *rhs) const {
   return new ConstantNumber(*this - *rhs);
 }
 
-ConstantNumber *ConstantNumber::mul(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::mul(const ConstantNumber *rhs) const {
   return new ConstantNumber(*this * *rhs);
 }
 
-ConstantNumber *ConstantNumber::div(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::div(const ConstantNumber *rhs) const {
   return new ConstantNumber(*this / *rhs);
 }
 
-ConstantNumber *ConstantNumber::rem(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::rem(const ConstantNumber *rhs) const {
   return new ConstantNumber(*this % *rhs);
 }
 
-ConstantNumber *ConstantNumber::exor(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::exor(const ConstantNumber *rhs) const {
   return new ConstantNumber(*this ^ *rhs);
 }
 
-ConstantNumber *ConstantNumber::neg() { return new ConstantNumber(-*this); }
+ConstantNumber *ConstantNumber::neg() const {
+  return new ConstantNumber(-*this);
+}
 
-ConstantNumber *ConstantNumber::lnot() {
+ConstantNumber *ConstantNumber::lnot() const {
   return new ConstantNumber(!*this);
 }
 
-ConstantNumber *ConstantNumber::eq(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::eq(const ConstantNumber *rhs) const {
   return new ConstantNumber(intValue() == rhs->intValue());
 }
 
-ConstantNumber *ConstantNumber::ne(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::ne(const ConstantNumber *rhs) const {
   return new ConstantNumber(intValue() != rhs->intValue());
 }
 
-ConstantNumber *ConstantNumber::gt(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::gt(const ConstantNumber *rhs) const {
   return new ConstantNumber(intValue() > rhs->intValue());
 }
 
-ConstantNumber *ConstantNumber::ge(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::ge(const ConstantNumber *rhs) const {
   return new ConstantNumber(intValue() >= rhs->intValue());
 }
 
-ConstantNumber *ConstantNumber::lt(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::lt(const ConstantNumber *rhs) const {
   return new ConstantNumber(intValue() < rhs->intValue());
 }
 
-ConstantNumber *ConstantNumber::le(ConstantNumber *rhs) {
+ConstantNumber *ConstantNumber::le(const ConstantNumber *rhs) const {
   return new ConstantNumber(intValue() <= rhs->intValue());
 }
 
@@ -228,7 +237,8 @@ std::string ConstantNumber::toString() const {
   return type->toString() + " " + getName();
 }
 
-ConstantZero::ConstantZero(Type *type) : Constant(type) {}
+ConstantZero::ConstantZero(Type *type) : Constant(type) {
+}
 
 std::string ConstantZero::getName() const { return "zeroinitializer"; }
 
@@ -237,7 +247,8 @@ std::string ConstantZero::toString() const {
 }
 
 ConstantArray::ConstantArray(Type *type, std::vector<Constant *> values)
-    : Constant(type), values(values) {}
+  : Constant(type), values(std::move(values)) {
+}
 
 std::vector<Constant *> &ConstantArray::getValues() { return values; }
 

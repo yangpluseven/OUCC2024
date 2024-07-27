@@ -43,15 +43,9 @@ void emitLLVM(const string &filename, Module *module) {
 }
 
 string a =
-    "int addFunc(int a, int b) {"
-    "  return a + b;"
-    "}"
-    "int minusFunc(int a, int b) {"
-    "  return a - b;"
-    "}"
+    "int a;"
     "int main() {"
-    "  int a;"
-    "  return addFunc(2, 1);"
+    "  return 0;"
     "}";
 string b =
     "int minusFunc(int a, int b) {"
@@ -61,11 +55,18 @@ string b =
     "  return minusFunc(2, 1);"
     "}";
 string c =
+    "int glob_base = 10;"
     "int mul(int base, int n) {"
     "  if (n == 0) {"
     "    return base;"
     "  }"
     "  return mul(base, n - 1) + base;"
+    "}"
+    "float mulf(float base, int n) {"
+    "  if (n == 0) {"
+    "    return base;"
+    "  }"
+    "  return mulf(base, n - 1) + base;"
     "}"
     "int main() {"
     "  int a = 0, b = 1;"

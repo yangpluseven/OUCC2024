@@ -18,19 +18,19 @@ public:
 
   bool isConst() const;
 
-  std::vector<int> getDimensions();
+  std::vector<int> getDimensions() const;
 
-  bool isSingle();
+  bool isSingle() const;
 
-  bool isInBss();
+  bool isInBss() const;
 
-  float getFloat();
-  float getFloat(int index);
+  float getFloat() const;
+  float getFloat(int index) const;
 
-  int getInt();
-  int getInt(int index);
+  int getInt() const;
+  int getInt(int index) const;
 
-  Constant *getValue();
+  Constant *getValue() const;
 
   std::string getName() const override;
   std::string getRawName() const;
