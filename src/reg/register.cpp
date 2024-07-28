@@ -11,6 +11,8 @@ BasicType *const BasicType::VOID = new BasicType(0, "void");
 
 namespace reg {
 
+int VReg::_counter = 0;
+
 MReg *const MReg::ZERO = new MReg(ir::BasicType::I32, "zero");
 MReg *const MReg::RA = new MReg(ir::BasicType::I32, "ra");
 MReg *const MReg::SP = new MReg(ir::BasicType::I32, "sp");

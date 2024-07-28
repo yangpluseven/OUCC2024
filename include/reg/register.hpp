@@ -38,8 +38,6 @@ public:
   };
 };
 
-int VReg::_counter = 0;
-
 class MReg : public Reg {
 private:
   std::string _name;

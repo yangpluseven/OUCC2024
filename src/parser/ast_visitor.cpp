@@ -70,7 +70,7 @@ void ASTVisitor::formatLLVM() {
       continue;
     for (int i = 0; i < func->size(); i++) {
       auto const block = func->get(i);
-      for (int j = 0; j < block->size() - 1; j++) {
+      for (int j = 0; j + 1 < block->size(); j++) {
         auto terminal = block->get(j);
         if (dynamic_cast<ir::BranchInst *>(terminal) ||
             dynamic_cast<ir::RetInst *>(terminal)) {
