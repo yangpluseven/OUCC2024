@@ -2,29 +2,23 @@
 
 namespace ir {
 
-Use::Use(User *user, Value *value) : user(user), value(value) {}
-
-Use::~Use() {
-  // TODO: Implement destructor
+Use::Use(User *user, Value *value) : user(user), value(value) {
 }
 
-User *Use::getUser() { return user; }
+User *Use::getUser() const { return user; }
 
-Value *Use::getValue() { return value; }
+Value *Use::getValue() const { return value; }
 
 void Use::setUser(User *user) { this->user = user; }
 
 void Use::setValue(Value *value) { this->value = value; }
 
-User::User(Type *type) : Value(type) {}
-
-User::~User() {
-  // TODO: Implement destructor
+User::User(Type *type) : Value(type) {
 }
 
 size_t User::size() const { return operands.size(); }
 
-void User::add(Use *use) { add(size(), use); }
+void User::add(Use *use) { add(static_cast<int>(size()), use); }
 
 void User::add(int index, Use *use) {
   while (index >= operands.size())
@@ -35,12 +29,15 @@ void User::add(int index, Use *use) {
 
 Use *User::remove(int index) {
   Use *use = get(index);
+  if (use == nullptr) {
+    return nullptr;
+  }
   use->getValue()->getUses().erase(use);
   operands.erase(operands.begin() + index);
   return use;
 }
 
-Use *User::remove(Value *value) {
+Use *User::remove(const Value *value) {
   for (auto i = 0; i < operands.size(); i++) {
     if (operands[i]->getValue() == value) {
       return remove(i);
@@ -65,15 +62,12 @@ void User::set(int index, Use *use) {
   use->getValue()->addUse(use);
 }
 
-Value::Value(Type *type) : type(type) {}
-
-Value::~Value() {
-  // TODO: Implement destructor
+Value::Value(Type *type) : type(type) {
 }
 
-Type *const Value::getType() { return type; }
+Type *Value::getType() const { return type; }
 
-int Value::getSize() const { return type->getSize(); }
+size_t Value::getSize() const { return type->getSize(); }
 
 void Value::addUse(Use *use) { uses.insert(use); }
 

@@ -11,11 +11,11 @@ public:
   Type() = default;
   virtual ~Type();
 
-  virtual Type *baseType() const = 0;
-  virtual size_t getSize() const = 0;
-  virtual std::string toString() const = 0;
+  [[nodiscard]] virtual Type *baseType() const = 0;
+  [[nodiscard]] virtual size_t getSize() const = 0;
+  [[nodiscard]] virtual std::string toString() const = 0;
 
-  static Type *CheckEquality(Type *lhs, Type *rhs);
+  static Type *CheckEquality(Type *lhs, const Type *rhs);
 
   bool operator==(const Type &rhs) const;
 };
@@ -27,9 +27,9 @@ public:
   static BasicType *const FLOAT;
   static BasicType *const VOID;
 
-  size_t getSize() const override;
-  std::string toString() const override;
-  Type *baseType() const override;
+  [[nodiscard]] size_t getSize() const override;
+  [[nodiscard]] std::string toString() const override;
+  [[nodiscard]] Type *baseType() const override;
 
 private:
   size_t _size;
@@ -43,11 +43,11 @@ private:
   Type *const _bType;
 
 public:
-  PointerType(Type *baseType);
+  explicit PointerType(Type *baseType);
 
-  Type *baseType() const override;
-  size_t getSize() const override;
-  std::string toString() const override;
+  [[nodiscard]] Type *baseType() const override;
+  [[nodiscard]] size_t getSize() const override;
+  [[nodiscard]] std::string toString() const override;
 };
 
 class ArrayType : public Type {
@@ -58,13 +58,13 @@ private:
 public:
   ArrayType(Type *baseType, size_t arraySize);
 
-  Type *baseType() const override;
-  size_t getArraySize();
-  size_t getSize() const override;
+  [[nodiscard]] Type *baseType() const override;
+  size_t getArraySize() const;
+  [[nodiscard]] size_t getSize() const override;
   Type *getScalarType();
   std::vector<ArrayType *> getArrayTypes();
   std::vector<size_t> getArraySizes();
-  std::string toString() const override;
+  [[nodiscard]] std::string toString() const override;
 };
 
 } // namespace ir

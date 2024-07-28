@@ -1,12 +1,13 @@
 #include "ir/type.hpp"
 #include <stdexcept>
 #include <sstream>
+#include <utility>
 
 namespace ir {
 
-Type::~Type() {}
+Type::~Type() = default;
 
-Type *Type::CheckEquality(Type *lhs, Type *rhs) {
+Type *Type::CheckEquality(Type *lhs, const Type *rhs) {
   if (lhs->toString() != rhs->toString())
     throw std::runtime_error("Unmatched types!");
   return lhs;
@@ -16,7 +17,9 @@ bool Type::operator==(const Type &rhs) const {
   return toString() == rhs.toString();
 }
 
-BasicType::BasicType(size_t size, std::string name) : _size(size), _name(name) {}
+BasicType::BasicType(size_t size, std::string name) : _size(size),
+  _name(std::move(name)) {
+}
 
 BasicType *const BasicType::I1 = new BasicType(1, "i1");
 BasicType *const BasicType::I32 = new BasicType(32, "i32");
@@ -27,21 +30,28 @@ size_t BasicType::getSize() const { return _size; }
 
 std::string BasicType::toString() const { return _name; }
 
-Type *BasicType::baseType() const { throw std::runtime_error("UnsupportedOperationException"); }
+Type *BasicType::baseType() const {
+  throw std::runtime_error("UnsupportedOperationException");
+}
 
-PointerType::PointerType(Type *baseType) : _bType(baseType) {}
+PointerType::PointerType(Type *baseType) : _bType(baseType) {
+}
 
 Type *PointerType::baseType() const { return _bType; }
 
 size_t PointerType::getSize() const { return 64; }
 
-std::string PointerType::toString() const { return baseType()->toString() + "*"; }
+std::string PointerType::toString() const {
+  return baseType()->toString() + "*";
+}
 
-ArrayType::ArrayType(Type *baseType, size_t arraySize) : _bType(baseType), _arraySize(arraySize) {}
+ArrayType::ArrayType(Type *baseType, size_t arraySize) : _bType(baseType),
+  _arraySize(arraySize) {
+}
 
 Type *ArrayType::baseType() const { return _bType; }
 
-size_t ArrayType::getArraySize() { return _arraySize; }
+size_t ArrayType::getArraySize() const { return _arraySize; }
 
 size_t ArrayType::getSize() const { return baseType()->getSize() * _arraySize; }
 
@@ -66,6 +76,7 @@ std::vector<ArrayType *> ArrayType::getArrayTypes() {
 std::vector<size_t> ArrayType::getArraySizes() {
   std::vector<size_t> arraySizes;
   auto types = getArrayTypes();
+  arraySizes.reserve(types.size());
   for (auto i : types) {
     arraySizes.push_back(i->_arraySize);
   }

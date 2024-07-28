@@ -26,6 +26,7 @@ Function *Module::getFunction(const std::string &name) {
 
 std::vector<GlobalVariable *> Module::getGlobals() const {
   std::vector<GlobalVariable *> result;
+  result.reserve(globals.size());
   for (auto &global : globals) {
     result.push_back(global.second);
   }
@@ -34,6 +35,7 @@ std::vector<GlobalVariable *> Module::getGlobals() const {
 
 std::vector<Function *> Module::getFunctions() const {
   std::vector<Function *> result;
+  result.reserve(functions.size());
   for (auto &function : functions) {
     result.push_back(function.second);
   }

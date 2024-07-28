@@ -18,9 +18,9 @@ private:
 
 public:
   Use(User *user, Value *value);
-  ~Use();
-  User *getUser();
-  Value *getValue();
+  ~Use() = default; // TODO: Implement destructor
+  [[nodiscard]] User *getUser() const;
+  [[nodiscard]] Value *getValue() const;
   void setUser(User *user);
   void setValue(Value *value);
 };
@@ -33,10 +33,10 @@ protected:
   Type *const type;
 
 public:
-  Value(Type *type);
-  virtual ~Value();
-  Type *const getType();
-  int getSize() const;
+  explicit Value(Type *type);
+  virtual ~Value() = default; // TODO: Implement destructor
+  Type *getType() const;
+  size_t getSize() const;
   void addUse(Use *use);
   void replaceAllUseAs(Value *value);
   std::unordered_set<Use *> &getUses();
@@ -48,23 +48,23 @@ protected:
   std::vector<Use *> operands;
 
 public:
-  User(Type *type);
-  virtual ~User();
+  explicit User(Type *type);
+  ~User() override = default; // TODO: Implement destructor
   size_t size() const;
   void add(Use *use);
   void add(int index, Use *use);
   Use *remove(int index);
-  Use *remove(Value *value);
+  Use *remove(const Value *value);
   Use *get(int index) const;
 
-  template <typename T, typename std::enable_if<
-              std::is_base_of<Value, T>::value>::type * = nullptr>
+  template <typename T, std::enable_if_t<
+              std::is_base_of_v<Value, T>> * = nullptr>
   T *getOperand(int index) const {
     return static_cast<T *>(get(index)->getValue());
   }
 
-  template <typename T, typename std::enable_if<
-              std::is_base_of<Value, T>::value>::type * = nullptr>
+  template <typename T, std::enable_if_t<
+              std::is_base_of_v<Value, T>> * = nullptr>
   T *getLastOperand() const {
     return getOperand<T>(size() - 1);
   }
