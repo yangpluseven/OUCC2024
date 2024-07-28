@@ -24,7 +24,7 @@ protected:
   Instruction(BasicBlock *block, Type *type, std::vector<Value *> &operands);
 
 public:
-  BasicBlock *getBlock();
+  BasicBlock *getBlock() const;
   std::string getName() const override;
   virtual std::string toString() const;
 };
@@ -54,7 +54,7 @@ public:
 
 class GetElementPtrInst : public Instruction {
 private:
-  static Type *_calcType(Value *value, size_t indexSize);
+  static Type *_calcType(const Value *value, size_t indexSize);
 
 public:
   GetElementPtrInst(BasicBlock *block, Value *ptr,

@@ -4,6 +4,6 @@ Everything from the original `compile/codegen/regalloc` should be moved here, an
 
 - reg_allocator.hpp
 - reg_allocator_single_func.hpp
-- physical_reg.hpp  (MReg.java)
+- machine_reg.hpp  (MReg.java)
 - reg.hpp
 - virtual_reg.hpp   (VReg.java)

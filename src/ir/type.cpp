@@ -21,11 +21,6 @@ BasicType::BasicType(size_t size, std::string name) : _size(size),
   _name(std::move(name)) {
 }
 
-BasicType *const BasicType::I1 = new BasicType(1, "i1");
-BasicType *const BasicType::I32 = new BasicType(32, "i32");
-BasicType *const BasicType::FLOAT = new BasicType(32, "float");
-BasicType *const BasicType::VOID = new BasicType(0, "void");
-
 size_t BasicType::getSize() const { return _size; }
 
 std::string BasicType::toString() const { return _name; }

@@ -7,7 +7,7 @@
 
 std::unordered_map<std::string, std::string> Compiler::optionValues{
     {"-S", "0"}, {"-O1", "0"}, {"-o", "out"}, {"", "main.sy"}, {"-dispf", "0"},
-    {"-emit-llvm", "0"}};
+    {"-emit-llvm", "0"}, {"-emit-mir", "0"}};
 
 ir::Module *Compiler::module;
 
@@ -32,6 +32,12 @@ void Compiler::compile() {
       std::cout << "Emit llvm prior to assembly. quitting." << std::endl;
       return;
     }
+  }
+  if (optionValues["-emit-mir"] == "1") {
+    // TODO
+  }
+  if (optionValues["-S"] == "1") {
+    // TODO
   }
 }
 

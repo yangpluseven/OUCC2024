@@ -10,9 +10,9 @@ namespace ir {
 
 class Constant : public User {
 public:
-  Constant(Type *type);
+  explicit Constant(Type *type);
 
-  virtual ~Constant();
+  ~Constant() override;
 
   virtual std::string toString() const = 0;
   virtual std::string getName() const = 0;

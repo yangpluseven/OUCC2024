@@ -27,7 +27,7 @@ public:
 
 class Value {
 private:
-  std::unordered_set<Use *> uses;
+  std::unordered_set<Use *> _uses;
 
 protected:
   Type *const type;

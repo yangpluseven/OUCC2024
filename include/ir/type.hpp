@@ -59,7 +59,7 @@ public:
   ArrayType(Type *baseType, size_t arraySize);
 
   [[nodiscard]] Type *baseType() const override;
-  size_t getArraySize() const;
+  [[nodiscard]] size_t getArraySize() const;
   [[nodiscard]] size_t getSize() const override;
   Type *getScalarType();
   std::vector<ArrayType *> getArrayTypes();

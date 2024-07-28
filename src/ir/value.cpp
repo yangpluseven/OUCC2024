@@ -69,16 +69,16 @@ Type *Value::getType() const { return type; }
 
 size_t Value::getSize() const { return type->getSize(); }
 
-void Value::addUse(Use *use) { uses.insert(use); }
+void Value::addUse(Use *use) { _uses.insert(use); }
 
 void Value::replaceAllUseAs(Value *value) {
-  for (auto use : uses) {
-    value->uses.insert(use);
+  for (auto use : _uses) {
+    value->_uses.insert(use);
     use->setValue(value);
   }
-  uses.clear();
+  _uses.clear();
 }
 
-std::unordered_set<Use *> &Value::getUses() { return uses; }
+std::unordered_set<Use *> &Value::getUses() { return _uses; }
 
 } // namespace ir

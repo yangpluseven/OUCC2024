@@ -5,7 +5,7 @@ namespace ir {
 int BasicBlock::_counter = 0;
 
 BasicBlock::BasicBlock(Function *func)
-  : Value(BasicType::VOID), _function(func), _id(_counter++) {
+  : Value(BasicType::VOID), _id(_counter++), _function(func) {
 }
 
 bool BasicBlock::isEmpty() const { return _instructions.empty(); }
@@ -51,7 +51,7 @@ Instruction *BasicBlock::get(int index) const {
   return _instructions[index];
 }
 
-size_t BasicBlock::size() { return _instructions.size(); }
+size_t BasicBlock::size() const { return _instructions.size(); }
 
 std::string BasicBlock::getName() const { return "b" + std::to_string(_id); }
 

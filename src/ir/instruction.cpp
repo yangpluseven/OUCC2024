@@ -25,7 +25,7 @@ Instruction::Instruction(BasicBlock *block, Type *type,
   id = _counter++;
 }
 
-BasicBlock *Instruction::getBlock() { return _block; }
+BasicBlock *Instruction::getBlock() const { return _block; }
 
 std::string Instruction::getName() const { return "%v" + std::to_string(id); }
 
@@ -95,7 +95,7 @@ std::string CallInst::toString() const {
          func->getName() + ss.str();
 }
 
-Type *GetElementPtrInst::_calcType(Value *value, size_t indexSize) {
+Type *GetElementPtrInst::_calcType(const Value *value, size_t indexSize) {
   auto type = value->getType();
   if (dynamic_cast<GlobalVariable *>(type))
     type = new PointerType(type);
@@ -108,14 +108,14 @@ Type *GetElementPtrInst::_calcType(Value *value, size_t indexSize) {
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
                                      std::initializer_list<Value *> indexes)
   : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
-  for (auto index : indexes)
+  for (auto const index : indexes)
     add(new Use(this, index));
 }
 
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
                                      std::vector<Value *> &indexes)
   : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
-  for (auto index : indexes)
+  for (auto const index : indexes)
     add(new Use(this, index));
 }
 

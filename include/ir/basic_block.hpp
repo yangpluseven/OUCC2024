@@ -28,7 +28,7 @@ public:
   void addAll(int index, const std::vector<Instruction *> &newInsts);
   Instruction *remove(int index);
   Instruction *get(int index) const;
-  size_t size();
+  size_t size() const;
 
   std::string getName() const override;
   std::string toString() const;
