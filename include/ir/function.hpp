@@ -1,5 +1,5 @@
-#ifndef FUNCTION_HPP
-#define FUNCTION_HPP
+#ifndef IR_FUNCTION_HPP
+#define IR_FUNCTION_HPP
 
 #include "basic_block.hpp"
 #include "value.hpp"
@@ -67,4 +67,4 @@ public:
 
 } // namespace ir
 
-#endif // FUNCTION_HPP
+#endif // IR_FUNCTION_HPP

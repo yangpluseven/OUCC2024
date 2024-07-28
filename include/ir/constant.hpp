@@ -1,5 +1,5 @@
-#ifndef CONSTANT_HPP
-#define CONSTANT_HPP
+#ifndef IR_CONSTANT_HPP
+#define IR_CONSTANT_HPP
 
 #include "model/number.hpp"
 #include "value.hpp"
@@ -91,4 +91,4 @@ public:
 
 } // namespace ir
 
-#endif // CONSTANT_HPP
+#endif // IR_CONSTANT_HPP

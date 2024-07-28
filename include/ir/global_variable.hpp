@@ -1,5 +1,5 @@
-#ifndef GLOBAL_VARIABLE_HPP
-#define GLOBAL_VARIABLE_HPP
+#ifndef IR_GLOBAL_VARIABLE_HPP
+#define IR_GLOBAL_VARIABLE_HPP
 
 #include "constant.hpp"
 #include <string>
@@ -40,4 +40,4 @@ public:
 
 } // namespace ir
 
-#endif // GLOBAL_VARIABLE_HPP
+#endif // IR_GLOBAL_VARIABLE_HPP

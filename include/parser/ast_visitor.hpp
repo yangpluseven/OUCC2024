@@ -22,7 +22,7 @@ class SymbolTable {
 private:
   std::list<std::unordered_map<std::string, ir::Value *>> _table;
 
-  ir::Value *get(const std::string &name) const {
+  [[nodiscard]] ir::Value *get(const std::string &name) const {
     for (auto item : _table) {
       if (item.find(name) != item.end())
         return item[name];
@@ -42,9 +42,9 @@ private:
     return sub;
   }
 
-  ir::Constant *fuseConst(ir::Type *type,
-                          const std::map<int, model::Number> &values,
-                          int base) {
+  static ir::Constant *fuseConst(ir::Type *type,
+                                 const std::map<int, model::Number> &values,
+                                 int base) {
     if (dynamic_cast<ir::BasicType *>(type))
       if (values.find(base) != values.end())
         return new ir::ConstantNumber(values.at(base));
@@ -55,29 +55,34 @@ private:
       return new ir::ConstantZero(type);
 
     auto arrayType = dynamic_cast<ir::ArrayType *>(type);
-    int size = 1;
+    size_t size = 1;
     for (auto i : arrayType->getArraySizes())
       size *= i;
 
     std::vector<ir::Constant *> array;
-    for (int i = base; i < base + size; i += size / arrayType->getArraySize())
+    for (size_t i = base; i < base + size;
+         i += size / arrayType->getArraySize())
       array.push_back(fuseConst(
           arrayType->baseType(),
-          submap(values, i, i + size / arrayType->getArraySize()), i));
+          submap(values, static_cast<int>(i),
+                 static_cast<int>(i + size / arrayType->getArraySize())),
+          static_cast<int>(i)));
     return new ir::ConstantArray(arrayType, array);
   }
 
 public:
-  ir::Value *getData(const std::string &name) { return get(name); }
+  [[nodiscard]] ir::Value *getData(const std::string &name) const {
+    return get(name);
+  }
 
-  ir::Function *getFunc(const std::string &name) {
+  [[nodiscard]] ir::Function *getFunc(const std::string &name) const {
     auto symbol = get(name);
     if (auto func = dynamic_cast<ir::Function *>(symbol))
       return func;
     throw std::runtime_error("Undefined function: " + name);
   }
 
-  void in() { _table.push_front({}); }
+  void in() { _table.emplace_front(); }
 
   ir::Function *makeFunc(ir::Type *type, const std::string &name) {
     auto func = new ir::Function(type, name);
@@ -86,7 +91,8 @@ public:
   }
 
   ir::GlobalVariable *makeGlobal(bool isConst, ir::Type *type,
-                                 const std::string &name, model::Number value) {
+                                 const std::string &name,
+                                 const model::Number &value) {
     auto symbol = new ir::GlobalVariable(isConst, type, name,
                                          new ir::ConstantNumber(value));
     _table.front()[name] = symbol;
@@ -95,7 +101,7 @@ public:
 
   ir::GlobalVariable *makeGlobal(bool isConst, ir::Type *type,
                                  const std::string &name,
-                                 std::map<int, model::Number> values) {
+                                 const std::map<int, model::Number> &values) {
     auto rootType = type;
     while (auto arrayType = dynamic_cast<ir::ArrayType *>(rootType))
       rootType = arrayType->baseType();
@@ -115,7 +121,7 @@ public:
     return symbol;
   }
 
-  size_t size() const { return _table.size(); }
+  [[nodiscard]] size_t size() const { return _table.size(); }
 
   ir::AllocaInst *makeLocal(ir::BasicBlock *block, ir::Type *type,
                             const std::string &name) {
@@ -127,7 +133,7 @@ public:
   ir::AllocaInst *makeLocal(ir::BasicBlock *block, ir::Type *type,
                             const std::string &name,
                             const std::vector<int> &dimensions) {
-    for (int i = dimensions.size() - 1; i >= 0; i--)
+    for (int i = static_cast<int>(dimensions.size() - 1); i >= 0; i--)
       type = new ir::ArrayType(type, dimensions[i]);
 
     auto allocaInst = new ir::AllocaInst(block, type);

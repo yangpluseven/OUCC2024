@@ -637,10 +637,10 @@ std::any ASTVisitor::visitAdditiveExp(SysYParser::AdditiveExpContext *ctx) {
 }
 
 std::any ASTVisitor::visitRelationalExp(SysYParser::RelationalExpContext *ctx) {
-  ir::Value *iterVal = std::any_cast<ir::Value *>(
+  auto *iterVal = std::any_cast<ir::Value *>(
       ASTVisitor::visitAdditiveExp(ctx->additiveExp(0)));
   for (int i = 1; i < ctx->additiveExp().size(); i++) {
-    ir::Value *nextVal = std::any_cast<ir::Value *>(
+    auto *nextVal = std::any_cast<ir::Value *>(
         ASTVisitor::visitAdditiveExp(ctx->additiveExp(i)));
     ir::Type *targetType = ASTVisitor::automaticTypePromotion(
         iterVal->getType(), nextVal->getType());
@@ -691,10 +691,10 @@ std::any ASTVisitor::visitRelationalExp(SysYParser::RelationalExpContext *ctx) {
 }
 
 std::any ASTVisitor::visitEqualityExp(SysYParser::EqualityExpContext *ctx) {
-  ir::Value *iterVal = std::any_cast<ir::Value *>(
+  auto *iterVal = std::any_cast<ir::Value *>(
       ASTVisitor::visitRelationalExp(ctx->relationalExp(0)));
   for (int i = 1; i < ctx->relationalExp().size(); i++) {
-    ir::Value *nextVal = std::any_cast<ir::Value *>(
+    auto *nextVal = std::any_cast<ir::Value *>(
         ASTVisitor::visitRelationalExp(ctx->relationalExp(i)));
     ir::Type *targetType = ASTVisitor::automaticTypePromotion(
         iterVal->getType(), nextVal->getType());
@@ -732,7 +732,7 @@ std::any ASTVisitor::visitLandExp(SysYParser::LandExpContext *ctx) {
   std::vector<ir::BasicBlock *> blocks;
   blocks.push_back(_curBlock);
   for (int i = 0; i < ctx->equalityExp().size() - 1; i++) {
-    ir::BasicBlock *block = new ir::BasicBlock(_curFunc);
+    auto *block = new ir::BasicBlock(_curFunc);
     _curFunc->insertAfter(blocks.back(), block);
     blocks.push_back(block);
   }
@@ -742,7 +742,7 @@ std::any ASTVisitor::visitLandExp(SysYParser::LandExpContext *ctx) {
     this->_curBlock = blocks[i];
     this->_trueBlock = blocks[i + 1];
     this->_falseBlock = falseBlock;
-    ir::Value *value = std::any_cast<ir::Value *>(
+    auto *value = std::any_cast<ir::Value *>(
         ASTVisitor::visitEqualityExp(ctx->equalityExp(i)));
     processValueCond(value);
   }
@@ -841,7 +841,7 @@ std::any ASTVisitor::visitArrayVarExp(SysYParser::ArrayVarExpContext *ctx) {
     ptr = inst;
     isFirstDim = false;
   }
-  if (auto arr = dynamic_cast<ir::ArrayType *>(ptr->getType()->baseType())) {
+  if (dynamic_cast<ir::ArrayType *>(ptr->getType()->baseType())) {
     return std::make_any<ir::Value *>(ptr);
   }
   ir::Instruction *inst = new ir::LoadInst(_curBlock, ptr);
@@ -947,16 +947,19 @@ std::any ASTVisitor::visitLVal(SysYParser::LValContext *ctx) {
     isArg = true;
     ptr = _argToAllocaMap[arg];
   }
-  if (ctx->additiveExp().size() == 0) {
+  if (ctx->additiveExp().empty()) {
     return std::make_any<ir::Value *>(ptr);
   }
   auto pType = dynamic_cast<ir::PointerType *>(ptr->getType());
-  auto bType = dynamic_cast<ir::BasicType *>(pType->baseType());
-  if (pType && bType) {
-    ir::Instruction *inst = new ir::LoadInst(_curBlock, ptr);
-    ptr = inst;
-    _curBlock->add(inst);
+  if (pType) {
+    auto bType = dynamic_cast<ir::BasicType *>(pType->baseType());
+    if (bType) {
+      ir::Instruction *inst = new ir::LoadInst(_curBlock, ptr);
+      ptr = inst;
+      _curBlock->add(inst);
+    }
   }
+
   std::vector<SysYParser::AdditiveExpContext *> ctxs = ctx->additiveExp();
   std::vector<ir::Value *> dims;
   std::transform(ctxs.begin(), ctxs.end(), std::back_inserter(dims),
