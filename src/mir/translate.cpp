@@ -296,14 +296,10 @@ void MIRBinTranslator::transBinRegImm(
     transSubRegImmF(irs, target, reg, value->floatValue());
     break;
   case ir::BinaryOperator::XOR:
-    auto midReg = new reg::VReg(ir::BasicType::I32);
+    auto const midReg = new reg::VReg(ir::BasicType::I32);
     MIROpUtil::loadImmToReg(irs, midReg, value->intValue());
     irs.push_back(new RrrMIR(RrrMIR::XOR, target, reg, midReg));
     break;
-  // default:
-  //   throw std::runtime_error(
-  //       "unsupported binary operator in MIRBinTranslator::transBinRegImm");
-  // TODO checkhere
   }
 }
 
@@ -311,7 +307,7 @@ void MIRBinTranslator::transBinRegReg(
     std::vector<MIR *> &irs,
     const std::unordered_map<ir::Instruction *, reg::VReg *> &instRegMap,
     ir::BinaryOperator *binOp, reg::VReg *reg1, reg::VReg *reg2) {
-  auto target = instRegMap.at(binOp);
+  auto const target = instRegMap.at(binOp);
   switch (binOp->op) {
   case ir::BinaryOperator::ADD:
     transAddRegRegI(irs, target, reg1, reg2);
