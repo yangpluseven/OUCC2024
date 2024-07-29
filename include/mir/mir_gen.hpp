@@ -1,11 +1,51 @@
 #ifndef MIR_MIR_GEN_HPP
 #define MIR_MIR_GEN_HPP
 #include "ir/module.hpp"
+#include "mir.hpp"
 #include "reg/register.hpp"
+
+#include <iostream>
 
 namespace mir {
 
-class MachineFunction {};
+class MachineFunction {
+private:
+  ir::Function *func;
+  std::vector<MIR *> irs;
+  const int localSize, iCallerNum, fCallerNum;
+
+public:
+  int maxFuncParamNum = 0;
+
+  MachineFunction(ir::Function *func, int localSize, int iCallerNum,
+                  int fCallerNum)
+      : func(func), localSize(localSize), iCallerNum(iCallerNum),
+        fCallerNum(fCallerNum) {}
+
+  void addMIR(MIR *mir) { irs.push_back(mir); }
+
+  [[nodiscard]] int getFCallerNum() const { return fCallerNum; }
+  [[nodiscard]] int getICallerNum() const { return iCallerNum; }
+  [[nodiscard]] int getLocalSize() const { return localSize; }
+  [[nodiscard]] std::vector<MIR *> getIrs() const { return irs; }
+  [[nodiscard]] std::string getName() const { return func->getName(); }
+  [[nodiscard]] std::string getRawName() const { return func->getRawName(); }
+  [[nodiscard]] std::string toString() const {
+    std::stringstream ss;
+    ss << func->toString() << '\n';
+    ss << "---------- mir ----------" << '\n';
+    for (auto mir : irs) {
+      ss << mir->toString() << '\n';
+    }
+    return ss.str();
+  }
+
+  void print() const {
+    std::cout << toString();
+  }
+
+
+};
 
 class MIRGenerator {
 private:
