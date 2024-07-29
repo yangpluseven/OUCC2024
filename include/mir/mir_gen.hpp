@@ -34,17 +34,13 @@ public:
     std::stringstream ss;
     ss << func->toString() << '\n';
     ss << "---------- mir ----------" << '\n';
-    for (auto const mir : irs) {
+    for (const auto mir : irs) {
       ss << mir->toString() << '\n';
     }
     return ss.str();
   }
 
-  void print() const {
-    std::cout << toString();
-  }
-
-
+  void print() const { std::cout << toString(); }
 };
 
 class MIRGenerator {
@@ -93,9 +89,13 @@ public:
     return mFuncs;
   }
 
-  std::vector<ir::GlobalVariable *> getGlobals() {
+  std::unordered_set<ir::GlobalVariable *> getGlobals() {
     checkIfIsProcessed();
-    return module->getGlobals();
+    std::unordered_set<ir::GlobalVariable *> s;
+    for (const auto glob : module->getGlobals()) {
+      s.insert(glob);
+    }
+    return s;
   }
 
   std::pair<int, std::unordered_map<ir::AllocaInst *, int>>

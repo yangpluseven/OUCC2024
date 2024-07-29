@@ -108,14 +108,14 @@ Type *GetElementPtrInst::_calcType(const Value *value, size_t indexSize) {
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
                                      std::initializer_list<Value *> indexes)
   : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
-  for (auto const index : indexes)
+  for (const auto index : indexes)
     add(new Use(this, index));
 }
 
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
                                      std::vector<Value *> &indexes)
   : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
-  for (auto const index : indexes)
+  for (const auto index : indexes)
     add(new Use(this, index));
 }
 

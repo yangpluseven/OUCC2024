@@ -120,7 +120,7 @@ IntervalSet IntervalSet::Or(const std::vector<IntervalSet> &sets) {
 
 IntervalSet& IntervalSet::addAll(const IntervalSet &set) {
   // walk set and add each interval
-  for (auto const& interval : set._intervals) {
+  for (const auto& interval : set._intervals) {
     add(interval);
   }
   return *this;

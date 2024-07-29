@@ -65,11 +65,11 @@ void ASTVisitor::checkIfIsProcessed() {
 }
 
 void ASTVisitor::formatLLVM() {
-  for (auto const func : _module->getFunctions()) {
+  for (const auto func : _module->getFunctions()) {
     if (func->isDeclare())
       continue;
     for (int i = 0; i < func->size(); i++) {
-      auto const block = func->get(i);
+      const auto block = func->get(i);
       for (int j = 0; j + 1 < block->size(); j++) {
         auto terminal = block->get(j);
         if (dynamic_cast<ir::BranchInst *>(terminal) ||
