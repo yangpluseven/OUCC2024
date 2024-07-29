@@ -64,6 +64,12 @@ public:
   calcArgOffsets(std::vector<ir::Argument *> &args);
 };
 
+class FakeMvInst : ir::Instruction {
+public:
+  FakeMvInst(ir::BasicBlock *block, ir::Value *target, ir::Value *src)
+      : ir::Instruction(block, ir::BasicType::VOID, {target, src}) {}
+};
+
 } // namespace mir
 
 #endif // MIR_MIR_GEN_HPP
