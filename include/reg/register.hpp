@@ -9,8 +9,7 @@ class Reg {
 protected:
   ir::Type *type;
 
-  explicit Reg(ir::Type *type) : type(type) {
-  }
+  explicit Reg(ir::Type *type) : type(type) {}
 
 public:
   virtual ~Reg() = default;
@@ -24,8 +23,7 @@ private:
   int _id;
 
 public:
-  explicit VReg(ir::Type *type) : Reg(type), _id(_counter++) {
-  }
+  explicit VReg(ir::Type *type) : Reg(type), _id(_counter++) {}
 
   [[nodiscard]] std::string toString() const override {
     if (type == ir::BasicType::I32) {
@@ -107,21 +105,19 @@ public:
   static MReg *const FT9;
   static MReg *const FT10;
   static MReg *const FT11;
-  static const std::vector<MReg *> iRegs;
-  static const std::vector<MReg *> fRegs;
-  static const std::vector<MReg *> callerIRegs;
-  static const std::vector<MReg *> callerFRegs;
-  static const std::vector<MReg *> calleeIRegs;
-  static const std::vector<MReg *> calleeFRegs;
 
-  MReg(ir::Type *type, std::string name) : Reg(type), _name(std::move(name)) {
-  }
+  static const std::vector<MReg *> I_REGS;
+  static const std::vector<MReg *> F_REGS;
+  static const std::vector<MReg *> I_CALLER_REGS;
+  static const std::vector<MReg *> F_CALLER_REGS;
+  static const std::vector<MReg *> I_CALLEE_REGS;
+  static const std::vector<MReg *> F_CALLEE_REGS;
 
-  [[nodiscard]] std::string toString() const override {
-    return _name;
-  };
+  MReg(ir::Type *type, std::string name) : Reg(type), _name(std::move(name)) {}
+
+  [[nodiscard]] std::string toString() const override { return _name; };
 };
 
-}
+} // namespace reg
 
-#endif //REG_REGISTER_HPP
+#endif // REG_REGISTER_HPP

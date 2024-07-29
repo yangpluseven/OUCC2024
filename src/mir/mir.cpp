@@ -15,6 +15,33 @@ std::vector<MIR *> AddRegLocalMIR::spill(reg::Reg *reg, int offset) {
   throw std::runtime_error("in AddRegLocalMIR::spill");
 }
 
+std::vector<MIR *> BMIR::spill(reg::Reg *reg, int offset) {
+  if (src1 == nullptr || src2 == nullptr) {
+    return {this};
+  }
+  if (src1 == reg && src2 == reg) {
+    auto src1 = new reg::VReg(reg->getType());
+    auto src2 = new reg::VReg(reg->getType());
+    MIR *mir1 = new LoadItemMIR(LoadItemMIR::SPILL, src1, offset);
+    MIR *mir2 = new LoadItemMIR(LoadItemMIR::SPILL, src2, offset);
+    MIR *mir3 = new BMIR(op, src1, src2, block);
+    return {mir1, mir2, mir3};
+  }
+  if (src1 == reg) {
+    auto src1 = new reg::VReg(reg->getType());
+    MIR *mir1 = new LoadItemMIR(LoadItemMIR::SPILL, src1, offset);
+    MIR *mir2 = new BMIR(op, src1, src2, block);
+    return {mir1, mir2};
+  }
+  if (src2 == reg) {
+    auto src2 = new reg::VReg(reg->getType());
+    MIR *mir1 = new LoadItemMIR(LoadItemMIR::SPILL, src2, offset);
+    MIR *mir2 = new BMIR(op, src1, src2, block);
+    return {mir1, mir2};
+  }
+  return {this};
+}
+
 std::vector<MIR *> LiMIR::spill(reg::Reg *reg, int offset) {
   if (reg == dest) {
     auto *target = new reg::VReg(reg->getType());

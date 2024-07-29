@@ -7,7 +7,7 @@ BasicType *const BasicType::I32 = new BasicType(32, "i32");
 BasicType *const BasicType::FLOAT = new BasicType(32, "float");
 BasicType *const BasicType::VOID = new BasicType(0, "void");
 
-}
+} // namespace ir
 
 namespace reg {
 
@@ -78,33 +78,26 @@ MReg *const MReg::FT9 = new MReg(ir::BasicType::FLOAT, "ft9");
 MReg *const MReg::FT10 = new MReg(ir::BasicType::FLOAT, "ft10");
 MReg *const MReg::FT11 = new MReg(ir::BasicType::FLOAT, "ft11");
 
-const std::vector<MReg *> iRegs = {MReg::A0, MReg::A1, MReg::A2, MReg::A3,
-                                   MReg::A4, MReg::A5, MReg::A6, MReg::A7,
-                                   MReg::S0, MReg::S1, MReg::S2, MReg::S3,
-                                   MReg::S4, MReg::S5, MReg::S6, MReg::S7,
-                                   MReg::S8, MReg::S9, MReg::S10, MReg::S11};
-const std::vector<MReg *> fRegs = {MReg::FA0, MReg::FA1, MReg::FA2, MReg::FA3,
-                                   MReg::FA4, MReg::FA5, MReg::FA6, MReg::FA7,
-                                   MReg::FS0, MReg::FS1, MReg::FS2, MReg::FS3,
-                                   MReg::FS4, MReg::FS5, MReg::FS6, MReg::FS7,
-                                   MReg::FS8, MReg::FS9, MReg::FS10,
-                                   MReg::FS11};
-const std::vector<MReg *> callerIRegs = {MReg::A0, MReg::A1, MReg::A2, MReg::A3,
-                                         MReg::A4, MReg::A5, MReg::A6,
-                                         MReg::A7};
-const std::vector<MReg *> callerFRegs = {MReg::FA0, MReg::FA1, MReg::FA2,
-                                         MReg::FA3,
-                                         MReg::FA4, MReg::FA5, MReg::FA6,
-                                         MReg::FA7};
-const std::vector<MReg *> calleeIRegs = {MReg::S0, MReg::S1, MReg::S2, MReg::S3,
-                                         MReg::S4, MReg::S5, MReg::S6, MReg::S7,
-                                         MReg::S8, MReg::S9, MReg::S10,
-                                         MReg::S11};
-const std::vector<MReg *> calleeFRegs = {MReg::FS0, MReg::FS1, MReg::FS2,
-                                         MReg::FS3,
-                                         MReg::FS4, MReg::FS5, MReg::FS6,
-                                         MReg::FS7,
-                                         MReg::FS8, MReg::FS9, MReg::FS10,
-                                         MReg::FS11};
+const std::vector<MReg *> MReg::I_REGS = {
+    MReg::A0, MReg::A1, MReg::A2, MReg::A3, MReg::A4,  MReg::A5, MReg::A6,
+    MReg::A7, MReg::S0, MReg::S1, MReg::S2, MReg::S3,  MReg::S4, MReg::S5,
+    MReg::S6, MReg::S7, MReg::S8, MReg::S9, MReg::S10, MReg::S11};
+const std::vector<MReg *> MReg::F_REGS = {
+    MReg::FA0, MReg::FA1, MReg::FA2, MReg::FA3,  MReg::FA4,
+    MReg::FA5, MReg::FA6, MReg::FA7, MReg::FS0,  MReg::FS1,
+    MReg::FS2, MReg::FS3, MReg::FS4, MReg::FS5,  MReg::FS6,
+    MReg::FS7, MReg::FS8, MReg::FS9, MReg::FS10, MReg::FS11};
+const std::vector<MReg *> MReg::I_CALLER_REGS = {MReg::A0, MReg::A1, MReg::A2,
+                                                 MReg::A3, MReg::A4, MReg::A5,
+                                                 MReg::A6, MReg::A7};
+const std::vector<MReg *> MReg::F_CALLER_REGS = {
+    MReg::FA0, MReg::FA1, MReg::FA2, MReg::FA3,
+    MReg::FA4, MReg::FA5, MReg::FA6, MReg::FA7};
+const std::vector<MReg *> MReg::I_CALLEE_REGS = {
+    MReg::S0, MReg::S1, MReg::S2, MReg::S3, MReg::S4,  MReg::S5,
+    MReg::S6, MReg::S7, MReg::S8, MReg::S9, MReg::S10, MReg::S11};
+const std::vector<MReg *> MReg::F_CALLEE_REGS = {
+    MReg::FS0, MReg::FS1, MReg::FS2, MReg::FS3, MReg::FS4,  MReg::FS5,
+    MReg::FS6, MReg::FS7, MReg::FS8, MReg::FS9, MReg::FS10, MReg::FS11};
 
-}
+} // namespace reg

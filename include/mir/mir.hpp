@@ -71,7 +71,7 @@ public:
 
 class BMIR : public MIR {
 public:
-  enum Op { EQ, NE, LT, LE, GT, GE, NUL };
+  enum Op { NUL, EQ, NE, LT, LE, GT, GE };
 
   Op op = NUL;
   reg::Reg *src1, *src2;
@@ -88,11 +88,50 @@ public:
   }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override;
+      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+    reg::Reg *newSrc1 = src1, *newSrc2 = src2;
+    if (auto vsrc1 = dynamic_cast<reg::VReg *>(src1)) {
+      if (replaceMap.find(vsrc1) != replaceMap.end())
+        newSrc1 = replaceMap.at(vsrc1);
+    }
+    if (auto vsrc2 = dynamic_cast<reg::VReg *>(src2)) {
+      if (replaceMap.find(vsrc2) != replaceMap.end())
+        newSrc2 = replaceMap.at(vsrc2);
+    }
+    return new BMIR(op, newSrc1, newSrc2, block);
+  }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
 
-  [[nodiscard]] std::string toString() const override;
+  [[nodiscard]] std::string toString() const override {
+    if (op == NUL) {
+      return "j\t" + block->getName();
+    }
+    return "b" + _opToString(op) + "\t" + src1->toString() + src2->toString() +
+           block->getName();
+  }
+
+private:
+  static std::string _opToString(Op op) noexcept {
+    switch (op) {
+    case NUL:
+      return "{null}";
+    case EQ:
+      return "eq";
+    case NE:
+      return "ne";
+    case LT:
+      return "lt";
+    case LE:
+      return "le";
+    case GT:
+      return "gt";
+    case GE:
+      return "ge";
+    default:
+      return "incomplete{_opToString}";
+    }
+  }
 };
 
 class CallMIR : public MIR {
@@ -106,13 +145,13 @@ public:
     int isize = 0, fsize = 0;
     for (auto arg : func->getArgs()) {
       if (arg->getType() == ir::BasicType::FLOAT) {
-        if (fsize < reg::MReg::calleeFRegs.size()) {
-          regs.push_back(reg::MReg::callerFRegs.at(fsize));
+        if (fsize < reg::MReg::F_CALLEE_REGS.size()) {
+          regs.push_back(reg::MReg::F_CALLER_REGS.at(fsize));
         }
         fsize++;
       } else {
-        if (isize < reg::MReg::callerIRegs.size()) {
-          regs.push_back(reg::MReg::callerIRegs.at(isize));
+        if (isize < reg::MReg::I_CALLER_REGS.size()) {
+          regs.push_back(reg::MReg::I_CALLER_REGS.at(isize));
         }
         isize++;
       }
@@ -122,10 +161,10 @@ public:
 
   std::vector<reg::Reg *> getWrite() override {
     std::vector<reg::Reg *> regs;
-    regs.insert(regs.end(), reg::MReg::callerIRegs.begin(),
-                reg::MReg::callerIRegs.end());
-    regs.insert(regs.end(), reg::MReg::callerFRegs.begin(),
-                reg::MReg::callerFRegs.end());
+    regs.insert(regs.end(), reg::MReg::I_CALLER_REGS.begin(),
+                reg::MReg::I_CALLER_REGS.end());
+    regs.insert(regs.end(), reg::MReg::F_CALLER_REGS.begin(),
+                reg::MReg::F_CALLER_REGS.end());
     return regs;
   }
 

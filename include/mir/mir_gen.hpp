@@ -34,7 +34,7 @@ public:
     std::stringstream ss;
     ss << func->toString() << '\n';
     ss << "---------- mir ----------" << '\n';
-    for (auto mir : irs) {
+    for (auto const mir : irs) {
       ss << mir->toString() << '\n';
     }
     return ss.str();
@@ -68,10 +68,10 @@ private:
     for (auto arg : func->getArgs()) {
       if (arg->getType() == ir::BasicType::FLOAT) {
         fSize = std::min(fSize + 1,
-                         static_cast<int>(reg::MReg::callerFRegs.size()));
+                         static_cast<int>(reg::MReg::F_CALLER_REGS.size()));
       } else {
         iSize = std::min(iSize + 1,
-                         static_cast<int>(reg::MReg::callerIRegs.size()));
+                         static_cast<int>(reg::MReg::I_CALLER_REGS.size()));
       }
     }
     return {iSize, fSize};

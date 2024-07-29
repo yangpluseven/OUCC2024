@@ -161,21 +161,23 @@ public:
 
 class MIROpTranslator {
 public:
-  static void
-  transBranch(std::vector<MIR *> &irs,
-              std::unordered_map<ir::Instruction *, reg::VReg *> &instRegMap,
-              ir::BranchInst *branchInst);
+  static void transBranch(
+      std::vector<MIR *> &irs,
+      std::unordered_map<ir::Instruction *, reg::VReg *> const &instRegMap,
+      ir::BranchInst *branchInst);
   static void
   transBin(std::vector<MIR *> &irs,
-           std::unordered_map<ir::Instruction *, reg::VReg *> &instRegMap,
-           std::unordered_map<ir::Argument *, std::pair<bool, int>> &argOffsets,
+           std::unordered_map<ir::Instruction *, reg::VReg *> const &instRegMap,
+           std::unordered_map<ir::Argument *, std::pair<bool, int>> const
+               &argOffsets,
            ir::BinaryOperator *binOp);
-  static void transCall(
+  static int transCall(
       std::vector<MIR *> &irs,
-      std::unordered_map<ir::Instruction *, reg::VReg *> &instRegMap,
-      std::unordered_map<ir::Argument *, std::pair<bool, int>> &argOffsets,
+      std::unordered_map<ir::Instruction *, reg::VReg *> const &instRegMap,
+      std::unordered_map<ir::Argument *, std::pair<bool, int>> const
+          &argOffsets,
       ir::CallInst *callInst,
-      std::unordered_map<ir::AllocaInst *, int> localOffsets);
+      std::unordered_map<ir::AllocaInst *, int> const &localOffsets);
 };
 
 } // namespace mir
