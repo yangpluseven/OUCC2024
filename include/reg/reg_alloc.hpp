@@ -100,7 +100,7 @@ private:
 
 public:
   explicit ModuleRegAlloc(
-      std::unordered_map<std::string, mir::MachineFunction *> funcs) {
+      const std::unordered_map<std::string, mir::MachineFunction *>& funcs) {
     for (const auto &[name, func] : funcs) {
       this->funcs.push_back(func);
     }
