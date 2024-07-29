@@ -94,7 +94,24 @@ public:
   void allocate();
 };
 
-class ModuleRegAlloc {};
+class ModuleRegAlloc {
+private:
+  std::vector<mir::MachineFunction *> funcs;
+
+public:
+  explicit ModuleRegAlloc(
+      std::unordered_map<std::string, mir::MachineFunction *> funcs) {
+    for (const auto &[name, func] : funcs) {
+      this->funcs.push_back(func);
+    }
+  }
+
+  void allocate() {
+    for (const auto func : funcs) {
+      reg::FuncRegAlloc(func).allocate();
+    }
+  }
+};
 
 } // namespace reg
 
