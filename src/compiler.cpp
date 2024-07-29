@@ -28,8 +28,8 @@ void Compiler::compile() {
   module = visitor.getModule();
   if (optionValues["-emit-llvm"] == "1") {
     emitLLVM();
-    if (optionValues["-S"] == "1") {
-      std::cout << "Emit llvm prior to assembly. quitting." << std::endl;
+    if (optionValues["-emit-mir"] == "1" || optionValues["-S"] == "1") {
+      std::cout << "Emit llvm prior to mir and assembly. quitting." << std::endl;
       return;
     }
   }
