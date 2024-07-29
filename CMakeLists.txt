@@ -16,6 +16,7 @@ file(GLOB_RECURSE HEADERS "include/*.hpp")
 
 add_executable(${TARGET_NAME} ${SOURCES} ${HEADERS}
         src/main.cpp
+        include/mir/mir_gen.hpp
 )
 
 target_link_libraries(${TARGET_NAME} antlr4_static)

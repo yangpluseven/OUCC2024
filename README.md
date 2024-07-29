@@ -1,4 +1,4 @@
-# WE NEED A NAME
+# OUCC
 
 Naming files and directories with lowercase and underline.
 Naming classes with big hump naming convention.
