@@ -101,7 +101,7 @@ public:
 
   static std::pair<int, std::unordered_map<ir::AllocaInst *, int>>
   calcLocalOffsets(ir::BasicBlock *block);
-  std::unordered_map<ir::Argument *, std::pair<bool, int>>
+  static std::unordered_map<ir::Argument *, std::pair<bool, int>>
   calcArgOffsets(std::vector<ir::Argument *> &args);
 };
 
