@@ -61,7 +61,7 @@ public:
 
   std::string getName() const override;
   std::string getRawName() const;
-  std::vector<Argument *> getArgs() const;
+  std::vector<Argument *> &getArgs();
   std::string toString() const;
 };
 

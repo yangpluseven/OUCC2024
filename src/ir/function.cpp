@@ -71,7 +71,7 @@ std::string Function::getName() const { return "@" + name; }
 
 std::string Function::getRawName() const { return name; }
 
-std::vector<Argument *> Function::getArgs() const { return args; }
+std::vector<Argument *> &Function::getArgs() { return args; }
 
 std::string Function::toString() const {
   bool const isDeclare = blocks.empty();
@@ -105,7 +105,8 @@ std::string Function::toString() const {
   return builder.str();
 }
 
-Argument::Argument(Type *type, std::string name) : Value(type), name(std::move(name)) {}
+Argument::Argument(Type *type, std::string name)
+    : Value(type), name(std::move(name)) {}
 
 std::string Argument::getName() const { return "%" + name; }
 

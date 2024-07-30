@@ -1,5 +1,6 @@
 #ifndef MIR_MIR_GEN_HPP
 #define MIR_MIR_GEN_HPP
+
 #include "ir/module.hpp"
 #include "mir.hpp"
 #include "reg/register.hpp"
@@ -27,7 +28,7 @@ public:
   [[nodiscard]] int getFCallerNum() const { return _fCallerNum; }
   [[nodiscard]] int getICallerNum() const { return _iCallerNum; }
   [[nodiscard]] int getLocalSize() const { return _localSize; }
-  [[nodiscard]] std::vector<MIR *> &getIrs() { return _irs; }
+  [[nodiscard]] std::vector<MIR *> &getIRs() { return _irs; }
   [[nodiscard]] std::string getName() const { return _func->getName(); }
   [[nodiscard]] std::string getRawName() const { return _func->getRawName(); }
   [[nodiscard]] std::string toString() const {
@@ -59,7 +60,7 @@ private:
     }
   }
 
-  static std::pair<int, int> getCallerNumbers(ir::Function const *func) {
+  static std::pair<int, int> getCallerNumbers(ir::Function *func) {
     int iSize = 0, fSize = 0;
     for (auto arg : func->getArgs()) {
       if (arg->getType() == ir::BasicType::FLOAT) {

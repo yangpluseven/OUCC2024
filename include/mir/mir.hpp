@@ -103,6 +103,8 @@ public:
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
 
+  [[nodiscard]] bool hasCond() const { return op != NUL; }
+
   [[nodiscard]] std::string toString() const override {
     if (op == NUL) {
       return "j\t" + block->getName();

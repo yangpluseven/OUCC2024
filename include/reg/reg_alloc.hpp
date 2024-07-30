@@ -49,10 +49,10 @@ public:
     regs.insert(_liveDef.begin(), _liveDef.end());
     regs.insert(_liveIn.begin(), _liveIn.end());
     regs.insert(_liveOut.begin(), _liveOut.end());
-    return regs;
+    return std::move(regs);
   }
 
-  [[nodiscard]] std::unordered_set<Reg *> getOut() const { return _liveOut; }
+  [[nodiscard]] std::unordered_set<Reg *> &getOut() { return _liveOut; }
 
   [[nodiscard]] size_t sizeOfInOut() const {
     return _liveIn.size() + _liveOut.size();
@@ -67,13 +67,14 @@ private:
   std::vector<MReg *> _iCalleeRegs;
   std::vector<MReg *> _fCalleeRegs;
   int _funcParamSize{}, _alignSize{}, _spillSize{}, _localSize{};
-  int _savedRegSize{}, _paramInnerSize;
+  int _savedRegSize{}, _callAddrSize{}, _paramInnerSize;
 
-  std::vector<Block *> calcBlocks();
+  static void calcInOut(std::vector<Block *> &blocks);
+
+  [[nodiscard]] std::vector<Block *> calcBlocks() const;
   std::unordered_map<Reg *, std::unordered_set<Reg *>> calcConflictMap();
-  void calcInOut(std::vector<Block *> blocks);
   std::unordered_map<Reg *, std::unordered_set<int>> calcLifespans();
-  void calcUseDef(std::vector<Block *> blocks);
+  void calcUseDef(std::vector<Block *> &blocks) const;
   std::unordered_map<VReg *, MReg *> calcVRegToMReg();
   void makeFrameInfo();
   void popFrame();
@@ -84,18 +85,18 @@ private:
 public:
   explicit FuncRegAlloc(mir::MachineFunction *func) : _func(func) {
     _iCalleeRegs = std::vector<MReg *>(MReg::I_CALLEE_REGS.begin(),
-                                      MReg::I_CALLEE_REGS.end());
+                                       MReg::I_CALLEE_REGS.end());
     _fCallerRegs = std::vector<MReg *>(MReg::F_CALLER_REGS.begin(),
-                                      MReg::F_CALLER_REGS.end());
+                                       MReg::F_CALLER_REGS.end());
     _paramInnerSize = (func->getICallerNum() + func->getFCallerNum()) * 8;
   }
 
   void allocate() {
     solveSpill();
-    std::unordered_map<VReg*, MReg*> vRegToMReg = calcVRegToMReg();
-    auto &vec = _func->getIrs();
+    std::unordered_map<VReg *, MReg *> vRegToMReg = calcVRegToMReg();
+    auto &vec = _func->getIRs();
     // TODO check here
-    for (auto & i : vec) {
+    for (auto &i : vec) {
       if (!i) {
         continue;
       }
@@ -114,7 +115,7 @@ private:
 
 public:
   explicit ModuleRegAlloc(
-      const std::unordered_map<std::string, mir::MachineFunction *>& funcs) {
+      const std::unordered_map<std::string, mir::MachineFunction *> &funcs) {
     for (const auto &[name, func] : funcs) {
       this->_funcs.push_back(func);
     }
