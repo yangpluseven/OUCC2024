@@ -1,7 +1,8 @@
 #include "mir/mir_gen.hpp"
 
+namespace mir {
 std::unordered_map<ir::Argument *, std::pair<bool, int>>
-mir::MIRGenerator::calcArgOffsets(std::vector<ir::Argument *> &args) {
+MIRGenerator::calcArgOffsets(std::vector<ir::Argument *> &args) {
   std::unordered_map<ir::Argument *, std::pair<bool, int>> argOffsets;
   int iCallerNum = 0, fCallerNum = 0;
   for (const auto arg : args) {
@@ -50,15 +51,15 @@ mir::MIRGenerator::calcArgOffsets(std::vector<ir::Argument *> &args) {
   return std::move(argOffsets);
 }
 
-mir::MachineFunction *mir::MIRGenerator::funcToMir(ir::Function *func) {
+MachineFunction *MIRGenerator::funcToMir(ir::Function *func) {
   // TODO
 }
 
 std::pair<int, std::unordered_map<ir::AllocaInst *, int>>
-mir::MIRGenerator::calcLocalOffsets(ir::BasicBlock *block) {
+MIRGenerator::calcLocalOffsets(ir::BasicBlock *block) {
   int localSize = 0;
   std::unordered_map<ir::AllocaInst *, int> localOffsets;
-  for (const auto ir : block) {
+  for (const auto ir : *block) {
     auto const allocaInst = dynamic_cast<ir::AllocaInst *>(ir);
     if (!allocaInst) {
       break;
@@ -70,3 +71,6 @@ mir::MIRGenerator::calcLocalOffsets(ir::BasicBlock *block) {
   }
   return {localSize, localOffsets};
 }
+
+}
+
