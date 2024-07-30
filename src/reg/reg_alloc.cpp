@@ -369,7 +369,111 @@ void FuncRegAlloc::calcUseDef(std::vector<Block *> &blocks) const {
 }
 
 void FuncRegAlloc::replaceFakeMIRs() {
-  // TODO
+  auto &irs = _func->getIRs();
+  for (int i = 0; i < irs.size(); i++) {
+    mir::MIR *mir = irs.at(i);
+    if (const auto addRegLocalMIR = dynamic_cast<mir::AddRegLocalMIR *>(mir)) {
+      int totalSize =
+          _funcParamSize + _alignSize + _spillSize + addRegLocalMIR->imm;
+      if (totalSize < 2048) {
+        irs[i] = new mir::RriMIR(mir::RriMIR::ADDI, addRegLocalMIR->dest,
+                                 MReg::SP, totalSize);
+      } else {
+        irs[i] = new mir::LiMIR(MReg::T0, totalSize);
+        if (irs.size() < i + 2) {
+          irs.resize(i + 2);
+        }
+        irs[i + 1] = new mir::RriMIR(mir::RriMIR::ADDI, MReg::SP, MReg::SP, 0);
+        i++;
+      }
+      continue;
+    }
+    if (const auto loadItemMIR = dynamic_cast<mir::LoadItemMIR *>(mir)) {
+      int totalSize = 0, size = 0;
+      const auto item = loadItemMIR->item;
+      if (item == mir::LoadItemMIR::SPILL) {
+        totalSize = _funcParamSize + _alignSize + loadItemMIR->imm;
+      } else if (item == mir::LoadItemMIR::LOCAL) {
+        size = 4;
+        totalSize = _funcParamSize + _alignSize + _spillSize + loadItemMIR->imm;
+      } else if (item == mir::LoadItemMIR::PARAM_INNER) {
+        totalSize = _funcParamSize + _alignSize + _spillSize + _localSize +
+                    _savedRegSize + loadItemMIR->imm;
+      } else if (item == mir::LoadItemMIR::PARAM_OUTER) {
+        totalSize = _funcParamSize + _alignSize + _spillSize + _localSize +
+                    _savedRegSize + _paramInnerSize + _callAddrSize +
+                    loadItemMIR->imm;
+      }
+      if (size == 0) {
+        const auto type = loadItemMIR->dest->getType();
+        if (type == ir::BasicType::FLOAT) {
+          size = 4;
+        } else if (type == ir::BasicType::I32) {
+          size = 8;
+        } else {
+          throw std::runtime_error(
+              "unexpected type in FuncRegAlloc::replaceFakeMIRs");
+        }
+      }
+      if (totalSize < 2048) {
+        irs[i] = new mir::LoadMIR(loadItemMIR->dest, MReg::SP, totalSize, size);
+      } else {
+        irs[i] = new mir::LiMIR(MReg::T0, totalSize);
+        if (irs.size() < i + 3) {
+          irs.resize(i + 3);
+        }
+        irs[i + 1] =
+            new mir::RrrMIR(mir::RrrMIR::ADD, MReg::T0, MReg::SP, MReg::T0);
+        irs[i + 2] = new mir::LoadMIR(loadItemMIR->dest, MReg::T0, 0, size);
+        i += 2;
+      }
+      continue;
+    }
+    if (const auto storeItemMIR = dynamic_cast<mir::StoreItemMIR *>(mir)) {
+      int totalSize = 0, size = 0;
+      const auto item = storeItemMIR->item;
+      if (item == mir::StoreItemMIR::PARAM_CALL) {
+        totalSize = storeItemMIR->imm;
+      } else if (item == mir::StoreItemMIR::SPILL) {
+        totalSize = _funcParamSize + _alignSize + storeItemMIR->imm;
+      } else if (item == mir::StoreItemMIR::LOCAL) {
+        size = 4;
+        totalSize =
+            _funcParamSize + _alignSize + _spillSize + storeItemMIR->imm;
+      } else if (item == mir::StoreItemMIR::PARAM_INNER) {
+        totalSize = _funcParamSize + _alignSize + _spillSize + _localSize +
+                    _savedRegSize + storeItemMIR->imm;
+      } else if (item == mir::StoreItemMIR::PARAM_OUTER) {
+        totalSize = _funcParamSize + _alignSize + _spillSize + _localSize +
+                    _savedRegSize + _paramInnerSize + _callAddrSize +
+                    storeItemMIR->imm;
+      }
+      if (size == 0) {
+        const auto type = storeItemMIR->src->getType();
+        if (type == ir::BasicType::FLOAT) {
+          size = 4;
+        } else if (type == ir::BasicType::I32) {
+          size = 8;
+        } else {
+          throw std::runtime_error(
+              "unexpected type in FuncRegAlloc::replaceFakeMIRs");
+        }
+      }
+      if (totalSize < 2048) {
+        irs[i] =
+            new mir::StoreMIR(storeItemMIR->src, MReg::SP, totalSize, size);
+      } else {
+        irs[i] = new mir::LiMIR(MReg::T0, totalSize);
+        if (irs.size() < i + 3) {
+          irs.resize(i + 3);
+        }
+        irs[i + 1] =
+            new mir::RrrMIR(mir::RrrMIR::ADD, MReg::T0, MReg::SP, MReg::T0);
+        irs[i + 2] = new mir::StoreMIR(storeItemMIR->src, MReg::T0, 0, size);
+        i += 2;
+      }
+    }
+  }
 }
 
 std::unordered_map<VReg *, MReg *> FuncRegAlloc::calcVRegToMReg() {

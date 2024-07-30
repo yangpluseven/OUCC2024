@@ -64,8 +64,8 @@ private:
   mir::MachineFunction *_func;
   std::vector<MReg *> _iCallerRegs;
   std::vector<MReg *> _fCallerRegs;
-  std::vector<MReg *> _iCalleeRegs;
-  std::vector<MReg *> _fCalleeRegs;
+  std::vector<MReg *> _iCalleeRegs{};
+  std::vector<MReg *> _fCalleeRegs{};
   int _funcParamSize{}, _alignSize{}, _spillSize{}, _localSize{};
   int _savedRegSize{}, _callAddrSize{}, _paramInnerSize;
 
@@ -84,8 +84,8 @@ private:
 
 public:
   explicit FuncRegAlloc(mir::MachineFunction *func) : _func(func) {
-    _iCalleeRegs = std::vector<MReg *>(MReg::I_CALLEE_REGS.begin(),
-                                       MReg::I_CALLEE_REGS.end());
+    _iCallerRegs = std::vector<MReg *>(MReg::I_CALLER_REGS.begin(),
+                                       MReg::I_CALLER_REGS.end());
     _fCallerRegs = std::vector<MReg *>(MReg::F_CALLER_REGS.begin(),
                                        MReg::F_CALLER_REGS.end());
     _paramInnerSize = (func->getICallerNum() + func->getFCallerNum()) * 8;
