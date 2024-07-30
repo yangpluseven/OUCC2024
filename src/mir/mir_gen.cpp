@@ -72,5 +72,4 @@ MIRGenerator::calcLocalOffsets(ir::BasicBlock *block) {
   return {localSize, localOffsets};
 }
 
-}
-
+} // namespace mir
