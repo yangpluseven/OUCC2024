@@ -10,31 +10,31 @@ namespace mir {
 
 class MachineFunction {
 private:
-  ir::Function *func;
-  std::vector<MIR *> irs;
-  const int localSize, iCallerNum, fCallerNum;
+  ir::Function *_func;
+  std::vector<MIR *> _irs;
+  const int _localSize, _iCallerNum, _fCallerNum;
 
 public:
   int maxFuncParamNum = 0;
 
   MachineFunction(ir::Function *func, int localSize, int iCallerNum,
                   int fCallerNum)
-      : func(func), localSize(localSize), iCallerNum(iCallerNum),
-        fCallerNum(fCallerNum) {}
+      : _func(func), _localSize(localSize), _iCallerNum(iCallerNum),
+        _fCallerNum(fCallerNum) {}
 
-  void addMIR(MIR *mir) { irs.push_back(mir); }
+  void addMIR(MIR *mir) { _irs.push_back(mir); }
 
-  [[nodiscard]] int getFCallerNum() const { return fCallerNum; }
-  [[nodiscard]] int getICallerNum() const { return iCallerNum; }
-  [[nodiscard]] int getLocalSize() const { return localSize; }
-  [[nodiscard]] std::vector<MIR *> getIrs() const { return irs; }
-  [[nodiscard]] std::string getName() const { return func->getName(); }
-  [[nodiscard]] std::string getRawName() const { return func->getRawName(); }
+  [[nodiscard]] int getFCallerNum() const { return _fCallerNum; }
+  [[nodiscard]] int getICallerNum() const { return _iCallerNum; }
+  [[nodiscard]] int getLocalSize() const { return _localSize; }
+  [[nodiscard]] std::vector<MIR *> getIrs() const { return _irs; }
+  [[nodiscard]] std::string getName() const { return _func->getName(); }
+  [[nodiscard]] std::string getRawName() const { return _func->getRawName(); }
   [[nodiscard]] std::string toString() const {
     std::stringstream ss;
-    ss << func->toString() << '\n';
+    ss << _func->toString() << '\n';
     ss << "---------- mir ----------" << '\n';
-    for (const auto mir : irs) {
+    for (const auto mir : _irs) {
       ss << mir->toString() << '\n';
     }
     return ss.str();
@@ -45,16 +45,16 @@ public:
 
 class MIRGenerator {
 private:
-  ir::Module *module;
-  std::unordered_map<std::string, MachineFunction *> mFuncs;
-  bool isProcessed = false;
+  ir::Module *_module;
+  std::unordered_map<std::string, MachineFunction *> _mFuncs;
+  bool _isProcessed = false;
 
   MachineFunction *funcToMir(ir::Function *func);
 
   void llvmToMir() {
-    for (auto func : module->getFunctions()) {
+    for (auto func : _module->getFunctions()) {
       if (!func->isDeclare()) {
-        mFuncs[func->getName()] = funcToMir(func);
+        _mFuncs[func->getName()] = funcToMir(func);
       }
     }
   }
@@ -74,25 +74,25 @@ private:
   }
 
 public:
-  explicit MIRGenerator(ir::Module *module) : module(module) {}
+  explicit MIRGenerator(ir::Module *module) : _module(module) {}
 
   void checkIfIsProcessed() {
-    if (isProcessed) {
+    if (_isProcessed) {
       return;
     }
-    isProcessed = true;
+    _isProcessed = true;
     llvmToMir();
   }
 
   std::unordered_map<std::string, MachineFunction *> getFuncs() {
     checkIfIsProcessed();
-    return mFuncs;
+    return _mFuncs;
   }
 
   std::unordered_set<ir::GlobalVariable *> getGlobals() {
     checkIfIsProcessed();
     std::unordered_set<ir::GlobalVariable *> s;
-    for (const auto glob : module->getGlobals()) {
+    for (const auto glob : _module->getGlobals()) {
       s.insert(glob);
     }
     return s;
