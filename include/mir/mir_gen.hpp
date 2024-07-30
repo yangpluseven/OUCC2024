@@ -27,7 +27,7 @@ public:
   [[nodiscard]] int getFCallerNum() const { return _fCallerNum; }
   [[nodiscard]] int getICallerNum() const { return _iCallerNum; }
   [[nodiscard]] int getLocalSize() const { return _localSize; }
-  [[nodiscard]] std::vector<MIR *> getIrs() const { return _irs; }
+  [[nodiscard]] std::vector<MIR *> &getIrs() { return _irs; }
   [[nodiscard]] std::string getName() const { return _func->getName(); }
   [[nodiscard]] std::string getRawName() const { return _func->getRawName(); }
   [[nodiscard]] std::string toString() const {

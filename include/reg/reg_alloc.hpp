@@ -93,7 +93,18 @@ public:
   void allocate() {
     solveSpill();
     std::unordered_map<VReg*, MReg*> vRegToMReg = calcVRegToMReg();
-
+    auto &vec = _func->getIrs();
+    // TODO check here
+    for (auto & i : vec) {
+      if (!i) {
+        continue;
+      }
+      i = i->replaceReg(vRegToMReg);
+    }
+    makeFrameInfo();
+    pushFrame();
+    popFrame();
+    replaceFakeMIRs();
   }
 };
 
