@@ -33,40 +33,12 @@ public:
   std::string getName() const override;
   std::string toString() const;
 
-  class Iterator {
-  private:
-    std::vector<Instruction *>::iterator it;
-
-  public:
-    explicit Iterator(std::vector<Instruction *>::iterator it);
-
-    Instruction *operator*() const;
-    Iterator &operator++();
-    Iterator operator++(int);
-    bool operator==(const Iterator &rhs) const;
-    bool operator!=(const Iterator &rhs) const;
-  };
-
-  Iterator begin();
-  Iterator end();
-
-  class ConstIterator {
-  private:
-    std::vector<Instruction *>::const_iterator it;
-
-  public:
-    explicit ConstIterator(
-        std::vector<Instruction *>::const_iterator it);
-
-    const Instruction *operator*() const;
-    ConstIterator &operator++();
-    ConstIterator operator++(int);
-    bool operator==(const ConstIterator &other) const;
-    bool operator!=(const ConstIterator &other) const;
-  };
-
-  ConstIterator begin() const;
-  ConstIterator end() const;
+  std::vector<Instruction *>::iterator begin();
+  std::vector<Instruction *>::iterator end();
+  std::vector<Instruction *>::const_iterator begin() const;
+  std::vector<Instruction *>::const_iterator end() const;
+  std::vector<Instruction *>::const_iterator cbegin() const;
+  std::vector<Instruction *>::const_iterator cend() const;
 };
 
 } // namespace ir

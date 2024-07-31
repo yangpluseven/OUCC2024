@@ -25,9 +25,9 @@ public:
 
 class Function : public Value {
 private:
-  std::string name;
-  std::vector<Argument *> args;
-  std::vector<BasicBlock *> blocks;
+  std::string _name;
+  std::vector<Argument *> _args;
+  std::vector<BasicBlock *> _blocks;
 
 public:
   Function(Type *type, std::string name);

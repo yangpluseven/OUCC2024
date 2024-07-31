@@ -5,8 +5,7 @@ namespace ir {
 int BasicBlock::_counter = 0;
 
 BasicBlock::BasicBlock(Function *func)
-  : Value(BasicType::VOID), _id(_counter++), _function(func) {
-}
+    : Value(BasicType::VOID), _id(_counter++), _function(func) {}
 
 bool BasicBlock::isEmpty() const { return _instructions.empty(); }
 
@@ -57,69 +56,28 @@ std::string BasicBlock::getName() const { return "b" + std::to_string(_id); }
 
 std::string BasicBlock::toString() const { return getName(); }
 
-BasicBlock::Iterator::Iterator(std::vector<Instruction *>::iterator it)
-  : it(it) {
+std::vector<Instruction *>::iterator BasicBlock::begin() {
+  return _instructions.begin();
 }
 
-Instruction *BasicBlock::Iterator::operator*() const { return *it; }
-
-BasicBlock::Iterator &BasicBlock::Iterator::operator++() {
-  ++it;
-  return *this;
+std::vector<Instruction *>::iterator BasicBlock::end() {
+  return _instructions.end();
 }
 
-BasicBlock::Iterator BasicBlock::Iterator::operator++(int) {
-  Iterator tmp = *this;
-  ++it;
-  return tmp;
+std::vector<Instruction *>::const_iterator BasicBlock::begin() const {
+  return _instructions.begin();
 }
 
-bool BasicBlock::Iterator::operator==(const Iterator &rhs) const {
-  return it == rhs.it;
+std::vector<Instruction *>::const_iterator BasicBlock::end() const {
+  return _instructions.end();
 }
 
-bool BasicBlock::Iterator::operator!=(const Iterator &rhs) const {
-  return it != rhs.it;
+std::vector<Instruction *>::const_iterator BasicBlock::cbegin() const {
+  return _instructions.cbegin();
 }
 
-BasicBlock::Iterator BasicBlock::begin() {
-  return Iterator(_instructions.begin());
-}
-
-BasicBlock::Iterator BasicBlock::end() { return Iterator(_instructions.end()); }
-
-BasicBlock::ConstIterator::ConstIterator(
-    std::vector<Instruction *>::const_iterator it)
-  : it(it) {
-}
-
-const Instruction *BasicBlock::ConstIterator::operator*() const { return *it; }
-
-BasicBlock::ConstIterator &BasicBlock::ConstIterator::operator++() {
-  ++it;
-  return *this;
-}
-
-BasicBlock::ConstIterator BasicBlock::ConstIterator::operator++(int) {
-  ConstIterator tmp = *this;
-  ++it;
-  return tmp;
-}
-
-bool BasicBlock::ConstIterator::operator==(const ConstIterator &other) const {
-  return it == other.it;
-}
-
-bool BasicBlock::ConstIterator::operator!=(const ConstIterator &other) const {
-  return it != other.it;
-}
-
-BasicBlock::ConstIterator BasicBlock::begin() const {
-  return ConstIterator(_instructions.begin());
-}
-
-BasicBlock::ConstIterator BasicBlock::end() const {
-  return ConstIterator(_instructions.end());
+std::vector<Instruction *>::const_iterator BasicBlock::cend() const {
+  return _instructions.cend();
 }
 
 } // namespace ir
