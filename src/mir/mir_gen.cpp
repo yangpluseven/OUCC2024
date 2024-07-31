@@ -52,7 +52,16 @@ MIRGenerator::calcArgOffsets(std::vector<ir::Argument *> &args) {
 }
 
 MachineFunction *MIRGenerator::funcToMir(ir::Function *func) {
-  // TODO
+  std::unordered_map<ir::Argument *, std::pair<bool, int>> argOffsets = calcArgOffsets(func->getArgs());
+  std::pair<int, std::unordered_map<ir::AllocaInst *, int>> locals = calcLocalOffsets(func->getFirst());
+  std::pair<int, int> callerNums = getCallerNumbers(func);
+  MachineFunction *mFunc = new MachineFunction(func, locals.first, callerNums.first, callerNums.second);
+  auto retLabelMIR = new LabelMIR(new ir::BasicBlock(func));
+  std::unordered_map<reg::VReg *, reg::MReg *> replaceMap;
+  std::unordered_map<ir::Instruction *, reg::VReg *> instRegMap;
+  for (const auto block : *func) {
+
+  }
 }
 
 std::pair<int, std::unordered_map<ir::AllocaInst *, int>>

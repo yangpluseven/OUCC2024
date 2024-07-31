@@ -55,11 +55,11 @@ std::string BranchInst::toString() const {
     auto cond = getOperand<Value>(0);
     auto ifTrue = getOperand<BasicBlock>(1);
     auto ifFalse = getOperand<BasicBlock>(2);
-    return "br i1 " + cond->getName() + ", label " + ifTrue->toString() +
-           ", label " + ifFalse->toString();
+    return "br i1 " + cond->getName() + ", label %" + ifTrue->toString() +
+           ", label %" + ifFalse->toString();
   }
   auto dest = getOperand<BasicBlock>(0);
-  return "br label " + dest->toString();
+  return "br label %" + dest->toString();
 }
 
 CallInst::CallInst(BasicBlock *block, Function *func,
