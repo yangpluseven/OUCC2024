@@ -54,7 +54,7 @@ public:
 
 class GetElementPtrInst : public Instruction {
 private:
-  static Type *_calcType(const Value *value, size_t indexSize);
+  static Type *calcType(Value *value, size_t indexSize);
 
 public:
   GetElementPtrInst(BasicBlock *block, Value *ptr,

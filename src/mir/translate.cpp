@@ -93,7 +93,7 @@ void MIRBinTranslator::transModImmReg(std::vector<MIR *> &irs,
   transModRegReg(irs, target, midReg, vsrc);
 }
 
-void MIRBinTranslator::transModRegImm(std::vector<MIR *> irs, reg::VReg *target,
+void MIRBinTranslator::transModRegImm(std::vector<MIR *> &irs, reg::VReg *target,
                                       reg::VReg *vsrc, int imm) {
   if (imm == 1) {
     irs.push_back(new RrMIR(RrMIR::MV, target, vsrc));

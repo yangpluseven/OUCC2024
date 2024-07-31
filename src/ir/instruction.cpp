@@ -95,9 +95,9 @@ std::string CallInst::toString() const {
          func->getName() + ss.str();
 }
 
-Type *GetElementPtrInst::_calcType(const Value *value, size_t indexSize) {
+Type *GetElementPtrInst::calcType(Value *value, size_t indexSize) {
   auto type = value->getType();
-  if (dynamic_cast<GlobalVariable *>(type))
+  if (dynamic_cast<GlobalVariable *>(value))
     type = new PointerType(type);
 
   for (int i = 0; i < indexSize; i++)
@@ -107,14 +107,14 @@ Type *GetElementPtrInst::_calcType(const Value *value, size_t indexSize) {
 
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
                                      std::initializer_list<Value *> indexes)
-  : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
+  : Instruction(block, calcType(ptr, indexes.size()), {ptr}) {
   for (const auto index : indexes)
     add(new Use(this, index));
 }
 
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
                                      std::vector<Value *> &indexes)
-  : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
+  : Instruction(block, calcType(ptr, indexes.size()), {ptr}) {
   for (const auto index : indexes)
     add(new Use(this, index));
 }

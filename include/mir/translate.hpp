@@ -42,7 +42,7 @@ public:
   }
 
   static int leadingZeros(int x) {
-    constexpr int bitSize = std::numeric_limits<int>::digits;
+    constexpr int bitSize = std::numeric_limits<int>::digits + 1;
     if (x == 0) {
       return bitSize;
     }
@@ -59,7 +59,7 @@ public:
   }
 
   static int trailingZeros(int x) {
-    constexpr int bitSize = std::numeric_limits<int>::digits;
+    constexpr int bitSize = std::numeric_limits<int>::digits + 1;
     if (x == 0) {
       return bitSize;
     }
@@ -107,7 +107,7 @@ private:
   }
   static void transModImmReg(std::vector<MIR *> &irs, reg::VReg *target,
                              int imm, reg::VReg *vsrc);
-  static void transModRegImm(std::vector<MIR *> irs, reg::VReg *target,
+  static void transModRegImm(std::vector<MIR *> &irs, reg::VReg *target,
                              reg::VReg *vsrc, int imm);
   static void transModRegReg(std::vector<MIR *> &irs, reg::VReg *target,
                              reg::VReg *vsrc1, reg::VReg *vsrc2) {
