@@ -54,7 +54,7 @@ std::string ConstantNumber::getName() const {
 }
 
 ConstantNumber ConstantNumber::operator+(const ConstantNumber &rhs) const {
-  if (type == BasicType::I32)
+  if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(model::Number(intValue() + rhs.intValue()));
   else if (type == BasicType::FLOAT)
     return ConstantNumber(model::Number(floatValue() + rhs.floatValue()));
@@ -63,7 +63,7 @@ ConstantNumber ConstantNumber::operator+(const ConstantNumber &rhs) const {
 }
 
 ConstantNumber ConstantNumber::operator-(const ConstantNumber &rhs) const {
-  if (type == BasicType::I32)
+  if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(model::Number(intValue() - rhs.intValue()));
   else if (type == BasicType::FLOAT)
     return ConstantNumber(model::Number(floatValue() - rhs.floatValue()));
@@ -72,7 +72,7 @@ ConstantNumber ConstantNumber::operator-(const ConstantNumber &rhs) const {
 }
 
 ConstantNumber ConstantNumber::operator*(const ConstantNumber &rhs) const {
-  if (type == BasicType::I32)
+  if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(model::Number(intValue() * rhs.intValue()));
   else if (type == BasicType::FLOAT)
     return ConstantNumber(model::Number(floatValue() * rhs.floatValue()));
@@ -81,7 +81,7 @@ ConstantNumber ConstantNumber::operator*(const ConstantNumber &rhs) const {
 }
 
 ConstantNumber ConstantNumber::operator/(const ConstantNumber &rhs) const {
-  if (type == BasicType::I32)
+  if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(model::Number(intValue() / rhs.intValue()));
   else if (type == BasicType::FLOAT)
     return ConstantNumber(model::Number(floatValue() / rhs.floatValue()));
@@ -90,7 +90,7 @@ ConstantNumber ConstantNumber::operator/(const ConstantNumber &rhs) const {
 }
 
 ConstantNumber ConstantNumber::operator%(const ConstantNumber &rhs) const {
-  if (type == BasicType::I32)
+  if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(model::Number(intValue() % rhs.intValue()));
   else
     throw std::runtime_error("Unsupported type");
@@ -106,7 +106,7 @@ ConstantNumber ConstantNumber::operator^(const ConstantNumber &rhs) const {
 }
 
 ConstantNumber ConstantNumber::operator-() const {
-  if (type == BasicType::I32)
+  if (type == BasicType::I32 || type == BasicType::I1)
     return ConstantNumber(model::Number(-intValue()));
   else if (type == BasicType::FLOAT)
     return ConstantNumber(model::Number(-floatValue()));

@@ -24,12 +24,12 @@ public:
       return std::get<float>(_value);
   }
 
-  std::variant<int, float> getValue() const { return _value; }
+  [[nodiscard]] std::variant<int, float> getValue() const { return _value; }
 
-  Number(int value) : _value(value) {}
-  Number(float value) : _value(value) {}
-  Number(const Number &other) : _value(other._value) {}
-  Number(Number &&other) : _value(std::move(other._value)) {}
+  explicit Number(int value) : _value(value) {}
+  explicit Number(float value) : _value(value) {}
+  Number(const Number &other) = default;
+  Number(Number &&other) : _value(other._value) {}
   Number &operator=(const Number &other) {
     _value = other._value;
     return *this;
