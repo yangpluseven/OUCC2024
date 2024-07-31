@@ -1,15 +1,18 @@
 #include "compiler.hpp"
-#include "parser/SysYParser.h"
-#include "parser/SysYLexer.h"
 #include "ANTLRInputStream.h"
+#include "parser/SysYLexer.h"
+#include "parser/SysYParser.h"
+#include "reg/reg_alloc.hpp"
+
 #include <fstream>
 #include <sstream>
 
 std::unordered_map<std::string, std::string> Compiler::optionValues{
-    {"-S", "0"}, {"-O1", "0"}, {"-o", "out"}, {"", "main.sy"}, {"-dispf", "0"},
-    {"-emit-llvm", "0"}, {"-emit-mir", "0"}};
+    {"-S", "0"},     {"-O1", "0"},        {"-o", "out"},     {"", "main.sy"},
+    {"-dispf", "0"}, {"-emit-llvm", "0"}, {"-emit-mir", "0"}};
 
-ir::Module *Compiler::module;
+ir::Module *Compiler::_module;
+std::unordered_map<std::string, mir::MachineFunction *> Compiler::_funcs;
 
 void Compiler::compile() {
   const std::string filePath = optionValues[""];
@@ -25,19 +28,37 @@ void Compiler::compile() {
   SysYParser parser(&tokens);
   SysYParser::RootContext *root = parser.root();
   parser::ASTVisitor visitor(root);
-  module = visitor.getModule();
+  _module = visitor.getModule();
   if (optionValues["-emit-llvm"] == "1") {
     emitLLVM();
     if (optionValues["-emit-mir"] == "1" || optionValues["-S"] == "1") {
-      std::cout << "Emit llvm prior to mir and assembly. quitting." << std::endl;
+      std::cout << "Emit llvm prior to mir and assembly. quitting."
+                << std::endl;
       return;
     }
   }
+  mir::MIRGenerator mirGenerator(_module);
+  std::unordered_set<ir::GlobalVariable *> globals = mirGenerator.getGlobals();
+  _funcs = mirGenerator.getFuncs();
   if (optionValues["-emit-mir"] == "1") {
-    // TODO
+    emitMIR();
+    if (optionValues["-S"] == "1") {
+      std::cout << "Emit mir prior to assembly. quitting." << std::endl;
+      return;
+    }
   }
   if (optionValues["-S"] == "1") {
-    // TODO
+    reg::ModuleRegAlloc regAlloc(_funcs);
+    regAlloc.allocate();
+    CodeGenerator codeGenerator(std::move(globals), std::move(_funcs));
+    std::string output = codeGenerator.getOutPut();
+    const std::string filename = optionValues["-o"];
+    std::ofstream writer(filename);
+    writer << output;
+    writer.close();
+    if (writer.fail()) {
+      throw std::runtime_error("Cannot write to file: " + filename);
+    }
   }
 }
 
@@ -48,15 +69,15 @@ void Compiler::emitLLVM() {
     throw std::runtime_error("Cannot open file: " + filename);
   }
 
-  for (const auto &global : module->getGlobals()) {
+  for (const auto &global : _module->getGlobals()) {
     writer << global->toString() << '\n';
   }
 
-  if (module->hasGlobal()) {
+  if (_module->hasGlobal()) {
     writer << '\n';
   }
 
-  auto functions = module->getFunctions();
+  auto functions = _module->getFunctions();
   sort(functions.begin(), functions.end(),
        [](const ir::Function *func1, const ir::Function *func2) {
          if (func1->isDeclare() != func2->isDeclare()) {
@@ -72,5 +93,111 @@ void Compiler::emitLLVM() {
   writer.close();
   if (writer.fail()) {
     throw std::runtime_error("Cannot write to file: " + filename);
+  }
+}
+
+void Compiler::emitMIR() {
+  const std::string filename = optionValues["-o"];
+  std::ofstream writer(filename);
+  if (!writer.is_open()) {
+    throw std::runtime_error("Cannot open file: " + filename);
+  }
+  for (const auto &p : _funcs) {
+    const auto func = p.second;
+    writer << func->toString() << '\n';
+  }
+  writer.close();
+  if (writer.fail()) {
+    throw std::runtime_error("Cannot write to file: " + filename);
+  }
+}
+
+void CodeGenerator::buildFuncs(std::ostringstream &builder) const {
+  builder << "\t.text\n";
+  for (const auto &[key, func] : _funcs) {
+    builder << "\t.align 8\n";
+    builder << "\t.global " << func->getRawName() << '\n';
+    builder << func->getRawName() << ":\n";
+    for (const auto ir : func->getIRs()) {
+      if (!dynamic_cast<const mir::LabelMIR *>(ir)) {
+        builder << '\t';
+      }
+      std::string irStr = ir->toString();
+      size_t pos = 0;
+      while ((pos = irStr.find('\n', pos)) != std::string::npos) {
+        irStr.insert(pos + 1, "\t");
+        pos += 2;
+      }
+      builder << irStr << '\n';
+    }
+    builder << "\tret\n";
+  }
+}
+
+void CodeGenerator::buildGlobals(std::ostringstream &builder) const {
+  std::vector<ir::GlobalVariable *> symbolsInData;
+  std::vector<ir::GlobalVariable *> symbolsInBss;
+  for (const auto &global : _globals) {
+    if (!global->isSingle() && global->isInBss()) {
+      symbolsInBss.push_back(global);
+    } else {
+      symbolsInData.push_back(global);
+    }
+  }
+  if (!symbolsInBss.empty()) {
+    builder << "\t.bss\n";
+  }
+  for (const auto &global : symbolsInBss) {
+    const int size = static_cast<int>(global->getSize()) / 8;
+    builder << "\t.align 8\n";
+    builder << "\t.size " << global->getRawName() << ", "
+            << std::to_string(size) << '\n';
+    builder << global->getRawName() << ":\n";
+    builder << "\t.space " << std::to_string(size) << '\n';
+  }
+  if (!symbolsInData.empty()) {
+    builder << "\t.data\n";
+  }
+  for (const auto &global : symbolsInData) {
+    const int size = static_cast<int>(global->getSize()) / 8;
+    builder << "\t.align 8\n";
+    builder << "\t.size " << global->getRawName() << ", "
+            << std::to_string(size) << '\n';
+    builder << global->getRawName() << ":\n";
+    const int num = size / 4;
+    if (global->isSingle()) {
+      builder << "\t.word ";
+      std::string value;
+      const auto type = global->getType();
+      if (type == ir::BasicType::FLOAT) {
+        float f = global->getFloat();
+        value = std::to_string(*reinterpret_cast<int *>(&f));
+      } else if (type == ir::BasicType::I32) {
+        value = std::to_string(global->getInt());
+      } else {
+        throw std::runtime_error(
+            "Unsupported type in CodeGenerator::buildGlobals");
+      }
+      builder << value << '\n';
+    } else {
+      auto type = global->getType();
+      while (auto arrayType = dynamic_cast<const ir::ArrayType *>(type)) {
+        type = arrayType->baseType();
+      }
+      for (int i = 0; i < num; i++) {
+        builder << "\t.word ";
+        std::string value;
+        if (type == ir::BasicType::FLOAT) {
+          float f = global->getFloat(i);
+          value = std::to_string(*reinterpret_cast<int *>(&f));
+        } else if (type == ir::BasicType::I32) {
+          value = std::to_string(global->getInt(i));
+        } else {
+          throw std::runtime_error(
+              "Unsupported type in CodeGenerator::buildGlobals");
+        }
+        builder << value << '\n';
+      }
+    }
   }
 }

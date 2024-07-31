@@ -52,7 +52,7 @@ private:
 
   static MachineFunction *funcToMIR(ir::Function *func);
 
-  void llvmToMir() {
+  void llvmToMIR() {
     for (auto func : _module->getFunctions()) {
       if (!func->isDeclare()) {
         _mFuncs[func->getName()] = funcToMIR(func);
@@ -82,12 +82,13 @@ public:
       return;
     }
     _isProcessed = true;
-    llvmToMir();
+    llvmToMIR();
   }
 
   std::unordered_map<std::string, MachineFunction *> getFuncs() {
     checkIfIsProcessed();
-    return _mFuncs;
+    // Can only be moved once
+    return std::move(_mFuncs);
   }
 
   std::unordered_set<ir::GlobalVariable *> getGlobals() {

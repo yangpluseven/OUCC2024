@@ -85,9 +85,11 @@ private:
 public:
   explicit FuncRegAlloc(mir::MachineFunction *func) : _func(func) {
     _iCallerRegs = std::vector<MReg *>(MReg::I_CALLER_REGS.begin(),
-                                       MReg::I_CALLER_REGS.end());
+                                       MReg::I_CALLER_REGS.begin() +
+                                           _func->getICallerNum());
     _fCallerRegs = std::vector<MReg *>(MReg::F_CALLER_REGS.begin(),
-                                       MReg::F_CALLER_REGS.end());
+                                       MReg::F_CALLER_REGS.begin() +
+                                           _func->getFCallerNum());
     _paramInnerSize = (func->getICallerNum() + func->getFCallerNum()) * 8;
   }
 
@@ -123,7 +125,7 @@ public:
 
   void allocate() {
     for (const auto func : _funcs) {
-      reg::FuncRegAlloc(func).allocate();
+      FuncRegAlloc(func).allocate();
     }
   }
 };
