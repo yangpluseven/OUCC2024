@@ -110,6 +110,6 @@ Argument::Argument(Type *type, std::string name)
 
 std::string Argument::getName() const { return "%" + name; }
 
-std::string Argument::toString() const { return type->toString(); }
+std::string Argument::toString() const { return type->toString() + " %" + name; }
 
 } // namespace ir

@@ -124,10 +124,10 @@ void ASTVisitor::processValueCond(ir::Value *value) {
 }
 
 ir::Type *ASTVisitor::automaticTypePromotion(ir::Type *type1, ir::Type *type2) {
-  if (type1 == ir::BasicType::I32 || type2 == ir::BasicType::I32)
-    return ir::BasicType::I32;
   if (type1 == ir::BasicType::FLOAT || type2 == ir::BasicType::FLOAT)
     return ir::BasicType::FLOAT;
+  if (type1 == ir::BasicType::I32 || type2 == ir::BasicType::I32)
+    return ir::BasicType::I32;
   return ir::BasicType::I1;
 }
 
@@ -784,7 +784,8 @@ std::any ASTVisitor::visitNumberExp(SysYParser::NumberExpContext *ctx) {
       else
         value = std::stoi(txt.substr(2), nullptr, 16);
     }
-    return std::make_any<ir::Value *>(new ir::ConstantNumber(model::Number(value)));
+    return std::make_any<ir::Value *>(
+        new ir::ConstantNumber(model::Number(value)));
   }
   if (ctx->FloatConst()) {
     return std::make_any<ir::Value *>(new ir::ConstantNumber(
@@ -871,7 +872,6 @@ std::any ASTVisitor::visitScalarVarExp(SysYParser::ScalarVarExpContext *ctx) {
 
 std::any ASTVisitor::visitUnaryExp(SysYParser::UnaryExpContext *ctx) {
   size_t const childCount = ctx->children.size();
-  // TODO check 'getChildCount()'
   ir::Value *result;
   if (childCount == 2) {
     auto *value =
@@ -932,7 +932,7 @@ std::any ASTVisitor::visitUnaryExp(SysYParser::UnaryExpContext *ctx) {
     return visitAdditiveExp(ctx->additiveExp());
   } else {
     auto res = SysYBaseVisitor::visitUnaryExp(ctx);
-    return res; // TODO
+    return res;
   }
 }
 
@@ -961,7 +961,7 @@ std::any ASTVisitor::visitLVal(SysYParser::LValContext *ctx) {
                  [&](SysYParser::AdditiveExpContext *ctx_) {
                    return std::any_cast<ir::Value *>(
                        ASTVisitor::visitAdditiveExp(ctx_));
-                 }); // TODO check 'transform'
+                 });
   bool isFirst = true;
   for (ir::Value *dim : dims) {
     ir::Instruction *inst;

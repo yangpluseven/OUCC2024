@@ -93,8 +93,14 @@ public:
   ir::GlobalVariable *makeGlobal(bool isConst, ir::Type *type,
                                  const std::string &name,
                                  const model::Number &value) {
+    model::Number realVal(value.intValue());
+    if (type == ir::BasicType::FLOAT) {
+      realVal = model::Number(value.floatValue());
+    } else if (type != ir::BasicType::I32) {
+      throw std::runtime_error("Unsupported type in ASTVisitor::makeGlobal");
+    }
     auto symbol = new ir::GlobalVariable(isConst, type, name,
-                                         new ir::ConstantNumber(value));
+                                         new ir::ConstantNumber(realVal));
     _table.front()[name] = symbol;
     return symbol;
   }
@@ -165,7 +171,7 @@ private:
   ir::Value *_curRetVal;
   ir::Type *_curType;
   ir::BasicBlock *_entryBlock, *_retBlock, *_curBlock, *_trueBlock,
-                 *_falseBlock;
+      *_falseBlock;
 
   void initBuiltInFuncs();
 
