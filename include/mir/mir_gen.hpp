@@ -50,12 +50,12 @@ private:
   std::unordered_map<std::string, MachineFunction *> _mFuncs;
   bool _isProcessed = false;
 
-  MachineFunction *funcToMir(ir::Function *func);
+  static MachineFunction *funcToMIR(ir::Function *func);
 
-  void llvmToMir() {
+  void llvmToMIR() {
     for (auto func : _module->getFunctions()) {
       if (!func->isDeclare()) {
-        _mFuncs[func->getName()] = funcToMir(func);
+        _mFuncs[func->getName()] = funcToMIR(func);
       }
     }
   }
@@ -82,12 +82,13 @@ public:
       return;
     }
     _isProcessed = true;
-    llvmToMir();
+    llvmToMIR();
   }
 
   std::unordered_map<std::string, MachineFunction *> getFuncs() {
     checkIfIsProcessed();
-    return _mFuncs;
+    // Can only be moved once
+    return std::move(_mFuncs);
   }
 
   std::unordered_set<ir::GlobalVariable *> getGlobals() {
@@ -105,12 +106,14 @@ public:
   calcArgOffsets(std::vector<ir::Argument *> &args);
 };
 
-class FakeMvInst : ir::Instruction {
-public:
-  FakeMvInst(ir::BasicBlock *block, ir::Value *target, ir::Value *src)
-      : ir::Instruction(block, ir::BasicType::VOID, {target, src}) {}
-};
-
 } // namespace mir
+
+namespace ir {
+class FakeMvInst : public ir::Instruction {
+public:
+  FakeMvInst(ir::BasicBlock *block, Value *target, Value *src)
+      : Instruction(block, ir::BasicType::VOID, {target, src}) {}
+};
+} // namespace ir
 
 #endif // MIR_MIR_GEN_HPP

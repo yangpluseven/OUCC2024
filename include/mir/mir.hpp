@@ -109,8 +109,8 @@ public:
     if (op == NUL) {
       return "j\t" + block->getName();
     }
-    return "b" + _opToString(op) + "\t" + src1->toString() + src2->toString() +
-           block->getName();
+    return "b" + _opToString(op) + "\t" + src1->toString() + ", " +
+           src2->toString() + ", " + block->getName();
   }
 
 private:

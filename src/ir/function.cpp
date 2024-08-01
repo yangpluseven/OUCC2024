@@ -5,86 +5,86 @@
 namespace ir {
 
 Function::Function(Type *type, std::string name)
-    : Value(type), name(std::move(name)) {}
+    : Value(type), _name(std::move(name)) {}
 
-bool Function::isDeclare() const { return blocks.empty(); }
+bool Function::isDeclare() const { return _blocks.empty(); }
 
 Function *Function::addArg(Argument *arg) {
-  args.push_back(arg);
+  _args.push_back(arg);
   return this;
 }
 
 bool Function::add(BasicBlock *block) {
-  blocks.push_back(block);
+  _blocks.push_back(block);
   return true;
 }
 
 void Function::add(int index, BasicBlock *block) {
-  blocks.insert(blocks.begin() + index, block);
+  _blocks.insert(_blocks.begin() + index, block);
 }
 
 bool Function::add(int index, const std::vector<BasicBlock *> &newBlocks) {
-  blocks.insert(blocks.begin() + index, newBlocks.begin(), newBlocks.end());
+  _blocks.insert(_blocks.begin() + index, newBlocks.begin(), newBlocks.end());
   return true;
 }
 
 BasicBlock *Function::remove(int index) {
-  BasicBlock *removed = blocks[index];
-  blocks.erase(blocks.begin() + index);
+  BasicBlock *removed = _blocks[index];
+  _blocks.erase(_blocks.begin() + index);
   return removed;
 }
 
-size_t Function::size() const { return blocks.size(); }
+size_t Function::size() const { return _blocks.size(); }
 
-BasicBlock *Function::get(int index) const { return blocks[index]; }
+BasicBlock *Function::get(int index) const { return _blocks[index]; }
 
-BasicBlock *Function::getFirst() const { return blocks.front(); }
+BasicBlock *Function::getFirst() const { return _blocks.front(); }
 
 void Function::insertAfter(const BasicBlock *base, BasicBlock *block) {
-  auto it = std::find(blocks.begin(), blocks.end(), base);
-  if (it != blocks.end()) {
-    blocks.insert(it + 1, block);
+  auto it = std::find(_blocks.begin(), _blocks.end(), base);
+  if (it != _blocks.end()) {
+    _blocks.insert(it + 1, block);
   }
 }
 
-std::vector<BasicBlock *>::iterator Function::begin() { return blocks.begin(); }
+std::vector<BasicBlock *>::iterator Function::begin() { return _blocks.begin(); }
 
-std::vector<BasicBlock *>::iterator Function::end() { return blocks.end(); }
+std::vector<BasicBlock *>::iterator Function::end() { return _blocks.end(); }
 
 std::vector<BasicBlock *>::const_iterator Function::begin() const {
-  return blocks.begin();
+  return _blocks.begin();
 }
 
 std::vector<BasicBlock *>::const_iterator Function::end() const {
-  return blocks.end();
+  return _blocks.end();
 }
 
 std::vector<BasicBlock *>::const_iterator Function::cbegin() const {
-  return blocks.cbegin();
+  return _blocks.cbegin();
 }
 
 std::vector<BasicBlock *>::const_iterator Function::cend() const {
-  return blocks.cend();
+  return _blocks.cend();
 }
 
-std::string Function::getName() const { return "@" + name; }
+std::string Function::getName() const { return "@" + _name; }
 
-std::string Function::getRawName() const { return name; }
+std::string Function::getRawName() const { return _name; }
 
-std::vector<Argument *> &Function::getArgs() { return args; }
+std::vector<Argument *> &Function::getArgs() { return _args; }
 
 std::string Function::toString() const {
-  bool const isDeclare = blocks.empty();
+  bool const isDeclare = _blocks.empty();
   std::ostringstream builder;
   std::ostringstream joiner;
   joiner << "(";
-  for (size_t i = 0; i < args.size(); ++i) {
+  for (size_t i = 0; i < _args.size(); ++i) {
     if (i > 0)
       joiner << ", ";
     if (isDeclare)
-      joiner << args[i]->getType()->toString();
+      joiner << _args[i]->getType()->toString();
     else
-      joiner << args[i]->toString();
+      joiner << _args[i]->toString();
   }
   joiner << ")";
   if (isDeclare)
@@ -95,7 +95,7 @@ std::string Function::toString() const {
   if (isDeclare)
     return builder.str() + "\n";
   builder << " {\n";
-  for (const auto &block : blocks) {
+  for (const auto &block : _blocks) {
     builder << block->toString() << ":\n";
     for (const auto &inst : *block) {
       builder << "  " << inst->toString() << "\n";
@@ -110,6 +110,6 @@ Argument::Argument(Type *type, std::string name)
 
 std::string Argument::getName() const { return "%" + name; }
 
-std::string Argument::toString() const { return type->toString(); }
+std::string Argument::toString() const { return type->toString() + " %" + name; }
 
 } // namespace ir

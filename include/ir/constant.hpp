@@ -15,7 +15,7 @@ public:
   ~Constant() override;
 
   virtual std::string toString() const = 0;
-  virtual std::string getName() const = 0;
+  std::string getName() const override = 0;
 };
 
 class ConstantNumber : public Constant {

@@ -15,7 +15,7 @@ public:
   [[nodiscard]] virtual size_t getSize() const = 0;
   [[nodiscard]] virtual std::string toString() const = 0;
 
-  static Type *CheckEquality(Type *lhs, const Type *rhs);
+  static Type *checkEquality(Type *lhs, const Type *rhs);
 
   bool operator==(const Type &rhs) const;
 };

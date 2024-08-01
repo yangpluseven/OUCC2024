@@ -1,13 +1,20 @@
 #include "ir/type.hpp"
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 #include <utility>
 
 namespace ir {
 
 Type::~Type() = default;
 
-Type *Type::CheckEquality(Type *lhs, const Type *rhs) {
+Type *Type::checkEquality(Type *lhs, const Type *rhs) {
+  if (lhs == nullptr && rhs == nullptr)
+    return nullptr;
+  if (lhs == nullptr || rhs == nullptr)
+    throw std::runtime_error("Unmatched types!");
+  if (lhs == rhs) {
+    return lhs;
+  }
   if (lhs->toString() != rhs->toString())
     throw std::runtime_error("Unmatched types!");
   return lhs;
@@ -17,9 +24,8 @@ bool Type::operator==(const Type &rhs) const {
   return toString() == rhs.toString();
 }
 
-BasicType::BasicType(size_t size, std::string name) : _size(size),
-  _name(std::move(name)) {
-}
+BasicType::BasicType(size_t size, std::string name)
+    : _size(size), _name(std::move(name)) {}
 
 size_t BasicType::getSize() const { return _size; }
 
@@ -29,8 +35,7 @@ Type *BasicType::baseType() const {
   throw std::runtime_error("UnsupportedOperationException");
 }
 
-PointerType::PointerType(Type *baseType) : _bType(baseType) {
-}
+PointerType::PointerType(Type *baseType) : _bType(baseType) {}
 
 Type *PointerType::baseType() const { return _bType; }
 
@@ -40,9 +45,8 @@ std::string PointerType::toString() const {
   return baseType()->toString() + "*";
 }
 
-ArrayType::ArrayType(Type *baseType, size_t arraySize) : _bType(baseType),
-  _arraySize(arraySize) {
-}
+ArrayType::ArrayType(Type *baseType, size_t arraySize)
+    : _bType(baseType), _arraySize(arraySize) {}
 
 Type *ArrayType::baseType() const { return _bType; }
 

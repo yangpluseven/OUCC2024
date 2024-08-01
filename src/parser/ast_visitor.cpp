@@ -6,54 +6,43 @@ void ASTVisitor::initBuiltInFuncs() {
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::I32, "getint"));
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::I32, "getch"));
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::I32, "getarray")
-                                   ->addArg(new ir::Argument(
-                                       new ir::PointerType(ir::BasicType::I32),
-                                       "a")));
+                           ->addArg(new ir::Argument(
+                               new ir::PointerType(ir::BasicType::I32), "a")));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::FLOAT, "getfloat"));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::I32, "getfarray")
-                  ->addArg(new ir::Argument(
-                      new ir::PointerType(ir::BasicType::FLOAT),
-                      "a")));
+          ->addArg(new ir::Argument(new ir::PointerType(ir::BasicType::FLOAT),
+                                    "a")));
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::VOID, "putint")
-                                   ->addArg(
-                                       new ir::Argument(
-                                           ir::BasicType::I32, "a")));
+                           ->addArg(new ir::Argument(ir::BasicType::I32, "a")));
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::VOID, "putch")
-                                   ->addArg(
-                                       new ir::Argument(
-                                           ir::BasicType::I32, "a")));
+                           ->addArg(new ir::Argument(ir::BasicType::I32, "a")));
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::VOID, "putarray")
-                                   ->addArg(
-                                       new ir::Argument(
-                                           ir::BasicType::I32, "n"))
-                                   ->addArg(
-                                       new ir::Argument(
-                                           ir::BasicType::I32, "a")));
+                           ->addArg(new ir::Argument(ir::BasicType::I32, "n"))
+                           ->addArg(new ir::Argument(ir::BasicType::I32, "a")));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::VOID, "putfloat")
-                  ->addArg(new ir::Argument(ir::BasicType::FLOAT, "a")));
+          ->addArg(new ir::Argument(ir::BasicType::FLOAT, "a")));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::VOID, "putfarray")
-                  ->addArg(new ir::Argument(ir::BasicType::I32, "n"))
-                  ->addArg(new ir::Argument(ir::BasicType::FLOAT, "a")));
+          ->addArg(new ir::Argument(ir::BasicType::I32, "n"))
+          ->addArg(new ir::Argument(ir::BasicType::FLOAT, "a")));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::VOID, "_sysy_starttime")
-                  ->addArg(new ir::Argument(ir::BasicType::I32, "lineno")));
+          ->addArg(new ir::Argument(ir::BasicType::I32, "lineno")));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::VOID, "_sysy_stoptime")
-                  ->addArg(new ir::Argument(ir::BasicType::I32, "lineno")));
+          ->addArg(new ir::Argument(ir::BasicType::I32, "lineno")));
 }
 
 void ASTVisitor::initSysCalls() {
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::VOID, "memset")
-                  ->addArg(
-                      new ir::Argument(new ir::PointerType(ir::BasicType::I32),
-                                       "addr"))
-                  ->addArg(new ir::Argument(ir::BasicType::I32, "value"))
-                  ->addArg(new ir::Argument(ir::BasicType::I32, "size")));
+          ->addArg(
+              new ir::Argument(new ir::PointerType(ir::BasicType::I32), "addr"))
+          ->addArg(new ir::Argument(ir::BasicType::I32, "value"))
+          ->addArg(new ir::Argument(ir::BasicType::I32, "size")));
 }
 
 void ASTVisitor::checkIfIsProcessed() {
@@ -135,10 +124,10 @@ void ASTVisitor::processValueCond(ir::Value *value) {
 }
 
 ir::Type *ASTVisitor::automaticTypePromotion(ir::Type *type1, ir::Type *type2) {
-  if (type1 == ir::BasicType::I32 || type2 == ir::BasicType::I32)
-    return ir::BasicType::I32;
   if (type1 == ir::BasicType::FLOAT || type2 == ir::BasicType::FLOAT)
     return ir::BasicType::FLOAT;
+  if (type1 == ir::BasicType::I32 || type2 == ir::BasicType::I32)
+    return ir::BasicType::I32;
   return ir::BasicType::I1;
 }
 
@@ -232,9 +221,9 @@ std::any ASTVisitor::visitType(SysYParser::TypeContext *ctx) {
 std::any ASTVisitor::visitDimensions(SysYParser::DimensionsContext *ctx) {
   auto dimensions = std::vector<int>();
   for (auto exp : ctx->additiveExp()) {
-    dimensions.push_back(
-        dynamic_cast<ir::ConstantNumber *>(std::any_cast<ir::Value *>(
-            visitAdditiveExp(exp)))->intValue());
+    dimensions.push_back(dynamic_cast<ir::ConstantNumber *>(
+                             std::any_cast<ir::Value *>(visitAdditiveExp(exp)))
+                             ->intValue());
   }
   return std::make_any<std::vector<int>>(dimensions);
 }
@@ -264,8 +253,8 @@ std::any ASTVisitor::visitArrayVarDef(SysYParser::ArrayVarDefContext *ctx) {
     for (const auto &entry : exps) {
       int index = entry.first;
       auto exp = entry.second;
-      auto result = dynamic_cast<ir::ConstantNumber *>(std::any_cast<ir::Value
-        *>(visitAdditiveExp(exp)));
+      auto result = dynamic_cast<ir::ConstantNumber *>(
+          std::any_cast<ir::Value *>(visitAdditiveExp(exp)));
       values.insert(std::make_pair(index, result->getValue()));
     }
 
@@ -338,8 +327,8 @@ std::any ASTVisitor::visitFuncDef(SysYParser::FuncDefContext *ctx) {
   _curBlock = new ir::BasicBlock(_curFunc);
   _curFunc->add(_curBlock);
   for (auto argCtx : ctx->funcArg()) {
-    auto arg = dynamic_cast<ir::Argument *>(std::any_cast<ir::Value *>(
-        visitFuncArg(argCtx)));
+    auto arg = dynamic_cast<ir::Argument *>(
+        std::any_cast<ir::Value *>(visitFuncArg(argCtx)));
     _curFunc->addArg(arg);
     auto allocaInst =
         _symbolTable->makeLocal(_entryBlock, arg->getType(), arg->getName());
@@ -375,9 +364,9 @@ std::any ASTVisitor::visitFuncArg(SysYParser::FuncArgContext *ctx) {
     std::reverse(reversed_ctx.begin(), reversed_ctx.end());
     for (auto exp : reversed_ctx)
       type = new ir::ArrayType(
-          type, dynamic_cast<ir::ConstantNumber *>(std::any_cast<ir::Value *>(
-              visitAdditiveExp(exp)))
-          ->intValue());
+          type, dynamic_cast<ir::ConstantNumber *>(
+                    std::any_cast<ir::Value *>(visitAdditiveExp(exp)))
+                    ->intValue());
     type = new ir::PointerType(type);
   }
   return std::make_any<ir::Value *>(
@@ -397,10 +386,10 @@ std::any ASTVisitor::visitBlockStmt(SysYParser::BlockStmtContext *ctx) {
 }
 
 std::any ASTVisitor::visitAssignStmt(SysYParser::AssignStmtContext *ctx) {
-  auto ptr = std::any_cast<ir::Value *>(visitLVal(ctx->lVal()));
+  const auto ptr = std::any_cast<ir::Value *>(visitLVal(ctx->lVal()));
   auto value = std::any_cast<ir::Value *>(visitAdditiveExp(ctx->additiveExp()));
-  auto type = ptr->getType();
-  if (dynamic_cast<ir::BasicType *>(type) != nullptr)
+  const auto type = ptr->getType();
+  if (dynamic_cast<ir::BasicType *>(type))
     value = typeConversion(value, type);
   else
     value = typeConversion(value, type->baseType());
@@ -413,9 +402,10 @@ std::any ASTVisitor::visitScalarVarDef(SysYParser::ScalarVarDefContext *ctx) {
   if (_isConst || _symbolTable->size() == 1) {
     auto value = model::Number(0);
     if (ctx->additiveExp() != nullptr)
-      value = dynamic_cast<ir::ConstantNumber *>(std::any_cast<ir::Value *>(
-              visitAdditiveExp(ctx->additiveExp())))
-          ->getValue();
+      value =
+          dynamic_cast<ir::ConstantNumber *>(
+              std::any_cast<ir::Value *>(visitAdditiveExp(ctx->additiveExp())))
+              ->getValue();
     _module->addGlobal(
         _symbolTable->makeGlobal(_isConst, _curType, name, value));
     return std::make_any<ir::Value *>(nullptr);
@@ -539,6 +529,8 @@ ASTVisitor::visitMultiplicativeExp(SysYParser::MultiplicativeExpContext *ctx) {
         std::any_cast<ir::Value *>(ASTVisitor::visitUnaryExp(ctx->unaryExp(i)));
     ir::Type *targetType = ASTVisitor::automaticTypePromotion(
         iterVal->getType(), nextVal->getType());
+    iterVal = typeConversion(iterVal, targetType);
+    nextVal = typeConversion(nextVal, targetType);
     auto number1 = dynamic_cast<ir::ConstantNumber *>(iterVal);
     auto number2 = dynamic_cast<ir::ConstantNumber *>(nextVal);
     auto txt = ctx->children[i * 2 - 1]->getText();
@@ -784,8 +776,16 @@ std::any ASTVisitor::visitLorExp(SysYParser::LorExpContext *ctx) {
 
 std::any ASTVisitor::visitNumberExp(SysYParser::NumberExpContext *ctx) {
   if (ctx->IntConst()) {
-    return std::make_any<ir::Value *>(new ir::ConstantNumber(
-        model::Number(std::stoi(ctx->IntConst()->getText()))));
+    const auto txt = ctx->IntConst()->getText();
+    int value = std::stoi(txt);
+    if (txt[0] == '0') {
+      if (txt[1] != 'x')
+        value = std::stoi(txt, nullptr, 8);
+      else
+        value = std::stoi(txt.substr(2), nullptr, 16);
+    }
+    return std::make_any<ir::Value *>(
+        new ir::ConstantNumber(model::Number(value)));
   }
   if (ctx->FloatConst()) {
     return std::make_any<ir::Value *>(new ir::ConstantNumber(
@@ -800,8 +800,7 @@ std::any ASTVisitor::visitFuncCallExp(SysYParser::FuncCallExpContext *ctx) {
   std::vector<ir::Value *> args;
   for (int i = 0; i < ctx->additiveExp().size(); i++) {
     SysYParser::AdditiveExpContext *exp = ctx->additiveExp()[i];
-    auto arg =
-        std::any_cast<ir::Value *>(ASTVisitor::visitAdditiveExp(exp));
+    auto arg = std::any_cast<ir::Value *>(ASTVisitor::visitAdditiveExp(exp));
     ir::Type *type;
     if (dynamic_cast<ir::BasicType *>(func->getArgs()[i]->getType()) &&
         func->getArgs()[i]->getType() == ir::BasicType::FLOAT) {
@@ -828,15 +827,13 @@ std::any ASTVisitor::visitArrayVarExp(SysYParser::ArrayVarExpContext *ctx) {
     _curBlock->add(inst);
   }
   for (SysYParser::AdditiveExpContext *dim : ctx->additiveExp()) {
-    auto index =
-        std::any_cast<ir::Value *>(ASTVisitor::visitAdditiveExp(dim));
+    auto index = std::any_cast<ir::Value *>(ASTVisitor::visitAdditiveExp(dim));
     index = typeConversion(index, ir::BasicType::I32);
     ir::Instruction *inst =
-        isFirstDim
-          ? new ir::GetElementPtrInst(_curBlock, ptr, {index})
-          : new ir::GetElementPtrInst(
-              _curBlock, ptr,
-              {new ir::ConstantNumber(model::Number(0)), index});
+        isFirstDim ? new ir::GetElementPtrInst(_curBlock, ptr, {index})
+                   : new ir::GetElementPtrInst(
+                         _curBlock, ptr,
+                         {new ir::ConstantNumber(model::Number(0)), index});
     _curBlock->add(inst);
     ptr = inst;
     isFirstDim = false;
@@ -875,7 +872,6 @@ std::any ASTVisitor::visitScalarVarExp(SysYParser::ScalarVarExpContext *ctx) {
 
 std::any ASTVisitor::visitUnaryExp(SysYParser::UnaryExpContext *ctx) {
   size_t const childCount = ctx->children.size();
-  // TODO check 'getChildCount()'
   ir::Value *result;
   if (childCount == 2) {
     auto *value =
@@ -936,7 +932,7 @@ std::any ASTVisitor::visitUnaryExp(SysYParser::UnaryExpContext *ctx) {
     return visitAdditiveExp(ctx->additiveExp());
   } else {
     auto res = SysYBaseVisitor::visitUnaryExp(ctx);
-    return res; //TODO
+    return res;
   }
 }
 
@@ -952,8 +948,7 @@ std::any ASTVisitor::visitLVal(SysYParser::LValContext *ctx) {
   }
   auto pType = dynamic_cast<ir::PointerType *>(ptr->getType());
   if (pType) {
-    auto bType = dynamic_cast<ir::BasicType *>(pType->baseType());
-    if (bType) {
+    if (dynamic_cast<ir::PointerType *>(pType->baseType())) {
       ir::Instruction *inst = new ir::LoadInst(_curBlock, ptr);
       ptr = inst;
       _curBlock->add(inst);
@@ -966,7 +961,7 @@ std::any ASTVisitor::visitLVal(SysYParser::LValContext *ctx) {
                  [&](SysYParser::AdditiveExpContext *ctx_) {
                    return std::any_cast<ir::Value *>(
                        ASTVisitor::visitAdditiveExp(ctx_));
-                 }); // TODO check 'transform'
+                 });
   bool isFirst = true;
   for (ir::Value *dim : dims) {
     ir::Instruction *inst;

@@ -93,7 +93,7 @@ void MIRBinTranslator::transModImmReg(std::vector<MIR *> &irs,
   transModRegReg(irs, target, midReg, vsrc);
 }
 
-void MIRBinTranslator::transModRegImm(std::vector<MIR *> irs, reg::VReg *target,
+void MIRBinTranslator::transModRegImm(std::vector<MIR *> &irs, reg::VReg *target,
                                       reg::VReg *vsrc, int imm) {
   if (imm == 1) {
     irs.push_back(new RrMIR(RrMIR::MV, target, vsrc));
@@ -106,7 +106,7 @@ void MIRBinTranslator::transModRegImm(std::vector<MIR *> irs, reg::VReg *target,
     } else {
       irs.push_back(new RriMIR(RriMIR::SRAIW, midReg1, vsrc, 31));
       irs.push_back(new RriMIR(RriMIR::SRLIW, midReg1, midReg1,
-                               MIROpUtil::leadingZeros(imm) + 10));
+                               MIROpUtil::leadingZeros(imm) + 1));
     }
     irs.push_back(new RrrMIR(RrrMIR::ADD, midReg1, midReg1, vsrc));
     if (std::abs(imm) < 2048) {

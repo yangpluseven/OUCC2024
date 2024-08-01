@@ -95,9 +95,9 @@ std::string CallInst::toString() const {
          func->getName() + ss.str();
 }
 
-Type *GetElementPtrInst::_calcType(const Value *value, size_t indexSize) {
+Type *GetElementPtrInst::calcType(Value *value, size_t indexSize) {
   auto type = value->getType();
-  if (dynamic_cast<GlobalVariable *>(type))
+  if (dynamic_cast<GlobalVariable *>(value))
     type = new PointerType(type);
 
   for (int i = 0; i < indexSize; i++)
@@ -107,14 +107,14 @@ Type *GetElementPtrInst::_calcType(const Value *value, size_t indexSize) {
 
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
                                      std::initializer_list<Value *> indexes)
-  : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
+  : Instruction(block, calcType(ptr, indexes.size()), {ptr}) {
   for (const auto index : indexes)
     add(new Use(this, index));
 }
 
 GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
                                      std::vector<Value *> &indexes)
-  : Instruction(block, _calcType(ptr, indexes.size()), {ptr}) {
+  : Instruction(block, calcType(ptr, indexes.size()), {ptr}) {
   for (const auto index : indexes)
     add(new Use(this, index));
 }
@@ -224,14 +224,14 @@ std::string StoreInst::toString() const {
 }
 
 BinaryOperator::BinaryOperator(BasicBlock *block, Op op, Value *lhs, Value *rhs)
-  : Instruction(block, Type::CheckEquality(lhs->getType(), rhs->getType()), {lhs, rhs}),
+  : Instruction(block, Type::checkEquality(lhs->getType(), rhs->getType()), {lhs, rhs}),
     op(op) {
 }
 
 std::string BinaryOperator::toString() const {
   auto lhs = getOperand<Value>(0);
   auto rhs = getOperand<Value>(1);
-  auto type = Type::CheckEquality(lhs->getType(), rhs->getType());
+  auto type = Type::checkEquality(lhs->getType(), rhs->getType());
   return getName() + " = " + _opToString(op) + " " + type->toString() + " " +
          lhs->getName() + ", " + rhs->getName();
 }
@@ -276,7 +276,7 @@ std::string CmpInst::toString() const {
   auto class_name = getClassName();
   auto op1 = getOperand<Value>(0);
   auto op2 = getOperand<Value>(1);
-  auto type = Type::CheckEquality(op1->getType(), op2->getType());
+  auto type = Type::checkEquality(op1->getType(), op2->getType());
   return getName() + " = " + class_name + " " + _condToString(cond) + " " +
          type->toString() + " " + op1->getName() + ", " + op2->getName();
 }
