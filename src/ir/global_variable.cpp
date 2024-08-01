@@ -17,7 +17,7 @@ std::vector<int> GlobalVariable::getDimensions() const {
     dimensions.push_back(static_cast<int>(arrayType->getArraySize()));
     curType = arrayType->baseType();
   }
-  return dimensions;
+  return std::move(dimensions);
 }
 
 bool GlobalVariable::isSingle() const {
@@ -70,9 +70,14 @@ int GlobalVariable::getInt(int index) const {
   dimensions.erase(dimensions.begin());
   dimensions.push_back(1);
   Constant *curValue = value;
-  for (int dimension : dimensions) {
-    if (auto constantArray = dynamic_cast<ConstantArray *>(curValue)) {
-      curValue = constantArray->getValues()[index / dimension];
+  for (int i = 0; i < dimensions.size(); i++) {
+    const int dimension = dimensions[i];
+    int num = 1;
+    for (int j = i; j < dimensions.size(); j++) {
+      num *= dimensions[j];
+    }
+    if (const auto constantArray = dynamic_cast<ConstantArray *>(curValue)) {
+      curValue = constantArray->getValues()[index / num];
       index = index % dimension;
     } else if (dynamic_cast<ConstantZero *>(curValue)) {
       return 0;
@@ -80,7 +85,7 @@ int GlobalVariable::getInt(int index) const {
       throw std::runtime_error("Unexpected value");
     }
   }
-  if (auto castValue = dynamic_cast<ConstantNumber *>(curValue)) {
+  if (const auto castValue = dynamic_cast<ConstantNumber *>(curValue)) {
     return castValue->intValue();
   }
   throw std::runtime_error("Not an int");

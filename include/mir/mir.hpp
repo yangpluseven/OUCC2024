@@ -147,7 +147,7 @@ public:
     int isize = 0, fsize = 0;
     for (auto arg : func->getArgs()) {
       if (arg->getType() == ir::BasicType::FLOAT) {
-        if (fsize < reg::MReg::F_CALLEE_REGS.size()) {
+        if (fsize < reg::MReg::F_CALLER_REGS.size()) {
           regs.push_back(reg::MReg::F_CALLER_REGS.at(fsize));
         }
         fsize++;

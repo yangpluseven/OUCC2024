@@ -1,8 +1,5 @@
 #include "mir/mir_gen.hpp"
-
 #include "mir/translate.hpp"
-
-#include <FlatHashMap.h>
 
 namespace mir {
 std::unordered_map<ir::Argument *, std::pair<bool, int>>
