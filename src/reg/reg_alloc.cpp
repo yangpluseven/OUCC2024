@@ -177,8 +177,8 @@ void FuncRegAlloc::solveSpill() {
           std::unordered_set<MReg *> usedRegs;
           for (auto const reg : conflictMap.at(vreg)) {
             if (auto const vreg1 = dynamic_cast<VReg *>(reg)) {
-              MReg *mreg = vRegToMRegMap[vreg1];
-              if (mreg) {
+              if (vRegToMRegMap.find(vreg1) != vRegToMRegMap.end()) {
+                MReg *mreg = vRegToMRegMap.at(vreg1);
                 usedRegs.insert(mreg);
               }
               continue;
@@ -226,11 +226,11 @@ void FuncRegAlloc::solveSpill() {
       VReg *reg = toSpill.first;
       int offset = toSpill.second;
       std::vector<mir::MIR *> newIRs;
-      for (const auto &ir : _func->getIRs()) {
+      for (const auto ir : _func->getIRs()) {
         auto vec = ir->getRegs();
         if (std::find(vec.begin(), vec.end(), reg) != vec.end()) {
           auto sp = ir->spill(reg, offset);
-          newIRs.insert(newIRs.begin(), sp.begin(), sp.end());
+          newIRs.insert(newIRs.end(), sp.begin(), sp.end());
         } else {
           newIRs.push_back(ir);
         }
