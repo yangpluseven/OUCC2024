@@ -2,6 +2,7 @@
 #include "ANTLRInputStream.h"
 #include "SysYLexer.h"
 #include "SysYParser.h"
+#include "preprocess.hpp"
 #include "reg_alloc.hpp"
 
 #include <fstream>
@@ -17,12 +18,14 @@ std::unordered_map<std::string, mir::MachineFunction *> Compiler::_funcs;
 void Compiler::compile() {
   const std::string filePath = optionValues[""];
   std::ifstream file(filePath);
-  if (!file.is_open()) {
-    throw std::runtime_error("File not found");
-  }
-  std::stringstream buffer;
-  buffer << file.rdbuf();
-  antlr4::ANTLRInputStream input(buffer.str());
+  // if (!file.is_open()) {
+  //   throw std::runtime_error("File not found");
+  // }
+  // std::stringstream buffer;
+  // buffer << file.rdbuf();
+  Preprocessor preprocessor(filePath);
+  std::string in = preprocessor.preprocess();
+  antlr4::ANTLRInputStream input(in);
   SysYLexer lexer(&input);
   antlr4::CommonTokenStream tokens(&lexer);
   SysYParser parser(&tokens);
