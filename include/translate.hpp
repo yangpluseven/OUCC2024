@@ -2,7 +2,7 @@
 #define MIR_TRANSLATE_HPP
 
 #include "mir.hpp"
-#include "reg/register.hpp"
+#include "register.hpp"
 #include <bitset>
 #include <limits>
 #include <vector>

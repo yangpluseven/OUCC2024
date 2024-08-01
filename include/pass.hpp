@@ -1,6 +1,7 @@
 #ifndef PASS_HPP
 #define PASS_HPP
-#include "ir/module.hpp"
+
+#include "module.hpp"
 
 #include <stack>
 

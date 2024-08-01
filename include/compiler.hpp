@@ -1,8 +1,8 @@
 #ifndef COMPILER_HPP
 #define COMPILER_HPP
 
-#include "mir/mir_gen.hpp"
-#include "parser/ast_visitor.hpp"
+#include "mir_gen.hpp"
+#include "ast_visitor.hpp"
 #include <string>
 #include <unordered_map>
 #include <utility>

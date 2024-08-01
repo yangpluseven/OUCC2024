@@ -1,4 +1,5 @@
-#include "ir/basic_block.hpp"
+#include "basic_block.hpp"
+#include "type.hpp"
 
 namespace ir {
 

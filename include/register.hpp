@@ -1,6 +1,7 @@
 #ifndef REG_REGISTER_HPP
 #define REG_REGISTER_HPP
-#include "ir/type.hpp"
+
+#include "type.hpp"
 #include <stdexcept>
 
 namespace reg {

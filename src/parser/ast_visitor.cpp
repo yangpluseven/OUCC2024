@@ -1,4 +1,4 @@
-#include "parser/ast_visitor.hpp"
+#include "ast_visitor.hpp"
 
 namespace parser {
 

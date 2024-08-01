@@ -1,6 +1,7 @@
 #ifndef REG_REG_ALLOC_HPP
 #define REG_REG_ALLOC_HPP
-#include "mir/mir_gen.hpp"
+
+#include "mir_gen.hpp"
 
 namespace reg {
 

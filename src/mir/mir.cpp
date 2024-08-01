@@ -1,4 +1,4 @@
-#include "mir/mir.hpp"
+#include "mir.hpp"
 
 namespace mir {
 

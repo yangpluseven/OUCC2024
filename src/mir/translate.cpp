@@ -1,4 +1,4 @@
-#include "mir/translate.hpp"
+#include "translate.hpp"
 
 namespace mir {
 

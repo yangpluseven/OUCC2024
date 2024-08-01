@@ -1,8 +1,8 @@
 #ifndef MIR_MIR_HPP
 #define MIR_MIR_HPP
-#include "ir/basic_block.hpp"
-#include "ir/global_variable.hpp"
-#include "reg/register.hpp"
+#include "basic_block.hpp"
+#include "global_variable.hpp"
+#include "register.hpp"
 
 #include <unordered_map>
 

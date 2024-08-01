@@ -1,4 +1,4 @@
-#include "ir/function.hpp"
+#include "function.hpp"
 #include <algorithm>
 #include <utility>
 

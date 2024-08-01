@@ -1,4 +1,4 @@
-#include "ir/value.hpp"
+#include "value.hpp"
 
 namespace ir {
 

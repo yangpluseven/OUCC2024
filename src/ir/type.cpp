@@ -1,4 +1,4 @@
-#include "ir/type.hpp"
+#include "type.hpp"
 #include <sstream>
 #include <stdexcept>
 #include <utility>

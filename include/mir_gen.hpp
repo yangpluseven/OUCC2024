@@ -1,9 +1,9 @@
 #ifndef MIR_MIR_GEN_HPP
 #define MIR_MIR_GEN_HPP
 
-#include "ir/module.hpp"
+#include "module.hpp"
 #include "mir.hpp"
-#include "reg/register.hpp"
+#include "register.hpp"
 
 #include <iostream>
 

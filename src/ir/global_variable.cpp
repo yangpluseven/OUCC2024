@@ -1,4 +1,4 @@
-#include "ir/global_variable.hpp"
+#include "global_variable.hpp"
 #include <stdexcept>
 #include <utility>
 

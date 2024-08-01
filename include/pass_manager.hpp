@@ -1,7 +1,8 @@
 #ifndef PASS_MANAGER_HPP
 #define PASS_MANAGER_HPP
+
+#include "module.hpp"
 #include "pass.hpp"
-#include "ir/module.hpp"
 
 namespace pass {
 class PassManager {

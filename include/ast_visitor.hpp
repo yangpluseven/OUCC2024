@@ -1,16 +1,16 @@
 #ifndef PARSER_AST_VISITOR_HPP
 #define PARSER_AST_VISITOR_HPP
 
+#include "basic_block.hpp"
+#include "global_variable.hpp"
+#include "module.hpp"
+#include "number.hpp"
+#include "value.hpp"
 #include "SysYBaseVisitor.h"
-#include "ir/basic_block.hpp"
-#include "ir/constant.hpp"
-#include "ir/function.hpp"
-#include "ir/global_variable.hpp"
-#include "ir/instruction.hpp"
-#include "ir/module.hpp"
-#include "ir/type.hpp"
-#include "ir/value.hpp"
-#include "model/number.hpp"
+#include "constant.hpp"
+#include "function.hpp"
+#include "instruction.hpp"
+#include "type.hpp"
 #include <list>
 #include <map>
 #include <stdexcept>

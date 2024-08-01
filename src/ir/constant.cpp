@@ -1,11 +1,13 @@
-#include "ir/constant.hpp"
+#include "constant.hpp"
+#include "type.hpp"
+#include "value.hpp"
 
 #include <sstream>
 #include <utility>
 
 namespace ir {
 
-Constant::Constant(Type *type) : User(type) {
+Constant::Constant(Type *type) : ir::User(type) {
 }
 
 Constant::~Constant() = default;

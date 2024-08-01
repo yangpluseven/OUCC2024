@@ -1,8 +1,8 @@
 #ifndef IR_CONSTANT_HPP
 #define IR_CONSTANT_HPP
 
-#include "model/number.hpp"
 #include "value.hpp"
+#include "number.hpp"
 #include <stdexcept>
 #include <vector>
 

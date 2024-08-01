@@ -1,4 +1,4 @@
-#include "reg/reg_alloc.hpp"
+#include "reg_alloc.hpp"
 #include <algorithm>
 
 namespace reg {

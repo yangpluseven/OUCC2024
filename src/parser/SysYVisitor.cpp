@@ -2,6 +2,6 @@
 // Generated from SysY.g4 by ANTLR 4.13.1
 
 
-#include "parser/SysYVisitor.h"
+#include "SysYVisitor.h"
 
 

@@ -1,4 +1,4 @@
-#include "reg/register.hpp"
+#include "register.hpp"
 
 namespace ir {
 

@@ -1,8 +1,8 @@
 #ifndef IR_MODULE_HPP
 #define IR_MODULE_HPP
 
-#include "function.hpp"
 #include "global_variable.hpp"
+#include "function.hpp"
 #include <unordered_map>
 #include <vector>
 
