@@ -1,5 +1,6 @@
 #include "ir/constant.hpp"
 
+#include <sstream>
 #include <utility>
 
 namespace ir {
@@ -48,7 +49,9 @@ std::string ConstantNumber::getName() const {
     return std::to_string(intValue());
   else if (type == BasicType::FLOAT) {
     auto value = floatValue();
-    return reinterpret_cast<const char *>(&value);
+    std::stringstream ss;
+    ss << "0x" << std::hex << std::uppercase << *reinterpret_cast<unsigned int *>(&value);
+    return ss.str();
   } else
     throw std::runtime_error("Unexpected type");
 }

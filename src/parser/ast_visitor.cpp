@@ -529,6 +529,8 @@ ASTVisitor::visitMultiplicativeExp(SysYParser::MultiplicativeExpContext *ctx) {
         std::any_cast<ir::Value *>(ASTVisitor::visitUnaryExp(ctx->unaryExp(i)));
     ir::Type *targetType = ASTVisitor::automaticTypePromotion(
         iterVal->getType(), nextVal->getType());
+    iterVal = typeConversion(iterVal, targetType);
+    nextVal = typeConversion(nextVal, targetType);
     auto number1 = dynamic_cast<ir::ConstantNumber *>(iterVal);
     auto number2 = dynamic_cast<ir::ConstantNumber *>(nextVal);
     auto txt = ctx->children[i * 2 - 1]->getText();

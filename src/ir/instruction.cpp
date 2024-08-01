@@ -224,14 +224,14 @@ std::string StoreInst::toString() const {
 }
 
 BinaryOperator::BinaryOperator(BasicBlock *block, Op op, Value *lhs, Value *rhs)
-  : Instruction(block, Type::CheckEquality(lhs->getType(), rhs->getType()), {lhs, rhs}),
+  : Instruction(block, Type::checkEquality(lhs->getType(), rhs->getType()), {lhs, rhs}),
     op(op) {
 }
 
 std::string BinaryOperator::toString() const {
   auto lhs = getOperand<Value>(0);
   auto rhs = getOperand<Value>(1);
-  auto type = Type::CheckEquality(lhs->getType(), rhs->getType());
+  auto type = Type::checkEquality(lhs->getType(), rhs->getType());
   return getName() + " = " + _opToString(op) + " " + type->toString() + " " +
          lhs->getName() + ", " + rhs->getName();
 }
@@ -276,7 +276,7 @@ std::string CmpInst::toString() const {
   auto class_name = getClassName();
   auto op1 = getOperand<Value>(0);
   auto op2 = getOperand<Value>(1);
-  auto type = Type::CheckEquality(op1->getType(), op2->getType());
+  auto type = Type::checkEquality(op1->getType(), op2->getType());
   return getName() + " = " + class_name + " " + _condToString(cond) + " " +
          type->toString() + " " + op1->getName() + ", " + op2->getName();
 }
