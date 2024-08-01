@@ -1,8 +1,5 @@
 tests
-build
 dist
-lib
-runtime
 
 ### C++ template
 # Prerequisites
@@ -258,3 +255,4 @@ temp/
 pass_config.txt
 
 .vs/
+/runtime/
