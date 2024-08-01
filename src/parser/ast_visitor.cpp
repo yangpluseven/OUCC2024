@@ -386,10 +386,10 @@ std::any ASTVisitor::visitBlockStmt(SysYParser::BlockStmtContext *ctx) {
 }
 
 std::any ASTVisitor::visitAssignStmt(SysYParser::AssignStmtContext *ctx) {
-  auto ptr = std::any_cast<ir::Value *>(visitLVal(ctx->lVal()));
+  const auto ptr = std::any_cast<ir::Value *>(visitLVal(ctx->lVal()));
   auto value = std::any_cast<ir::Value *>(visitAdditiveExp(ctx->additiveExp()));
-  auto type = ptr->getType();
-  if (dynamic_cast<ir::BasicType *>(type) != nullptr)
+  const auto type = ptr->getType();
+  if (dynamic_cast<ir::BasicType *>(type))
     value = typeConversion(value, type);
   else
     value = typeConversion(value, type->baseType());
@@ -946,8 +946,7 @@ std::any ASTVisitor::visitLVal(SysYParser::LValContext *ctx) {
   }
   auto pType = dynamic_cast<ir::PointerType *>(ptr->getType());
   if (pType) {
-    auto bType = dynamic_cast<ir::BasicType *>(pType->baseType());
-    if (bType) {
+    if (dynamic_cast<ir::PointerType *>(pType->baseType())) {
       ir::Instruction *inst = new ir::LoadInst(_curBlock, ptr);
       ptr = inst;
       _curBlock->add(inst);

@@ -383,10 +383,9 @@ void FuncRegAlloc::replaceFakeMIRs() {
                                  MReg::SP, totalSize);
       } else {
         irs[i] = new mir::LiMIR(MReg::T0, totalSize);
-        if (irs.size() < i + 2) {
-          irs.resize(i + 2);
-        }
-        irs[i + 1] = new mir::RriMIR(mir::RriMIR::ADDI, MReg::SP, MReg::SP, 0);
+        irs.insert(irs.begin() + i + 1,
+                   new mir::RrrMIR(mir::RrrMIR::ADD, addRegLocalMIR->dest,
+                                   MReg::SP, MReg::T0));
         i++;
       }
       continue;
@@ -422,12 +421,11 @@ void FuncRegAlloc::replaceFakeMIRs() {
         irs[i] = new mir::LoadMIR(loadItemMIR->dest, MReg::SP, totalSize, size);
       } else {
         irs[i] = new mir::LiMIR(MReg::T0, totalSize);
-        if (irs.size() < i + 3) {
-          irs.resize(i + 3);
-        }
-        irs[i + 1] =
-            new mir::RrrMIR(mir::RrrMIR::ADD, MReg::T0, MReg::SP, MReg::T0);
-        irs[i + 2] = new mir::LoadMIR(loadItemMIR->dest, MReg::T0, 0, size);
+        irs.insert(
+            irs.begin() + i + 1,
+            new mir::RrrMIR(mir::RrrMIR::ADD, MReg::T0, MReg::SP, MReg::T0));
+        irs.insert(irs.begin() + i + 2,
+                   new mir::LoadMIR(loadItemMIR->dest, MReg::T0, 0, size));
         i += 2;
       }
       continue;
@@ -467,12 +465,11 @@ void FuncRegAlloc::replaceFakeMIRs() {
             new mir::StoreMIR(storeItemMIR->src, MReg::SP, totalSize, size);
       } else {
         irs[i] = new mir::LiMIR(MReg::T0, totalSize);
-        if (irs.size() < i + 3) {
-          irs.resize(i + 3);
-        }
-        irs[i + 1] =
-            new mir::RrrMIR(mir::RrrMIR::ADD, MReg::T0, MReg::SP, MReg::T0);
-        irs[i + 2] = new mir::StoreMIR(storeItemMIR->src, MReg::T0, 0, size);
+        irs.insert(
+            irs.begin() + i + 1,
+            new mir::RrrMIR(mir::RrrMIR::ADD, MReg::T0, MReg::SP, MReg::T0));
+        irs.insert(irs.begin() + i + 2,
+                   new mir::StoreMIR(storeItemMIR->src, MReg::T0, 0, size));
         i += 2;
       }
     }
