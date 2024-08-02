@@ -10,14 +10,14 @@ private:
   std::variant<int, float> _value;
 
 public:
-  int intValue() const {
+  [[nodiscard]] int intValue() const {
     if (std::holds_alternative<int>(_value))
       return std::get<int>(_value);
     else
       return static_cast<int>(std::get<float>(_value));
   }
 
-  float floatValue() const {
+  [[nodiscard]] float floatValue() const {
     if (std::holds_alternative<int>(_value))
       return static_cast<float>(std::get<int>(_value));
     else
@@ -29,13 +29,10 @@ public:
   explicit Number(int value) : _value(value) {}
   explicit Number(float value) : _value(value) {}
   Number(const Number &other) = default;
-  Number(Number &&other) : _value(other._value) {}
-  Number &operator=(const Number &other) {
+  Number(Number &&other)  noexcept : _value(other._value) {}
+  Number &operator=(const Number &other) = default;
+  Number &operator=(Number &&other)  noexcept {
     _value = other._value;
-    return *this;
-  }
-  Number &operator=(Number &&other) {
-    _value = std::move(other._value);
     return *this;
   }
 };

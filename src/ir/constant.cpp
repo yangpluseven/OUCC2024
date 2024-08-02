@@ -7,8 +7,7 @@
 
 namespace ir {
 
-Constant::Constant(Type *type) : ir::User(type) {
-}
+Constant::Constant(Type *type) : ir::User(type) {}
 
 Constant::~Constant() = default;
 
@@ -23,20 +22,16 @@ BasicType *ConstantNumber::determineType(const model::Number &num) {
 }
 
 ConstantNumber::ConstantNumber(bool value)
-  : Constant(BasicType::I1), _value(value ? 1 : 0) {
-}
+    : Constant(BasicType::I1), _value(value ? 1 : 0) {}
 
 ConstantNumber::ConstantNumber(const model::Number &num)
-  : Constant(determineType(num)), _value(num) {
-}
+    : Constant(determineType(num)), _value(num) {}
 
 ConstantNumber::ConstantNumber(const ConstantNumber &other)
-  : Constant(other.type), _value(other._value) {
-}
+    : Constant(other.type), _value(other._value) {}
 
 ConstantNumber::ConstantNumber(ConstantNumber &&other) noexcept
-  : Constant(other.type), _value(std::move(other._value)) {
-}
+    : Constant(other.type), _value(std::move(other._value)) {}
 
 model::Number ConstantNumber::getValue() const { return _value; }
 
@@ -52,7 +47,8 @@ std::string ConstantNumber::getName() const {
   else if (type == BasicType::FLOAT) {
     auto value = floatValue();
     std::stringstream ss;
-    ss << "0x" << std::hex << std::uppercase << *reinterpret_cast<unsigned int *>(&value);
+    ss << "0x" << std::hex << std::uppercase
+       << *reinterpret_cast<unsigned int *>(&value);
     return ss.str();
   } else
     throw std::runtime_error("Unexpected type");
@@ -215,35 +211,34 @@ ConstantNumber *ConstantNumber::lnot() const {
 }
 
 ConstantNumber *ConstantNumber::eq(const ConstantNumber *rhs) const {
-  return new ConstantNumber(intValue() == rhs->intValue());
+  return new ConstantNumber(*this == *rhs);
 }
 
 ConstantNumber *ConstantNumber::ne(const ConstantNumber *rhs) const {
-  return new ConstantNumber(intValue() != rhs->intValue());
+  return new ConstantNumber(*this != *rhs);
 }
 
 ConstantNumber *ConstantNumber::gt(const ConstantNumber *rhs) const {
-  return new ConstantNumber(intValue() > rhs->intValue());
+  return new ConstantNumber(*this > *rhs);
 }
 
 ConstantNumber *ConstantNumber::ge(const ConstantNumber *rhs) const {
-  return new ConstantNumber(intValue() >= rhs->intValue());
+  return new ConstantNumber(*this >= *rhs);
 }
 
 ConstantNumber *ConstantNumber::lt(const ConstantNumber *rhs) const {
-  return new ConstantNumber(intValue() < rhs->intValue());
+  return new ConstantNumber(*this < *rhs);
 }
 
 ConstantNumber *ConstantNumber::le(const ConstantNumber *rhs) const {
-  return new ConstantNumber(intValue() <= rhs->intValue());
+  return new ConstantNumber(*this <= *rhs);
 }
 
 std::string ConstantNumber::toString() const {
   return type->toString() + " " + getName();
 }
 
-ConstantZero::ConstantZero(Type *type) : Constant(type) {
-}
+ConstantZero::ConstantZero(Type *type) : Constant(type) {}
 
 std::string ConstantZero::getName() const { return "zeroinitializer"; }
 
@@ -252,8 +247,7 @@ std::string ConstantZero::toString() const {
 }
 
 ConstantArray::ConstantArray(Type *type, std::vector<Constant *> values)
-  : Constant(type), values(std::move(values)) {
-}
+    : Constant(type), values(std::move(values)) {}
 
 std::vector<Constant *> &ConstantArray::getValues() { return values; }
 
