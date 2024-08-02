@@ -25,6 +25,7 @@ protected:
 
 public:
   BasicBlock *getBlock() const;
+  void setBlock(BasicBlock *block) { _block = block; }
   std::string getName() const override;
   virtual std::string toString() const;
 };

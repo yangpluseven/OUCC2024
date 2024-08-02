@@ -4,7 +4,7 @@
 #include "SysYParser.h"
 #include "preprocess.hpp"
 #include "reg_alloc.hpp"
-// #include "pass_manager.hpp"
+#include "pass_manager.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -41,10 +41,10 @@ void Compiler::compile() {
       return;
     }
   }
-  // if (optionValues["-O1"] == "1") {
-  //   pass::PassManager passManager(_module);
-  //   passManager.run();
-  // }
+  if (optionValues["-O1"] == "1") {
+    pass::PassManager passManager(_module);
+    passManager.run();
+  }
   mir::MIRGenerator mirGenerator(_module);
   std::unordered_set<ir::GlobalVariable *> globals = mirGenerator.getGlobals();
   _funcs = mirGenerator.getFuncs();
