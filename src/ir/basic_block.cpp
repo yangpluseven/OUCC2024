@@ -53,7 +53,7 @@ Instruction *BasicBlock::get(int index) const {
 
 size_t BasicBlock::size() const { return _instructions.size(); }
 
-std::string BasicBlock::getName() const { return ".b" + std::to_string(_id); }
+std::string BasicBlock::getName() const { return "b" + std::to_string(_id); }
 
 std::string BasicBlock::toString() const { return getName(); }
 

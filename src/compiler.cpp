@@ -2,9 +2,9 @@
 #include "ANTLRInputStream.h"
 #include "SysYLexer.h"
 #include "SysYParser.h"
+#include "pass_manager.hpp"
 #include "preprocess.hpp"
 #include "reg_alloc.hpp"
-#include "pass_manager.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -33,17 +33,17 @@ void Compiler::compile() {
   SysYParser::RootContext *root = parser.root();
   parser::ASTVisitor visitor(root);
   _module = visitor.getModule();
+  if (optionValues["-O1"] == "1") {
+    pass::PassManager passManager(_module);
+    passManager.run();
+  }
   if (optionValues["-emit-llvm"] == "1") {
     emitLLVM();
     if (optionValues["-emit-mir"] == "1" || optionValues["-S"] == "1") {
       std::cout << "Emit llvm prior to mir and assembly. quitting."
                 << std::endl;
-      return;
     }
-  }
-  if (optionValues["-O1"] == "1") {
-    pass::PassManager passManager(_module);
-    passManager.run();
+    return;
   }
   mir::MIRGenerator mirGenerator(_module);
   std::unordered_set<ir::GlobalVariable *> globals = mirGenerator.getGlobals();
@@ -52,8 +52,8 @@ void Compiler::compile() {
     emitMIR();
     if (optionValues["-S"] == "1") {
       std::cout << "Emit mir prior to assembly. quitting." << std::endl;
-      return;
     }
+    return;
   }
   if (optionValues["-S"] == "1") {
     reg::ModuleRegAlloc regAlloc(_funcs);

@@ -163,13 +163,13 @@ PHINode::PHINode(BasicBlock *block, Type *type) : Instruction(block, type) {
 
 void PHINode::add(BasicBlock *block, Use *use) {
   User::add(use);
-  useBlockMap[use] = block;
+  _useBlockMap[use] = block;
 }
 
 std::pair<BasicBlock *, Value *> PHINode::getBlockValue(int index) {
   auto use = get(index);
-  if (useBlockMap.find(use) != useBlockMap.end())
-    return {useBlockMap[use], use->getValue()};
+  if (_useBlockMap.find(use) != _useBlockMap.end())
+    return {_useBlockMap[use], use->getValue()};
   else
     throw std::runtime_error("Failed to get the use from this index.");
 }
@@ -177,7 +177,7 @@ std::pair<BasicBlock *, Value *> PHINode::getBlockValue(int index) {
 void PHINode::setBlockValue(int index, BasicBlock *block) {
   auto use = get(index);
   if (use != nullptr)
-    useBlockMap[use] = block;
+    _useBlockMap[use] = block;
   else
     throw std::runtime_error("Failed to get the use from this index.");
 }
@@ -188,8 +188,8 @@ std::string PHINode::toString() const {
     if (i != 0)
       ss << ", ";
 
-    ss << "[" << operands[i]->getValue()->getName() << ", "
-        << useBlockMap.at(operands[i])->toString() << "]";
+    ss << "[" << operands[i]->getValue()->getName() << ", %"
+        << _useBlockMap.at(operands[i])->toString() << "]";
   }
   return getName() + " = phi " + type->toString() + " " + ss.str();
 }

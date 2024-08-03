@@ -24,20 +24,22 @@ public:
   void calcIn() {
     _liveIn.clear();
     _liveIn.insert(_liveOut.begin(), _liveOut.end());
-    for (const auto &def : _liveDef) {
-      _liveIn.erase(def);
+    for (const auto def : _liveDef) {
+      if (_liveIn.find(def) != _liveIn.end()) {
+        _liveIn.erase(def);
+      }
     }
     _liveIn.insert(_liveUse.begin(), _liveUse.end());
   }
 
   void calcOut() {
-    for (const auto &next : _nexts) {
+    for (const auto next : _nexts) {
       _liveOut.insert(next->_liveIn.begin(), next->_liveIn.end());
     }
   }
 
   [[nodiscard]] bool containsInDef(Reg *reg) const {
-    return _liveOut.find(reg) != _liveOut.end();
+    return _liveDef.find(reg) != _liveDef.end();
   }
 
   [[nodiscard]] int getBegin() const { return _begin; }

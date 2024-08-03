@@ -17,10 +17,10 @@ public:
     bool modified;
     do {
       modified = false;
-      modified |= (new BranchOptPass(module))->run();
-      modified |= (new PromotePass(module))->run();
-      modified |= (new ConstPropPass(module))->run();
-      modified |= (new DCEPass(module))->run();
+      modified |= BranchOptPass(module).run();
+      modified |= PromotePass(module).run();
+      modified |= ConstPropPass(module).run();
+      modified |= DCEPass(module).run();
     } while (modified);
   }
 };

@@ -107,10 +107,10 @@ public:
 
   [[nodiscard]] std::string toString() const override {
     if (op == NUL) {
-      return "j\t" + block->getName();
+      return "j\t." + block->getName();
     }
     return "b" + _opToString(op) + "\t" + src1->toString() + ", " +
-           src2->toString() + ", " + block->getName();
+           src2->toString() + ", ." + block->getName();
   }
 
 private:
@@ -184,7 +184,7 @@ public:
   [[nodiscard]] ir::BasicBlock *getBlock() const { return block; }
 
   [[nodiscard]] std::string toString() const override {
-    return block->getName() + ":";
+    return "." + block->getName() + ":";
   }
 };
 

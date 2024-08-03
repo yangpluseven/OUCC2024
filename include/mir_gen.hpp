@@ -113,6 +113,10 @@ class FakeMvInst : public ir::Instruction {
 public:
   FakeMvInst(ir::BasicBlock *block, Value *target, Value *src)
       : Instruction(block, ir::BasicType::VOID, {target, src}) {}
+  std::string toString() const override {
+    return "fake mv " + getName() + "\ttarget: " + getOperand<Instruction>(0)->toString() + "\tsrc: " +
+           getOperand<Value>(1)->getName();
+  }
 };
 } // namespace ir
 

@@ -1,5 +1,5 @@
-#ifndef PASS_HPP
-#define PASS_HPP
+#ifndef PASS_PASS_HPP
+#define PASS_PASS_HPP
 
 #include "module.hpp"
 
@@ -61,10 +61,10 @@ class PromotePass : public FunctionPass {
 private:
   std::unordered_map<ir::BasicBlock *,
                      std::unordered_map<ir::AllocaInst *, ir::PHINode *>>
-      globalPhiMap;
+      _globalPhiMap;
   std::unordered_set<ir::AllocaInst *>
-  analyzePromoteAllocaInsts(ir::Function *function);
-  bool isAllocaPromotable(ir::AllocaInst *allocaInst);
+  static analyzePromoteAllocaInsts(ir::Function *function);
+  static bool isAllocaPromotable(ir::AllocaInst *allocaInst);
   void insertPhi(ir::Function *func,
                  std::unordered_map<ir::BasicBlock *,
                                     std::unordered_set<ir::BasicBlock *>> &df,
@@ -84,4 +84,4 @@ public:
 };
 } // namespace pass
 
-#endif // PASS_HPP
+#endif // PASS_PASS_HPP

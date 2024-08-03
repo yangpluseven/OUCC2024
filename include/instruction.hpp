@@ -73,7 +73,7 @@ public:
 
 class PHINode : public Instruction {
 private:
-  std::unordered_map<Use *, BasicBlock *> useBlockMap;
+  std::unordered_map<Use *, BasicBlock *> _useBlockMap;
 
 public:
   PHINode(BasicBlock *block, Type *type);

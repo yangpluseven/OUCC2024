@@ -63,24 +63,24 @@ FuncRegAlloc::calcLifespans() {
   auto const &irs = _func->getIRs();
   std::vector<Block *> blocks = calcBlocks();
   calcUseDef(blocks);
-  calcUseDef(blocks);
+  calcInOut(blocks);
   std::unordered_map<Reg *, std::unordered_set<int>> lifespans;
   for (auto block : blocks) {
     auto &regs = block->getOut();
     for (int i = block->getEnd() - 1; i >= block->getBegin(); i--) {
       for (auto reg : regs) {
-        // TODO make sure this will work
-        auto &lifespan = lifespans.try_emplace(reg).first->second;
+        // TODO make sure this will work .try_emplace(reg).first->second?
+        auto &lifespan = lifespans[reg];
         lifespan.insert(i);
       }
       mir::MIR *mir = irs.at(i);
       for (auto reg : mir->getWrite()) {
-        auto &lifespan = lifespans.try_emplace(reg).first->second;
+        auto &lifespan = lifespans[reg];
         lifespan.insert(i);
         regs.erase(reg);
       }
       for (auto reg : mir->getRead()) {
-        auto &lifespan = lifespans.try_emplace(reg).first->second;
+        auto &lifespan = lifespans[reg];
         lifespan.insert(i);
         regs.insert(reg);
       }
@@ -253,13 +253,14 @@ FuncRegAlloc::calcConflictMap() {
   }
   for (const auto &lifespan : lifespans) {
     for (int id : lifespan.second) {
-      regsInEackIR[id].insert(lifespan.first);
+      regsInEackIR.at(id).insert(lifespan.first);
     }
   }
   std::unordered_map<Reg *, std::unordered_set<Reg *>> conflictMap;
   for (const auto &regs : regsInEackIR) {
     for (const auto reg : regs) {
-      auto &conflicts = conflictMap.try_emplace(reg).first->second;
+      // .try_emplace(reg).first->second
+      auto &conflicts = conflictMap[reg];
       conflicts.insert(regs.begin(), regs.end());
     }
   }
@@ -335,7 +336,7 @@ void FuncRegAlloc::calcUseDef(std::vector<Block *> &blocks) const {
   auto &irs = _func->getIRs();
   for (const auto block : blocks) {
     for (int i = block->getBegin(); i < block->getEnd(); i++) {
-      mir::MIR *mir = irs[i];
+      mir::MIR *mir = irs.at(i);
       if (auto const callMIR = dynamic_cast<mir::CallMIR *>(mir)) {
         int iSize = 0, fSize = 0;
         for (const auto arg : callMIR->func->getArgs()) {
@@ -359,7 +360,7 @@ void FuncRegAlloc::calcUseDef(std::vector<Block *> &blocks) const {
           block->addDef(reg);
         }
       }
-      for (const auto reg : mir->getRegs()) {
+      for (const auto reg : mir->getRead()) {
         if (!block->containsInDef(reg)) {
           block->addUse(reg);
         }

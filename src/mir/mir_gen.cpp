@@ -853,7 +853,7 @@ MIRGenerator::calcLocalOffsets(ir::BasicBlock *block) {
     localOffsets[allocaInst] = localSize;
     localSize += size;
   }
-  return {localSize, localOffsets};
+  return {localSize, std::move(localOffsets)};
 }
 
 } // namespace mir
