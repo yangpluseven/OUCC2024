@@ -18,7 +18,7 @@ public:
     do {
       modified = false;
       modified |= BranchOptPass(module).run();
-      modified |= PromotePass(module).run();
+      // modified |= PromotePass(module).run();
       modified |= ConstPropPass(module).run();
       modified |= DCEPass(module).run();
     } while (modified);

@@ -210,6 +210,13 @@ void CodeGenerator::buildGlobals(std::ostringstream &builder) const {
   }
 }
 
+void test() {
+  ir::Function *func = new ir::Function(ir::BasicType::I32, "main");
+  ir::BasicBlock *block0 = new ir::BasicBlock(func);
+  ir::Instruction *alloca0 = new ir::AllocaInst(block0, ir::BasicType::I32);
+  ir::Instruction *store0 = new ir::
+}
+
 int main(const int argc, char *argv[]) {
   for (int i = 1; i < argc; i++) {
     const std::string op = argv[i];
