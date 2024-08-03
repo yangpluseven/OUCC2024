@@ -211,10 +211,31 @@ void CodeGenerator::buildGlobals(std::ostringstream &builder) const {
 }
 
 void test() {
-  ir::Function *func = new ir::Function(ir::BasicType::I32, "main");
-  ir::BasicBlock *block0 = new ir::BasicBlock(func);
+  auto *module = new ir::Module();
+  auto *func = new ir::Function(ir::BasicType::I32, "main");
+  auto *block0 = new ir::BasicBlock(func);
+  auto *block1 = new ir::BasicBlock(func);
   ir::Instruction *alloca0 = new ir::AllocaInst(block0, ir::BasicType::I32);
-  ir::Instruction *store0 = new ir::
+  ir::Instruction *store0 = new ir::StoreInst(block0, new ir::ConstantNumber(model::Number(0)), alloca0);
+  ir::Instruction *sotre1 = new ir::StoreInst(block0, new ir::ConstantNumber(model::Number(10)), alloca0);
+  ir::Instruction *branch0 = new ir::BranchInst(block0, block1);
+  block0->add(alloca0);
+  block0->add(store0);
+  block0->add(sotre1);
+  block0->add(branch0);
+  func->add(block0);
+  ir::Instruction *load0 = new ir::LoadInst(block1, alloca0);
+  ir::Instruction *ret0 = new ir::RetInst(block1, load0);
+  block1->add(load0);
+  block1->add(ret0);
+  func->add(block1);
+  module->addFunction(func);
+
+  pass::PassManager passManager(module);
+  passManager.run();
+
+  Compiler::setModule(module);
+  Compiler::emitLLVM();
 }
 
 int main(const int argc, char *argv[]) {
@@ -252,6 +273,7 @@ int main(const int argc, char *argv[]) {
   }
 
   Compiler::compile();
+  // test();
 
   return 0;
 }

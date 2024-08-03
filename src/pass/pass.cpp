@@ -236,10 +236,8 @@ void PromotePass::insertPhi(
   std::unordered_set<ir::AllocaInst *> globals;
   std::unordered_map<ir::AllocaInst *, std::unordered_set<ir::BasicBlock *>>
       blocks;
-  // TODO varKill ?
-  std::unordered_set<ir::AllocaInst *> varKill;
   for (const auto block : *func) {
-    // TODO varKill ?
+    std::unordered_set<ir::AllocaInst *> varKill;
     for (const auto inst : *block) {
       if (const auto loadInst = dynamic_cast<ir::LoadInst *>(inst)) {
         const auto allocaInst =

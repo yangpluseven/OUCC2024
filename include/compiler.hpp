@@ -1,8 +1,8 @@
 #ifndef COMPILER_HPP
 #define COMPILER_HPP
 
-#include "mir_gen.hpp"
 #include "ast_visitor.hpp"
+#include "mir_gen.hpp"
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -20,6 +20,7 @@ public:
   static void compile();
   static void emitLLVM();
   static void emitMIR();
+  static void setModule(ir::Module *module) { _module = module; }
 };
 
 class CodeGenerator {
