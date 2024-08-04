@@ -589,8 +589,34 @@ MachineFunction *MIRGenerator::funcToMIR(ir::Function *func) {
               new RriMIR(RriMIR::XORI, target, midReg, 1));
           break;
         case ir::CmpInst::SLT:
-          mFunc->getIRs().push_back(
-              new RrrMIR(RrrMIR::SLT, target, operand1, operand2));
+          if (const auto value = dynamic_cast<ir::ConstantNumber *>(op2)) {
+            if (value->intValue() == 0) {
+              mFunc->getIRs().pop_back();
+              const auto mid = new reg::VReg(value->getType());
+              mFunc->getIRs().push_back(
+                  new RriMIR(RriMIR::SRAIW, mid, operand1, 31));
+              mFunc->getIRs().push_back(
+                  new RriMIR(RriMIR::ANDI, target, mid, 1));
+            } else if (value->intValue() >= -2048 &&
+                       value->intValue() <= 2047) {
+              mFunc->getIRs().pop_back();
+              mFunc->getIRs().push_back(new RriMIR(
+                  RriMIR::SLTI, target, operand1, value->intValue()));
+            } else {
+              mFunc->getIRs().push_back(
+                  new RrrMIR(RrrMIR::SLT, target, operand1, operand2));
+            }
+          } else if (const auto zero = dynamic_cast<ir::ConstantZero *>(op2)) {
+            mFunc->getIRs().pop_back();
+            const auto mid = new reg::VReg(zero->getType());
+            mFunc->getIRs().push_back(
+                new RriMIR(RriMIR::SRAIW, mid, operand1, 31));
+            mFunc->getIRs().push_back(new RriMIR(RriMIR::ANDI, target, mid, 1));
+          } else {
+            mFunc->getIRs().push_back(
+                new RrrMIR(RrrMIR::SLT, target, operand1, operand2));
+          }
+
         default:
           // TODO need a throw?
           break;

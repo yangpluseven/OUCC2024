@@ -372,7 +372,7 @@ private:
 
 class RriMIR : public MIR {
 public:
-  enum Op { ADDI, ANDI, SLLIW, SRAIW, SRLI, SRLIW, XORI };
+  enum Op { ADDI, ANDI, SLLIW, SRAIW, SRLI, SRLIW, XORI, SLTI };
 
   Op op;
   reg::Reg *dest, *src;
@@ -423,6 +423,8 @@ private:
       return "srliw";
     case XORI:
       return "xori";
+    case SLTI:
+      return "slti";
     default:
       return "incomplete{_opToString}";
     }

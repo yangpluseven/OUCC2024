@@ -10,20 +10,25 @@ private:
   const ir::Module *module;
 
 public:
-  explicit PassManager(const ir::Module *module) : module(module) {
-  }
+  explicit PassManager(const ir::Module *module) : module(module) {}
 
   void run() const {
     bool modified;
     do {
       modified = false;
-      modified |= BranchOptPass(module).run();
-      modified |= ConstPropPass(module).run();
-      modified |= DCEPass(module).run();
+      bool inner;
+      do {
+        inner = false;
+        inner |= BranchOptPass(module).run();
+        inner |= ConstPropPass(module).run();
+        inner |= DCEPass(module).run();
+        modified |= inner;
+      } while (inner);
       modified |= PromotePass(module).run();
+      modified |= DCEPass(module).run();
     } while (modified);
   }
 };
-}
+} // namespace pass
 
-#endif //PASS_MANAGER_HPP
+#endif // PASS_MANAGER_HPP

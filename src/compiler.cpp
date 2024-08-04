@@ -19,11 +19,6 @@ std::unordered_map<std::string, mir::MachineFunction *> Compiler::_funcs;
 void Compiler::compile() {
   const std::string filePath = optionValues[""];
   std::ifstream file(filePath);
-  // if (!file.is_open()) {
-  //   throw std::runtime_error("File not found");
-  // }
-  // std::stringstream buffer;
-  // buffer << file.rdbuf();
   Preprocessor preprocessor(filePath);
   std::string in = preprocessor.preprocess();
   antlr4::ANTLRInputStream input(in);
@@ -156,7 +151,7 @@ void CodeGenerator::buildGlobals(std::ostringstream &builder) const {
     builder << "\t.bss\n";
   }
   for (const auto &global : symbolsInBss) {
-    const int size = static_cast<int>(global->getSize()) / 8;
+    const int size = static_cast<int>(global->getSize() / 8);
     builder << "\t.align 8\n";
     builder << "\t.size " << global->getRawName() << ", "
             << std::to_string(size) << '\n';
