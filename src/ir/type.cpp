@@ -15,13 +15,13 @@ Type *Type::checkEquality(Type *lhs, const Type *rhs) {
   if (lhs == rhs) {
     return lhs;
   }
-  if (lhs->toString() != rhs->toString())
+  if (lhs->str() != rhs->str())
     throw std::runtime_error("Unmatched types!");
   return lhs;
 }
 
 bool Type::operator==(const Type &rhs) const {
-  return toString() == rhs.toString();
+  return str() == rhs.str();
 }
 
 BasicType::BasicType(size_t size, std::string name)
@@ -29,7 +29,7 @@ BasicType::BasicType(size_t size, std::string name)
 
 size_t BasicType::getSize() const { return _size; }
 
-std::string BasicType::toString() const { return _name; }
+std::string BasicType::str() const { return _name; }
 
 Type *BasicType::baseType() const {
   throw std::runtime_error("UnsupportedOperationException");
@@ -41,8 +41,8 @@ Type *PointerType::baseType() const { return _bType; }
 
 size_t PointerType::getSize() const { return 64; }
 
-std::string PointerType::toString() const {
-  return baseType()->toString() + "*";
+std::string PointerType::str() const {
+  return baseType()->str() + "*";
 }
 
 ArrayType::ArrayType(Type *baseType, size_t arraySize)
@@ -82,9 +82,9 @@ std::vector<size_t> ArrayType::getArraySizes() {
   return arraySizes;
 }
 
-std::string ArrayType::toString() const {
+std::string ArrayType::str() const {
   std::ostringstream oss;
-  oss << "[" << _arraySize << " x " << baseType()->toString() << "]";
+  oss << "[" << _arraySize << " x " << baseType()->str() << "]";
   return oss.str();
 }
 

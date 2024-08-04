@@ -15,18 +15,18 @@ protected:
 public:
   virtual ~Reg() = default;
   [[nodiscard]] ir::Type *getType() const { return type; }
-  [[nodiscard]] virtual std::string toString() const = 0;
+  [[nodiscard]] virtual std::string str() const = 0;
 };
 
-class VReg : public Reg {
+class Virtual : public Reg {
 private:
   static int _counter;
   int _id;
 
 public:
-  explicit VReg(ir::Type *type) : Reg(type), _id(_counter++) {}
+  explicit Virtual(ir::Type *type) : Reg(type), _id(_counter++) {}
 
-  [[nodiscard]] std::string toString() const override {
+  [[nodiscard]] std::string str() const override {
     if (type == ir::BasicType::I32) {
       return "$i" + std::to_string(_id);
     }
@@ -37,86 +37,86 @@ public:
   };
 };
 
-class MReg : public Reg {
+class Machine : public Reg {
 private:
   std::string _name;
 
 public:
-  static MReg *const ZERO;
-  static MReg *const RA;
-  static MReg *const SP;
-  static MReg *const GP;
-  static MReg *const TP;
-  static MReg *const T0;
-  static MReg *const T1;
-  static MReg *const T2;
-  static MReg *const S0;
-  static MReg *const S1;
-  static MReg *const A0;
-  static MReg *const A1;
-  static MReg *const A2;
-  static MReg *const A3;
-  static MReg *const A4;
-  static MReg *const A5;
-  static MReg *const A6;
-  static MReg *const A7;
-  static MReg *const S2;
-  static MReg *const S3;
-  static MReg *const S4;
-  static MReg *const S5;
-  static MReg *const S6;
-  static MReg *const S7;
-  static MReg *const S8;
-  static MReg *const S9;
-  static MReg *const S10;
-  static MReg *const S11;
-  static MReg *const T3;
-  static MReg *const T4;
-  static MReg *const T5;
-  static MReg *const T6;
-  static MReg *const FA0;
-  static MReg *const FA1;
-  static MReg *const FA2;
-  static MReg *const FA3;
-  static MReg *const FA4;
-  static MReg *const FA5;
-  static MReg *const FA6;
-  static MReg *const FA7;
-  static MReg *const FS0;
-  static MReg *const FS1;
-  static MReg *const FS2;
-  static MReg *const FS3;
-  static MReg *const FS4;
-  static MReg *const FS5;
-  static MReg *const FS6;
-  static MReg *const FS7;
-  static MReg *const FS8;
-  static MReg *const FS9;
-  static MReg *const FS10;
-  static MReg *const FS11;
-  static MReg *const FT0;
-  static MReg *const FT1;
-  static MReg *const FT2;
-  static MReg *const FT3;
-  static MReg *const FT4;
-  static MReg *const FT5;
-  static MReg *const FT6;
-  static MReg *const FT7;
-  static MReg *const FT8;
-  static MReg *const FT9;
-  static MReg *const FT10;
-  static MReg *const FT11;
+  static Machine *const ZERO;
+  static Machine *const RA;
+  static Machine *const SP;
+  static Machine *const GP;
+  static Machine *const TP;
+  static Machine *const T0;
+  static Machine *const T1;
+  static Machine *const T2;
+  static Machine *const S0;
+  static Machine *const S1;
+  static Machine *const A0;
+  static Machine *const A1;
+  static Machine *const A2;
+  static Machine *const A3;
+  static Machine *const A4;
+  static Machine *const A5;
+  static Machine *const A6;
+  static Machine *const A7;
+  static Machine *const S2;
+  static Machine *const S3;
+  static Machine *const S4;
+  static Machine *const S5;
+  static Machine *const S6;
+  static Machine *const S7;
+  static Machine *const S8;
+  static Machine *const S9;
+  static Machine *const S10;
+  static Machine *const S11;
+  static Machine *const T3;
+  static Machine *const T4;
+  static Machine *const T5;
+  static Machine *const T6;
+  static Machine *const FA0;
+  static Machine *const FA1;
+  static Machine *const FA2;
+  static Machine *const FA3;
+  static Machine *const FA4;
+  static Machine *const FA5;
+  static Machine *const FA6;
+  static Machine *const FA7;
+  static Machine *const FS0;
+  static Machine *const FS1;
+  static Machine *const FS2;
+  static Machine *const FS3;
+  static Machine *const FS4;
+  static Machine *const FS5;
+  static Machine *const FS6;
+  static Machine *const FS7;
+  static Machine *const FS8;
+  static Machine *const FS9;
+  static Machine *const FS10;
+  static Machine *const FS11;
+  static Machine *const FT0;
+  static Machine *const FT1;
+  static Machine *const FT2;
+  static Machine *const FT3;
+  static Machine *const FT4;
+  static Machine *const FT5;
+  static Machine *const FT6;
+  static Machine *const FT7;
+  static Machine *const FT8;
+  static Machine *const FT9;
+  static Machine *const FT10;
+  static Machine *const FT11;
 
-  static const std::vector<MReg *> I_REGS;
-  static const std::vector<MReg *> F_REGS;
-  static const std::vector<MReg *> I_CALLER_REGS;
-  static const std::vector<MReg *> F_CALLER_REGS;
-  static const std::vector<MReg *> I_CALLEE_REGS;
-  static const std::vector<MReg *> F_CALLEE_REGS;
+  static const std::vector<Machine *> I_REGS;
+  static const std::vector<Machine *> F_REGS;
+  static const std::vector<Machine *> I_CALLER_REGS;
+  static const std::vector<Machine *> F_CALLER_REGS;
+  static const std::vector<Machine *> I_CALLEE_REGS;
+  static const std::vector<Machine *> F_CALLEE_REGS;
 
-  MReg(ir::Type *type, std::string name) : Reg(type), _name(std::move(name)) {}
+  Machine(ir::Type *type, std::string name) : Reg(type), _name(std::move(name)) {}
 
-  [[nodiscard]] std::string toString() const override { return _name; };
+  [[nodiscard]] std::string str() const override { return _name; };
 };
 
 } // namespace reg

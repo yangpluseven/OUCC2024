@@ -9,26 +9,26 @@ Function::Function(Type *type, std::string name)
 
 bool Function::isDeclare() const { return _blocks.empty(); }
 
-Function *Function::addArg(Argument *arg) {
+Function *Function::pushArg(Argument *arg) {
   _args.push_back(arg);
   return this;
 }
 
-bool Function::add(BasicBlock *block) {
+bool Function::pushBlock(BasicBlock *block) {
   _blocks.push_back(block);
   return true;
 }
 
-void Function::add(int index, BasicBlock *block) {
+void Function::insertBlock(int index, BasicBlock *block) {
   _blocks.insert(_blocks.begin() + index, block);
 }
 
-bool Function::add(int index, const std::vector<BasicBlock *> &newBlocks) {
+bool Function::insertBlock(int index, const std::vector<BasicBlock *> &newBlocks) {
   _blocks.insert(_blocks.begin() + index, newBlocks.begin(), newBlocks.end());
   return true;
 }
 
-BasicBlock *Function::remove(int index) {
+BasicBlock *Function::erase(int index) {
   BasicBlock *removed = _blocks[index];
   _blocks.erase(_blocks.begin() + index);
   return removed;
@@ -73,7 +73,7 @@ std::string Function::getRawName() const { return _name; }
 
 std::vector<Argument *> &Function::getArgs() { return _args; }
 
-std::string Function::toString() const {
+std::string Function::str() const {
   bool const isDeclare = _blocks.empty();
   std::ostringstream builder;
   std::ostringstream joiner;
@@ -82,23 +82,23 @@ std::string Function::toString() const {
     if (i > 0)
       joiner << ", ";
     if (isDeclare)
-      joiner << _args[i]->getType()->toString();
+      joiner << _args[i]->getType()->str();
     else
-      joiner << _args[i]->toString();
+      joiner << _args[i]->str();
   }
   joiner << ")";
   if (isDeclare)
     builder << "declare ";
   else
     builder << "define ";
-  builder << type->toString() << " " << getName() << joiner.str();
+  builder << type->str() << " " << getName() << joiner.str();
   if (isDeclare)
     return builder.str() + "\n";
   builder << " {\n";
   for (const auto &block : _blocks) {
-    builder << block->toString() << ":\n";
+    builder << block->str() << ":\n";
     for (const auto &inst : *block) {
-      builder << "  " << inst->toString() << "\n";
+      builder << "  " << inst->str() << "\n";
     }
   }
   builder << "}\n";
@@ -110,6 +110,6 @@ Argument::Argument(Type *type, std::string name)
 
 std::string Argument::getName() const { return "%" + name; }
 
-std::string Argument::toString() const { return type->toString() + " %" + name; }
+std::string Argument::str() const { return type->str() + " %" + name; }
 
 } // namespace ir

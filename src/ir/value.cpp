@@ -18,16 +18,16 @@ User::User(Type *type) : Value(type) {
 
 size_t User::size() const { return operands.size(); }
 
-void User::add(Use *use) { add(static_cast<int>(size()), use); }
+void User::insert(Use *use) { insert(static_cast<int>(size()), use); }
 
-void User::add(int index, Use *use) {
+void User::insert(int index, Use *use) {
   while (index >= operands.size())
     operands.push_back(nullptr);
   operands[index] = use;
   use->getValue()->addUse(use);
 }
 
-Use *User::remove(int index) {
+Use *User::erase(int index) {
   Use *use = get(index);
   if (use == nullptr) {
     return nullptr;
@@ -37,10 +37,10 @@ Use *User::remove(int index) {
   return use;
 }
 
-Use *User::remove(const Value *value) {
+Use *User::erase(const Value *value) {
   for (auto i = 0; i < operands.size(); i++) {
     if (operands[i]->getValue() == value) {
-      return remove(i);
+      return erase(i);
     }
   }
   return nullptr;
@@ -53,7 +53,7 @@ Use *User::get(int index) const {
   return operands[index];
 }
 
-bool User::isEmpty() const { return operands.empty(); }
+bool User::empty() const { return operands.empty(); }
 
 void User::set(int index, Use *use) {
   while (index >= operands.size())

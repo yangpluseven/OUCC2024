@@ -31,20 +31,21 @@ public:
   [[nodiscard]] std::vector<MIR *> &getIRs() { return _irs; }
   [[nodiscard]] std::string getName() const { return _func->getName(); }
   [[nodiscard]] std::string getRawName() const { return _func->getRawName(); }
-  [[nodiscard]] std::string toString() const {
+  [[nodiscard]] std::string str() const {
     std::stringstream ss;
-    ss << _func->toString() << '\n';
-    ss << "---------- mir ----------" << '\n';
+    ss << "ir --------------------------------" << '\n';
+    ss << _func->str() << '\n';
+    ss << "mir -------------------------------" << '\n';
     for (const auto mir : _irs) {
-      ss << mir->toString() << '\n';
+      ss << mir->str() << '\n';
     }
     return ss.str();
   }
 
-  void print() const { std::cout << toString(); }
+  void print() const { std::cout << str(); }
 };
 
-class MIRGenerator {
+class Generator {
 private:
   ir::Module *_module;
   std::unordered_map<std::string, MachineFunction *> _mFuncs;
@@ -65,17 +66,17 @@ private:
     for (auto arg : func->getArgs()) {
       if (arg->getType() == ir::BasicType::FLOAT) {
         fSize = std::min(fSize + 1,
-                         static_cast<int>(reg::MReg::F_CALLER_REGS.size()));
+                         static_cast<int>(reg::Machine::F_CALLER_REGS.size()));
       } else {
         iSize = std::min(iSize + 1,
-                         static_cast<int>(reg::MReg::I_CALLER_REGS.size()));
+                         static_cast<int>(reg::Machine::I_CALLER_REGS.size()));
       }
     }
     return {iSize, fSize};
   }
 
 public:
-  explicit MIRGenerator(ir::Module *module) : _module(module) {}
+  explicit Generator(ir::Module *module) : _module(module) {}
 
   void checkIfIsProcessed() {
     if (_isProcessed) {
@@ -113,8 +114,8 @@ class FakeMvInst : public ir::Instruction {
 public:
   FakeMvInst(ir::BasicBlock *block, Value *target, Value *src)
       : Instruction(block, ir::BasicType::VOID, {target, src}) {}
-  std::string toString() const override {
-    return "fake mv " + getName() + "\ttarget: " + getOperand<Instruction>(0)->toString() + "\tsrc: " +
+  std::string str() const override {
+    return "fake mv " + getName() + "\ttarget: " + getOperand<Instruction>(0)->str() + "\tsrc: " +
            getOperand<Value>(1)->getName();
   }
 };

@@ -35,7 +35,7 @@ public:
   std::string getName() const override;
   std::string getRawName() const;
 
-  std::string toString() const;
+  std::string str() const;
 };
 
 } // namespace ir

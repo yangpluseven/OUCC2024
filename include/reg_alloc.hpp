@@ -65,10 +65,10 @@ public:
 class FuncRegAlloc {
 private:
   mir::MachineFunction *_func;
-  std::vector<MReg *> _iCallerRegs;
-  std::vector<MReg *> _fCallerRegs;
-  std::vector<MReg *> _iCalleeRegs{};
-  std::vector<MReg *> _fCalleeRegs{};
+  std::vector<Machine *> _iCallerRegs;
+  std::vector<Machine *> _fCallerRegs;
+  std::vector<Machine *> _iCalleeRegs{};
+  std::vector<Machine *> _fCalleeRegs{};
   int _funcParamSize{}, _alignSize{}, _spillSize{}, _localSize{};
   int _savedRegSize{}, _callAddrSize{}, _paramInnerSize;
 
@@ -78,7 +78,7 @@ private:
   std::unordered_map<Reg *, std::unordered_set<Reg *>> calcConflictMap();
   std::unordered_map<Reg *, std::unordered_set<int>> calcLifespans();
   void calcUseDef(std::vector<Block *> &blocks) const;
-  std::unordered_map<VReg *, MReg *> calcVRegToMReg();
+  std::unordered_map<Virtual *, Machine *> calcVRegToMReg();
   void makeFrameInfo();
   void popFrame();
   void pushFrame();
@@ -87,18 +87,18 @@ private:
 
 public:
   explicit FuncRegAlloc(mir::MachineFunction *func) : _func(func) {
-    _iCallerRegs = std::vector<MReg *>(MReg::I_CALLER_REGS.begin(),
-                                       MReg::I_CALLER_REGS.begin() +
+    _iCallerRegs = std::vector<Machine *>(Machine::I_CALLER_REGS.begin(),
+                                       Machine::I_CALLER_REGS.begin() +
                                            _func->getICallerNum());
-    _fCallerRegs = std::vector<MReg *>(MReg::F_CALLER_REGS.begin(),
-                                       MReg::F_CALLER_REGS.begin() +
+    _fCallerRegs = std::vector<Machine *>(Machine::F_CALLER_REGS.begin(),
+                                       Machine::F_CALLER_REGS.begin() +
                                            _func->getFCallerNum());
     _paramInnerSize = (func->getICallerNum() + func->getFCallerNum()) * 8;
   }
 
   void allocate() {
     solveSpill();
-    std::unordered_map<VReg *, MReg *> vRegToMReg = calcVRegToMReg();
+    std::unordered_map<Virtual *, Machine *> vRegToMReg = calcVRegToMReg();
     auto &vec = _func->getIRs();
     // TODO check here
     for (auto &i : vec) {

@@ -5,7 +5,7 @@
 
 namespace pass {
 
-bool DCEPass::runOnFunction(ir::Function *function) {
+bool DeadCodeEli::onFunction(ir::Function *function) {
   bool modified = false;
   for (const auto block : *function) {
     for (int i = 0; i + 1 < block->size(); i++) {
@@ -22,7 +22,7 @@ bool DCEPass::runOnFunction(ir::Function *function) {
   return modified;
 }
 
-bool BranchOptPass::runOnFunction(ir::Function *function) {
+bool BranchOpt::onFunction(ir::Function *function) {
   bool modified = false;
   for (int i = 1; i < function->size(); i++) {
     const auto block = function->get(i);
@@ -42,7 +42,7 @@ bool BranchOptPass::runOnFunction(ir::Function *function) {
             if (const auto phiNode = dynamic_cast<ir::PHINode *>(inst)) {
               for (int j = 0; j < phiNode->size(); j++) {
                 if (phiNode->getBlockValue(j).first == block) {
-                  phiNode->remove(j);
+                  phiNode->erase(j);
                   j--;
                 }
               }
@@ -50,7 +50,7 @@ bool BranchOptPass::runOnFunction(ir::Function *function) {
           }
         }
       }
-      function->remove(i);
+      function->erase(i);
       i--;
       modified = true;
     } else if (uses.size() == 1) {
@@ -84,7 +84,7 @@ bool BranchOptPass::runOnFunction(ir::Function *function) {
             }
           }
         }
-        function->remove(i);
+        function->erase(i);
         i--;
         modified = true;
       }
@@ -96,14 +96,14 @@ bool BranchOptPass::runOnFunction(ir::Function *function) {
     if (branchInst && branchInst->isConditional()) {
       if (const auto condValue = dynamic_cast<ir::ConstantNumber *>(
               branchInst->getOperand<ir::Value>(0))) {
-        branchInst->remove(0);
-        ir::Use *use = branchInst->remove(condValue->intValue());
+        branchInst->erase(0);
+        ir::Use *use = branchInst->erase(condValue->intValue());
         const auto nextBlock = dynamic_cast<ir::BasicBlock *>(use->getValue());
         for (const auto inst : *nextBlock) {
           if (const auto phiNode = dynamic_cast<ir::PHINode *>(inst)) {
             for (int j = 0; j < phiNode->size(); j++) {
               if (phiNode->getBlockValue(j).first == block) {
-                phiNode->remove(j);
+                phiNode->erase(j);
                 j--;
               }
             }
@@ -116,7 +116,7 @@ bool BranchOptPass::runOnFunction(ir::Function *function) {
   return modified;
 }
 
-bool ConstPropPass::runOnFunction(ir::Function *function) {
+bool ConstProp::onFunction(ir::Function *function) {
   bool modified = false;
   for (const auto block : *function) {
     for (int i = 0; i < block->size(); i++) {
@@ -214,12 +214,12 @@ bool ConstPropPass::runOnFunction(ir::Function *function) {
 }
 
 std::unordered_set<ir::AllocaInst *>
-PromotePass::analyzePromoteAllocaInsts(ir::Function *function) {
+MemoryPromote::analyzePromotableAllocaInsts(ir::Function *function) {
   std::unordered_set<ir::AllocaInst *> allocaInsts;
   for (const auto block : *function) {
     for (const auto inst : *block) {
       if (const auto allocaInst = dynamic_cast<ir::AllocaInst *>(inst)) {
-        if (isAllocaPromotable(allocaInst)) {
+        if (isPromotable(allocaInst)) {
           allocaInsts.insert(allocaInst);
         }
       }
@@ -228,7 +228,7 @@ PromotePass::analyzePromoteAllocaInsts(ir::Function *function) {
   return std::move(allocaInsts);
 }
 
-void PromotePass::insertPhi(
+void MemoryPromote::insertPhi(
     ir::Function *func,
     std::unordered_map<ir::BasicBlock *, std::unordered_set<ir::BasicBlock *>>
         &df,
@@ -275,7 +275,7 @@ void PromotePass::insertPhi(
   }
 }
 
-void PromotePass::rename(
+void MemoryPromote::replace(
     ir::BasicBlock *block,
     std::unordered_map<ir::AllocaInst *, std::stack<ir::Value *>> &replaceMap,
     std::unordered_set<ir::AllocaInst *> &allocaInsts,
@@ -345,7 +345,7 @@ void PromotePass::rename(
   }
   if (domTree.find(block) != domTree.end()) {
     for (const auto nextBlock : domTree.at(block)) {
-      rename(nextBlock, replaceMap, allocaInsts, domTree);
+      replace(nextBlock, replaceMap, allocaInsts, domTree);
     }
   }
   for (const auto &entry : counter) {
@@ -358,7 +358,7 @@ void PromotePass::rename(
   }
 }
 
-bool PromotePass::isAllocaPromotable(ir::AllocaInst *allocaInst) {
+bool MemoryPromote::isPromotable(ir::AllocaInst *allocaInst) {
   const auto type = allocaInst->getType();
   if (const auto ptrType = dynamic_cast<ir::PointerType *>(type)) {
     if (dynamic_cast<ir::BasicType *>(ptrType->baseType())) {
@@ -368,7 +368,7 @@ bool PromotePass::isAllocaPromotable(ir::AllocaInst *allocaInst) {
   return false;
 }
 
-void PromotePass::prunePhi(ir::Function *func) {
+void MemoryPromote::clearPhi(ir::Function *func) {
   bool toContinue;
   do {
     toContinue = false;
@@ -425,11 +425,11 @@ void PromotePass::prunePhi(ir::Function *func) {
   } while (toContinue);
 }
 
-bool PromotePass::runOnFunction(ir::Function *function) {
+bool MemoryPromote::onFunction(ir::Function *function) {
   if (function->isDeclare()) {
     return false;
   }
-  auto promoteAllocaInsts = analyzePromoteAllocaInsts(function);
+  auto promoteAllocaInsts = analyzePromotableAllocaInsts(function);
   if (promoteAllocaInsts.empty()) {
     return false;
   }
@@ -440,9 +440,9 @@ bool PromotePass::runOnFunction(ir::Function *function) {
   DomTree domTree(function);
   insertPhi(function, domTree.getDomFrontire(), promoteAllocaInsts);
   std::unordered_map<ir::AllocaInst *, std::stack<ir::Value *>> replaceMap;
-  rename(function->getFirst(), replaceMap, promoteAllocaInsts,
+  replace(function->getFirst(), replaceMap, promoteAllocaInsts,
          domTree.getDomTree());
-  prunePhi(function);
+  clearPhi(function);
   for (const auto &phiEntry : _globalPhiMap) {
     for (const auto &p : phiEntry.second) {
       const auto phiNode = p.second;
@@ -454,7 +454,7 @@ bool PromotePass::runOnFunction(ir::Function *function) {
     for (int i = 0; i < block->size(); i++) {
       ir::Instruction *inst = block->get(i);
       const auto allocaInst = dynamic_cast<ir::AllocaInst *>(inst);
-      if (allocaInst && isAllocaPromotable(allocaInst)) {
+      if (allocaInst && isPromotable(allocaInst)) {
         block->remove(i);
         i--;
       }

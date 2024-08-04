@@ -16,71 +16,71 @@ public:
 
   virtual ~Pass() = default;
 
-  virtual bool run() = 0;
+  virtual bool onModule() = 0;
 };
 
 class FunctionPass : public Pass {
 public:
   explicit FunctionPass(const ir::Module *module) : Pass(module) {}
 
-  bool run() override {
+  bool onModule() override {
     bool modified = false;
     for (auto function : module->getFunctions()) {
-      modified |= runOnFunction(function);
+      modified |= onFunction(function);
     }
     return modified;
   }
 
-  virtual bool runOnFunction(ir::Function *function) = 0;
+  virtual bool onFunction(ir::Function *function) = 0;
 };
 
-class BranchOptPass : public FunctionPass {
+class BranchOpt : public FunctionPass {
 public:
-  explicit BranchOptPass(const ir::Module *module) : FunctionPass(module) {}
+  explicit BranchOpt(const ir::Module *module) : FunctionPass(module) {}
 
-  bool runOnFunction(ir::Function *function) override;
+  bool onFunction(ir::Function *function) override;
 };
 
-class ConstPropPass : public FunctionPass {
+class ConstProp : public FunctionPass {
 public:
-  explicit ConstPropPass(const ir::Module *module) : FunctionPass(module) {}
+  explicit ConstProp(const ir::Module *module) : FunctionPass(module) {}
 
-  bool runOnFunction(ir::Function *function) override;
+  bool onFunction(ir::Function *function) override;
 };
 
-class DCEPass : public FunctionPass {
+class DeadCodeEli : public FunctionPass {
 public:
-  explicit DCEPass(const ir::Module *module) : FunctionPass(module) {}
+  explicit DeadCodeEli(const ir::Module *module) : FunctionPass(module) {}
 
-  ~DCEPass() override = default;
+  ~DeadCodeEli() override = default;
 
-  bool runOnFunction(ir::Function *function) override;
+  bool onFunction(ir::Function *function) override;
 };
 
-class PromotePass : public FunctionPass {
+class MemoryPromote : public FunctionPass {
 private:
   std::unordered_map<ir::BasicBlock *,
                      std::unordered_map<ir::AllocaInst *, ir::PHINode *>>
       _globalPhiMap;
   std::unordered_set<ir::AllocaInst *>
-  static analyzePromoteAllocaInsts(ir::Function *function);
-  static bool isAllocaPromotable(ir::AllocaInst *allocaInst);
+  static analyzePromotableAllocaInsts(ir::Function *function);
+  static bool isPromotable(ir::AllocaInst *allocaInst);
   void insertPhi(ir::Function *func,
                  std::unordered_map<ir::BasicBlock *,
                                     std::unordered_set<ir::BasicBlock *>> &df,
                  std::unordered_set<ir::AllocaInst *> &allocaInsts);
-  void rename(
+  void replace(
       ir::BasicBlock *block,
       std::unordered_map<ir::AllocaInst *, std::stack<ir::Value *>> &replaceMap,
       std::unordered_set<ir::AllocaInst *> &allocaInsts,
       std::unordered_map<ir::BasicBlock *, std::unordered_set<ir::BasicBlock *>>
           &domTree);
-  void prunePhi(ir::Function *func);
+  void clearPhi(ir::Function *func);
 
 public:
-  explicit PromotePass(const ir::Module *module) : FunctionPass(module) {}
+  explicit MemoryPromote(const ir::Module *module) : FunctionPass(module) {}
 
-  bool runOnFunction(ir::Function *function) override;
+  bool onFunction(ir::Function *function) override;
 };
 } // namespace pass
 

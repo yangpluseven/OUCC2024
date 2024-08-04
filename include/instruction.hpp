@@ -27,13 +27,13 @@ public:
   BasicBlock *getBlock() const;
   void setBlock(BasicBlock *block) { _block = block; }
   std::string getName() const override;
-  virtual std::string toString() const;
+  virtual std::string str() const;
 };
 
 class AllocaInst : public Instruction {
 public:
   AllocaInst(BasicBlock *block, Type *type);
-  std::string toString() const override;
+  std::string str() const override;
 };
 
 class BranchInst : public Instruction {
@@ -42,7 +42,7 @@ public:
   BranchInst(BasicBlock *block, Value *cond, BasicBlock *ifTrue,
              BasicBlock *ifFalse);
   bool isConditional() const;
-  std::string toString() const override;
+  std::string str() const override;
 };
 
 class CallInst : public Instruction {
@@ -50,7 +50,7 @@ public:
   CallInst(BasicBlock *block, Function *func,
            std::initializer_list<Value *> params);
   CallInst(BasicBlock *block, Function *func, std::vector<Value *> &params);
-  std::string toString() const override;
+  std::string str() const override;
 };
 
 class GetElementPtrInst : public Instruction {
@@ -62,13 +62,13 @@ public:
                     std::initializer_list<Value *> indexes = {});
   GetElementPtrInst(BasicBlock *block, Value *ptr,
                     std::vector<Value *> &indexes);
-  std::string toString() const override;
+  std::string str() const override;
 };
 
 class LoadInst : public Instruction {
 public:
   LoadInst(BasicBlock *block, Value *ptr);
-  std::string toString() const override;
+  std::string str() const override;
 };
 
 class PHINode : public Instruction {
@@ -80,20 +80,20 @@ public:
   void add(BasicBlock *block, Use *use);
   std::pair<BasicBlock *, Value *> getBlockValue(int index);
   void setBlockValue(int index, BasicBlock *block);
-  std::string toString() const override;
+  std::string str() const override;
 };
 
 class RetInst : public Instruction {
 public:
   explicit RetInst(BasicBlock *block);
   RetInst(BasicBlock *block, Value *retValue);
-  std::string toString() const override;
+  std::string str() const override;
 };
 
 class StoreInst : public Instruction {
 public:
   StoreInst(BasicBlock *block, Value *value, Value *pointer);
-  std::string toString() const override;
+  std::string str() const override;
 };
 
 class BinaryOperator : public Instruction {
@@ -102,7 +102,7 @@ public:
 
   const Op op;
   BinaryOperator(BasicBlock *block, Op op, Value *lhs, Value *rhs);
-  std::string toString() const override;
+  std::string str() const override;
 
 private:
   static std::string _opToString(Op v) noexcept;
@@ -114,7 +114,7 @@ public:
 
   CmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs);
   Cond getCond() const;
-  std::string toString() const override;
+  std::string str() const override;
   virtual std::string getClassName() const;
 
 private:
@@ -137,7 +137,7 @@ public:
 class CastInst : public Instruction {
 protected:
   CastInst(BasicBlock *block, Type *type, Value *operand);
-  std::string toString() const override;
+  std::string str() const override;
   virtual std::string getClassName() const;
 };
 

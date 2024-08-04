@@ -31,7 +31,7 @@ public:
   size_t size() const;
 
   std::string getName() const override;
-  std::string toString() const;
+  std::string str() const;
 
   std::vector<Instruction *>::iterator begin();
   std::vector<Instruction *>::iterator end();

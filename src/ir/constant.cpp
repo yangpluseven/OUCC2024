@@ -234,16 +234,16 @@ ConstantNumber *ConstantNumber::le(const ConstantNumber *rhs) const {
   return new ConstantNumber(*this <= *rhs);
 }
 
-std::string ConstantNumber::toString() const {
-  return type->toString() + " " + getName();
+std::string ConstantNumber::str() const {
+  return type->str() + " " + getName();
 }
 
 ConstantZero::ConstantZero(Type *type) : Constant(type) {}
 
 std::string ConstantZero::getName() const { return "zeroinitializer"; }
 
-std::string ConstantZero::toString() const {
-  return type->toString() + " zeroinitializer";
+std::string ConstantZero::str() const {
+  return type->str() + " zeroinitializer";
 }
 
 ConstantArray::ConstantArray(Type *type, std::vector<Constant *> values)
@@ -251,15 +251,15 @@ ConstantArray::ConstantArray(Type *type, std::vector<Constant *> values)
 
 std::vector<Constant *> &ConstantArray::getValues() { return values; }
 
-std::string ConstantArray::toString() const {
+std::string ConstantArray::str() const {
   std::string result = "[";
   for (auto value : values) {
-    result += value->toString() + ", ";
+    result += value->str() + ", ";
   }
   result += "]";
-  return type->toString() + " " + result;
+  return type->str() + " " + result;
 }
 
-std::string ConstantArray::getName() const { return toString(); }
+std::string ConstantArray::getName() const { return str(); }
 
 } // namespace ir

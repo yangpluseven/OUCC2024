@@ -2,12 +2,12 @@
 
 namespace pass {
 
-void DomTree::analyzePrev() {
-  if (!_prevMap.empty()) {
+void DomTree::analyzePred() {
+  if (!_predMap.empty()) {
     return;
   }
   for (const auto block : *_function) {
-    _prevMap.try_emplace(block);
+    _predMap.try_emplace(block);
   }
   for (const auto block : *_function) {
     for (const auto inst : *block) {
@@ -15,18 +15,18 @@ void DomTree::analyzePrev() {
         if (branchInst->isConditional()) {
           const auto trueBlock = branchInst->getOperand<ir::BasicBlock>(1);
           const auto falseBlock = branchInst->getOperand<ir::BasicBlock>(2);
-          _prevMap.at(trueBlock).insert(block);
-          _prevMap.at(falseBlock).insert(block);
+          _predMap.at(trueBlock).insert(block);
+          _predMap.at(falseBlock).insert(block);
         } else {
           const auto destBlock = branchInst->getOperand<ir::BasicBlock>(0);
-          _prevMap.at(destBlock).insert(block);
+          _predMap.at(destBlock).insert(block);
         }
       }
     }
   }
 }
 
-void DomTree::analyzeDom() {
+void DomTree::anaylzeDom() {
   if (!_domMap.empty()) {
     return;
   }
@@ -42,7 +42,7 @@ void DomTree::analyzeDom() {
     for (const auto block : *_function) {
       std::unordered_set<ir::BasicBlock *> interSet;
       bool first = true;
-      for (const auto b : _prevMap.at(block)) {
+      for (const auto b : _predMap.at(block)) {
         const auto &domSet = _domMap.at(b);
         if (first) {
           interSet = domSet;
@@ -66,8 +66,8 @@ void DomTree::analyzeDom() {
   } while (changed);
 }
 
-void DomTree::analyzeIdom() {
-  if (!_idomMap.empty()) {
+void DomTree::analyzeImmDom() {
+  if (!_immDomMap.empty()) {
     return;
   }
   std::unordered_map<ir::BasicBlock *, std::unordered_set<ir::BasicBlock *>>
@@ -79,11 +79,11 @@ void DomTree::analyzeIdom() {
     domBlocks.erase(block);
     switch (domBlocks.size()) {
     case 0:
-      _idomMap[block] = nullptr;
+      _immDomMap[block] = nullptr;
       break;
     case 1: {
       const auto domBlock = *(domBlocks.begin());
-      _idomMap[block] = domBlock;
+      _immDomMap[block] = domBlock;
       toRemoveBlocks.insert(domBlock);
       break;
     }
@@ -105,7 +105,7 @@ void DomTree::analyzeIdom() {
       }
       if (domBlocks.size() == 1) {
         const auto domBlock = *(domBlocks.begin());
-        _idomMap[block] = domBlock;
+        _immDomMap[block] = domBlock;
         nextToRemoveBlocks.insert(domBlock);
         it = remainDom.erase(it);
       } else {
@@ -120,7 +120,7 @@ void DomTree::analyzeDomTree() {
   if (!_domTree.empty()) {
     return;
   }
-  for (const auto &entry : _idomMap) {
+  for (const auto &entry : _immDomMap) {
     const auto from = entry.second;
     const auto to = entry.first;
     if (from) {
@@ -129,7 +129,7 @@ void DomTree::analyzeDomTree() {
   }
 }
 
-void DomTree::analyzeDF() {
+void DomTree::analyzeDomFrontier() {
   if (!_domFrontire.empty()) {
     return;
   }
@@ -137,12 +137,12 @@ void DomTree::analyzeDF() {
     _domFrontire.try_emplace(block);
   }
   for (const auto block : *_function) {
-    if (_prevMap.at(block).size() >= 2) {
-      for (const auto prevBlock : _prevMap.at(block)) {
+    if (_predMap.at(block).size() >= 2) {
+      for (const auto prevBlock : _predMap.at(block)) {
         ir::BasicBlock *runner = prevBlock;
-        while (runner != _idomMap.at(block)) {
+        while (runner != _immDomMap.at(block)) {
           _domFrontire.at(runner).insert(block);
-          runner = _idomMap.at(runner);
+          runner = _immDomMap.at(runner);
         }
       }
     }

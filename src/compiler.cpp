@@ -40,7 +40,7 @@ void Compiler::compile() {
     }
     return;
   }
-  mir::MIRGenerator mirGenerator(_module);
+  mir::Generator mirGenerator(_module);
   std::unordered_set<ir::GlobalVariable *> globals = mirGenerator.getGlobals();
   _funcs = mirGenerator.getFuncs();
   if (optionValues["-emit-mir"] == "1") {
@@ -73,7 +73,7 @@ void Compiler::emitLLVM() {
   }
 
   for (const auto &global : _module->getGlobals()) {
-    writer << global->toString() << '\n';
+    writer << global->str() << '\n';
   }
 
   if (_module->hasGlobal()) {
@@ -90,7 +90,7 @@ void Compiler::emitLLVM() {
        });
 
   for (const auto &func : functions) {
-    writer << func->toString() << '\n';
+    writer << func->str() << '\n';
   }
 
   writer.close();
@@ -107,7 +107,7 @@ void Compiler::emitMIR() {
   }
   for (const auto &p : _funcs) {
     const auto func = p.second;
-    writer << func->toString() << '\n';
+    writer << func->str() << '\n';
   }
   writer.close();
   if (writer.fail()) {
@@ -122,10 +122,10 @@ void CodeGenerator::buildFuncs(std::ostringstream &builder) const {
     builder << "\t.global " << func->getRawName() << '\n';
     builder << func->getRawName() << ":\n";
     for (const auto ir : func->getIRs()) {
-      if (!dynamic_cast<const mir::LabelMIR *>(ir)) {
+      if (!dynamic_cast<const mir::Label *>(ir)) {
         builder << '\t';
       }
-      std::string irStr = ir->toString();
+      std::string irStr = ir->str();
       size_t pos = 0;
       while ((pos = irStr.find('\n', pos)) != std::string::npos) {
         irStr.insert(pos + 1, "\t");
@@ -218,12 +218,12 @@ void test() {
   block0->add(store0);
   block0->add(sotre1);
   block0->add(branch0);
-  func->add(block0);
+  func->pushBlock(block0);
   ir::Instruction *load0 = new ir::LoadInst(block1, alloca0);
   ir::Instruction *ret0 = new ir::RetInst(block1, load0);
   block1->add(load0);
   block1->add(ret0);
-  func->add(block1);
+  func->pushBlock(block1);
   module->addFunction(func);
 
   pass::PassManager passManager(module);

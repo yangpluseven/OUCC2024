@@ -23,13 +23,13 @@ public:
   virtual std::vector<reg::Reg *> getWrite() { return {}; }
 
   virtual MIR *
-  replaceReg(const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) {
+  replaceReg(const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) {
     return this;
   }
 
   virtual std::vector<MIR *> spill(reg::Reg *reg, int offset) { return {this}; }
 
-  [[nodiscard]] virtual std::string toString() const = 0;
+  [[nodiscard]] virtual std::string str() const = 0;
 
   std::vector<reg::Reg *> getRegs() {
     std::vector<reg::Reg *> regs;
@@ -43,33 +43,33 @@ public:
   bool operator==(const MIR &rhs) const { return _id == rhs._id; }
 };
 
-class AddRegLocalMIR : public MIR {
+class RegAddImm : public MIR {
 public:
   reg::Reg *dest;
   int imm;
 
-  AddRegLocalMIR(reg::Reg *dest, int imm) : dest(dest), imm(imm) {}
+  RegAddImm(reg::Reg *dest, int imm) : dest(dest), imm(imm) {}
 
   std::vector<reg::Reg *> getWrite() override { return {dest}; }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+      const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) override {
     reg::Reg *newDest = dest;
-    if (auto vdest = dynamic_cast<reg::VReg *>(dest)) {
+    if (auto vdest = dynamic_cast<reg::Virtual *>(dest)) {
       if (replaceMap.find(vdest) != replaceMap.end())
         newDest = replaceMap.at(vdest);
     }
-    return new AddRegLocalMIR(newDest, imm);
+    return new RegAddImm(newDest, imm);
   }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
 
-  [[nodiscard]] std::string toString() const override {
-    return "add\t" + dest->toString() + ", $local, #" + std::to_string(imm);
+  [[nodiscard]] std::string str() const override {
+    return "add\t" + dest->str() + ", $local, #" + std::to_string(imm);
   }
 };
 
-class BMIR : public MIR {
+class Branch : public MIR {
 public:
   enum Op { NUL, EQ, NE, LT, LE, GT, GE };
 
@@ -77,7 +77,7 @@ public:
   reg::Reg *src1, *src2;
   ir::BasicBlock *block;
 
-  BMIR(Op op, reg::Reg *src1, reg::Reg *src2, ir::BasicBlock *block)
+  Branch(Op op, reg::Reg *src1, reg::Reg *src2, ir::BasicBlock *block)
       : op(op), src1(src1), src2(src2), block(block) {}
 
   std::vector<reg::Reg *> getRead() override {
@@ -88,29 +88,29 @@ public:
   }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+      const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) override {
     reg::Reg *newSrc1 = src1, *newSrc2 = src2;
-    if (auto vsrc1 = dynamic_cast<reg::VReg *>(src1)) {
+    if (auto vsrc1 = dynamic_cast<reg::Virtual *>(src1)) {
       if (replaceMap.find(vsrc1) != replaceMap.end())
         newSrc1 = replaceMap.at(vsrc1);
     }
-    if (auto vsrc2 = dynamic_cast<reg::VReg *>(src2)) {
+    if (auto vsrc2 = dynamic_cast<reg::Virtual *>(src2)) {
       if (replaceMap.find(vsrc2) != replaceMap.end())
         newSrc2 = replaceMap.at(vsrc2);
     }
-    return new BMIR(op, newSrc1, newSrc2, block);
+    return new Branch(op, newSrc1, newSrc2, block);
   }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
 
   [[nodiscard]] bool hasCond() const { return op != NUL; }
 
-  [[nodiscard]] std::string toString() const override {
+  [[nodiscard]] std::string str() const override {
     if (op == NUL) {
       return "j\t." + block->getName();
     }
-    return "b" + _opToString(op) + "\t" + src1->toString() + ", " +
-           src2->toString() + ", ." + block->getName();
+    return "b" + _opToString(op) + "\t" + src1->str() + ", " +
+           src2->str() + ", ." + block->getName();
   }
 
 private:
@@ -136,24 +136,24 @@ private:
   }
 };
 
-class CallMIR : public MIR {
+class Call : public MIR {
 public:
   ir::Function *func;
 
-  explicit CallMIR(ir::Function *func) : func(func) {}
+  explicit Call(ir::Function *func) : func(func) {}
 
   std::vector<reg::Reg *> getRead() override {
     std::vector<reg::Reg *> regs;
     int isize = 0, fsize = 0;
     for (auto arg : func->getArgs()) {
       if (arg->getType() == ir::BasicType::FLOAT) {
-        if (fsize < reg::MReg::F_CALLER_REGS.size()) {
-          regs.push_back(reg::MReg::F_CALLER_REGS.at(fsize));
+        if (fsize < reg::Machine::F_CALLER_REGS.size()) {
+          regs.push_back(reg::Machine::F_CALLER_REGS.at(fsize));
         }
         fsize++;
       } else {
-        if (isize < reg::MReg::I_CALLER_REGS.size()) {
-          regs.push_back(reg::MReg::I_CALLER_REGS.at(isize));
+        if (isize < reg::Machine::I_CALLER_REGS.size()) {
+          regs.push_back(reg::Machine::I_CALLER_REGS.at(isize));
         }
         isize++;
       }
@@ -163,124 +163,124 @@ public:
 
   std::vector<reg::Reg *> getWrite() override {
     std::vector<reg::Reg *> regs;
-    regs.insert(regs.end(), reg::MReg::I_CALLER_REGS.begin(),
-                reg::MReg::I_CALLER_REGS.end());
-    regs.insert(regs.end(), reg::MReg::F_CALLER_REGS.begin(),
-                reg::MReg::F_CALLER_REGS.end());
+    regs.insert(regs.end(), reg::Machine::I_CALLER_REGS.begin(),
+                reg::Machine::I_CALLER_REGS.end());
+    regs.insert(regs.end(), reg::Machine::F_CALLER_REGS.begin(),
+                reg::Machine::F_CALLER_REGS.end());
     return regs;
   }
 
-  [[nodiscard]] std::string toString() const override {
+  [[nodiscard]] std::string str() const override {
     return "call\t" + func->getRawName();
   }
 };
 
-class LabelMIR : public MIR {
+class Label : public MIR {
 public:
   ir::BasicBlock *block;
 
-  explicit LabelMIR(ir::BasicBlock *block) : block(block) {}
+  explicit Label(ir::BasicBlock *block) : block(block) {}
 
   [[nodiscard]] ir::BasicBlock *getBlock() const { return block; }
 
-  [[nodiscard]] std::string toString() const override {
+  [[nodiscard]] std::string str() const override {
     return "." + block->getName() + ":";
   }
 };
 
-class LiMIR : public MIR {
+class LoadImm : public MIR {
 public:
   reg::Reg *dest;
   int imm;
 
-  LiMIR(reg::Reg *dest, int imm) : dest(dest), imm(imm) {}
+  LoadImm(reg::Reg *dest, int imm) : dest(dest), imm(imm) {}
 
   std::vector<reg::Reg *> getWrite() override { return {dest}; }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+      const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) override {
     reg::Reg *newDest = dest;
-    if (auto vdest = dynamic_cast<reg::VReg *>(dest)) {
+    if (auto vdest = dynamic_cast<reg::Virtual *>(dest)) {
       if (replaceMap.find(vdest) != replaceMap.end())
         newDest = replaceMap.at(vdest);
     }
-    return new LiMIR(newDest, imm);
+    return new LoadImm(newDest, imm);
   }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
 
-  [[nodiscard]] std::string toString() const override {
-    return "li\t" + dest->toString() + ", " + std::to_string(imm);
+  [[nodiscard]] std::string str() const override {
+    return "li\t" + dest->str() + ", " + std::to_string(imm);
   }
 };
 
-class LlaMIR : public MIR {
+class LLA : public MIR {
 public:
   reg::Reg *dest;
   ir::GlobalVariable *global;
 
-  LlaMIR(reg::Reg *dest, ir::GlobalVariable *global)
+  LLA(reg::Reg *dest, ir::GlobalVariable *global)
       : dest(dest), global(global) {}
 
   std::vector<reg::Reg *> getWrite() override { return {dest}; }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+      const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) override {
     reg::Reg *newDest = dest;
-    if (auto vdest = dynamic_cast<reg::VReg *>(dest)) {
+    if (auto vdest = dynamic_cast<reg::Virtual *>(dest)) {
       if (replaceMap.find(vdest) != replaceMap.end())
         newDest = replaceMap.at(vdest);
     }
-    return new LlaMIR(newDest, global);
+    return new LLA(newDest, global);
   }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
 
-  [[nodiscard]] std::string toString() const override {
-    return "lla\t" + dest->toString() + ", " + global->getRawName();
+  [[nodiscard]] std::string str() const override {
+    return "lla\t" + dest->str() + ", " + global->getRawName();
   }
 };
 
-class LoadItemMIR : public MIR {
+class LoadFrom : public MIR {
 public:
-  enum Item { SPILL, PARAM_INNER, PARAM_OUTER, LOCAL };
+  enum From { SPILL, INNER_PARAM, OUTER_PARAM, LOCAL };
 
-  Item item;
+  From from;
   reg::Reg *dest;
   int imm;
 
-  LoadItemMIR(Item item, reg::Reg *dest, int imm)
-      : item(item), dest(dest), imm(imm) {}
+  LoadFrom(From item, reg::Reg *dest, int imm)
+      : from(item), dest(dest), imm(imm) {}
 
   std::vector<reg::Reg *> getWrite() override { return {dest}; }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+      const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) override {
     reg::Reg *newDest = dest;
-    if (auto vdest = dynamic_cast<reg::VReg *>(dest)) {
+    if (auto vdest = dynamic_cast<reg::Virtual *>(dest)) {
       if (replaceMap.find(vdest) != replaceMap.end()) {
         newDest = replaceMap.at(vdest);
       }
     }
-    return new LoadItemMIR(item, newDest, imm);
+    return new LoadFrom(from, newDest, imm);
   }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
 
-  [[nodiscard]] std::string toString() const override {
-    return "load\t" + dest->toString() + ", " + std::to_string(imm) + "($" +
-           _itemToString(item) + ")";
+  [[nodiscard]] std::string str() const override {
+    return "load\t" + dest->str() + ", " + std::to_string(imm) + "($" +
+           _itemToString(from) + ")";
   }
 
 private:
-  static std::string _itemToString(Item v) noexcept {
+  static std::string _itemToString(From v) noexcept {
     switch (v) {
     case SPILL:
       return "spill";
-    case PARAM_INNER:
-      return "param_inner";
-    case PARAM_OUTER:
-      return "param_outer";
+    case INNER_PARAM:
+      return "inner";
+    case OUTER_PARAM:
+      return "outer";
     case LOCAL:
       return "local";
     default:
@@ -289,12 +289,12 @@ private:
   }
 };
 
-class LoadMIR : public MIR {
+class Load : public MIR {
 public:
   reg::Reg *dest, *src;
   int imm, size;
 
-  LoadMIR(reg::Reg *dest, reg::Reg *src, int imm, int size)
+  Load(reg::Reg *dest, reg::Reg *src, int imm, int size)
       : dest(dest), src(src), imm(imm), size(size) {}
 
   std::vector<reg::Reg *> getRead() override { return {src}; }
@@ -302,52 +302,52 @@ public:
   std::vector<reg::Reg *> getWrite() override { return {dest}; }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+      const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) override {
     reg::Reg *newDest = dest, *newSrc = src;
-    if (auto vdest = dynamic_cast<reg::VReg *>(dest)) {
+    if (auto vdest = dynamic_cast<reg::Virtual *>(dest)) {
       if (replaceMap.find(vdest) != replaceMap.end())
         newDest = replaceMap.at(vdest);
     }
-    if (auto vsrc = dynamic_cast<reg::VReg *>(src)) {
+    if (auto vsrc = dynamic_cast<reg::Virtual *>(src)) {
       if (replaceMap.find(vsrc) != replaceMap.end())
         newSrc = replaceMap.at(vsrc);
     }
-    return new LoadMIR(newDest, newSrc, imm, size);
+    return new Load(newDest, newSrc, imm, size);
   }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
-  [[nodiscard]] std::string toString() const override;
+  [[nodiscard]] std::string str() const override;
 };
 
-class RrMIR : public MIR {
+class RR : public MIR {
 public:
   enum Op { CVT, FABS, MV, NEG, SEQZ, SNEZ };
 
   Op op;
   reg::Reg *dest, *src;
 
-  RrMIR(Op op, reg::Reg *dest, reg::Reg *src) : op(op), dest(dest), src(src) {}
+  RR(Op op, reg::Reg *dest, reg::Reg *src) : op(op), dest(dest), src(src) {}
 
   std::vector<reg::Reg *> getRead() override { return {src}; }
 
   std::vector<reg::Reg *> getWrite() override { return {dest}; }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+      const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) override {
     reg::Reg *newDest = dest, *newSrc = src;
-    if (auto vdest = dynamic_cast<reg::VReg *>(dest)) {
+    if (auto vdest = dynamic_cast<reg::Virtual *>(dest)) {
       if (replaceMap.find(vdest) != replaceMap.end())
         newDest = replaceMap.at(vdest);
     }
-    if (auto vsrc = dynamic_cast<reg::VReg *>(src)) {
+    if (auto vsrc = dynamic_cast<reg::Virtual *>(src)) {
       if (replaceMap.find(vsrc) != replaceMap.end())
         newSrc = replaceMap.at(vsrc);
     }
-    return new RrMIR(op, newDest, newSrc);
+    return new RR(op, newDest, newSrc);
   }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
-  [[nodiscard]] std::string toString() const override;
+  [[nodiscard]] std::string str() const override;
 
 private:
   static std::string _opToString(Op v) noexcept {
@@ -370,7 +370,7 @@ private:
   }
 };
 
-class RriMIR : public MIR {
+class RRI : public MIR {
 public:
   enum Op { ADDI, ANDI, SLLIW, SRAIW, SRLI, SRLIW, XORI, SLTI };
 
@@ -378,7 +378,7 @@ public:
   reg::Reg *dest, *src;
   int imm;
 
-  RriMIR(Op op, reg::Reg *dest, reg::Reg *src, int imm)
+  RRI(Op op, reg::Reg *dest, reg::Reg *src, int imm)
       : op(op), dest(dest), src(src), imm(imm) {}
 
   std::vector<reg::Reg *> getRead() override { return {src}; }
@@ -386,23 +386,23 @@ public:
   std::vector<reg::Reg *> getWrite() override { return {dest}; }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+      const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) override {
     reg::Reg *newDest = dest, *newSrc = src;
-    if (auto vdest = dynamic_cast<reg::VReg *>(dest)) {
+    if (auto vdest = dynamic_cast<reg::Virtual *>(dest)) {
       if (replaceMap.find(vdest) != replaceMap.end())
         newDest = replaceMap.at(vdest);
     }
-    if (auto vsrc = dynamic_cast<reg::VReg *>(src)) {
+    if (auto vsrc = dynamic_cast<reg::Virtual *>(src)) {
       if (replaceMap.find(vsrc) != replaceMap.end())
         newSrc = replaceMap.at(vsrc);
     }
-    return new RriMIR(op, newDest, newSrc, imm);
+    return new RRI(op, newDest, newSrc, imm);
   }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
 
-  [[nodiscard]] std::string toString() const override {
-    return _opToString(op) + "\t" + dest->toString() + ", " + src->toString() +
+  [[nodiscard]] std::string str() const override {
+    return _opToString(op) + "\t" + dest->str() + ", " + src->str() +
            ", " + std::to_string(imm);
   }
 
@@ -431,7 +431,7 @@ private:
   }
 };
 
-class RrrMIR : public MIR {
+class RRR : public MIR {
 public:
   enum Op {
     ADD,
@@ -457,7 +457,7 @@ public:
   Op op;
   reg::Reg *dest, *src1, *src2;
 
-  RrrMIR(Op op, reg::Reg *dest, reg::Reg *src1, reg::Reg *src2)
+  RRR(Op op, reg::Reg *dest, reg::Reg *src1, reg::Reg *src2)
       : op(op), dest(dest), src1(src1), src2(src2) {}
 
   std::vector<reg::Reg *> getRead() override { return {src1, src2}; }
@@ -465,25 +465,25 @@ public:
   std::vector<reg::Reg *> getWrite() override { return {dest}; }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+      const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) override {
     reg::Reg *newDest = dest, *newSrc1 = src1, *newSrc2 = src2;
-    if (auto vdest = dynamic_cast<reg::VReg *>(dest)) {
+    if (auto vdest = dynamic_cast<reg::Virtual *>(dest)) {
       if (replaceMap.find(vdest) != replaceMap.end())
         newDest = replaceMap.at(vdest);
     }
-    if (auto vsrc1 = dynamic_cast<reg::VReg *>(src1)) {
+    if (auto vsrc1 = dynamic_cast<reg::Virtual *>(src1)) {
       if (replaceMap.find(vsrc1) != replaceMap.end())
         newSrc1 = replaceMap.at(vsrc1);
     }
-    if (auto vsrc2 = dynamic_cast<reg::VReg *>(src2)) {
+    if (auto vsrc2 = dynamic_cast<reg::Virtual *>(src2)) {
       if (replaceMap.find(vsrc2) != replaceMap.end())
         newSrc2 = replaceMap.at(vsrc2);
     }
-    return new RrrMIR(op, newDest, newSrc1, newSrc2);
+    return new RRR(op, newDest, newSrc1, newSrc2);
   }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
-  [[nodiscard]] std::string toString() const override;
+  [[nodiscard]] std::string str() const override;
 
 private:
   static std::string _opToString(Op v) noexcept {
@@ -530,46 +530,46 @@ private:
   }
 };
 
-class StoreItemMIR : public MIR {
+class StoreTo : public MIR {
 public:
-  enum Item { LOCAL, PARAM_CALL, PARAM_INNER, PARAM_OUTER, SPILL };
+  enum To { LOCAL, CALL_PARAM, INNER_PARAM, OUTER_PARAM, SPILL };
 
-  Item item;
+  To to;
   reg::Reg *src;
   int imm;
 
-  StoreItemMIR(Item item, reg::Reg *src, int imm)
-      : item(item), src(src), imm(imm) {}
+  StoreTo(To item, reg::Reg *src, int imm)
+      : to(item), src(src), imm(imm) {}
 
   std::vector<reg::Reg *> getRead() override { return {src}; }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+      const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) override {
     reg::Reg *newSrc = src;
-    if (auto vsrc = dynamic_cast<reg::VReg *>(src)) {
+    if (auto vsrc = dynamic_cast<reg::Virtual *>(src)) {
       if (replaceMap.find(vsrc) != replaceMap.end())
         newSrc = replaceMap.at(vsrc);
     }
-    return new StoreItemMIR(item, newSrc, imm);
+    return new StoreTo(to, newSrc, imm);
   }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
 
-  [[nodiscard]] std::string toString() const override {
-    return "store\t" + src->toString() + ", " + std::to_string(imm) + "($" +
-           _itemToString(item) + ")";
+  [[nodiscard]] std::string str() const override {
+    return "store\t" + src->str() + ", " + std::to_string(imm) + "($" +
+           _itemToString(to) + ")";
   }
 
 private:
-  static std::string _itemToString(Item v) noexcept {
+  static std::string _itemToString(To v) noexcept {
     switch (v) {
     case LOCAL:
       return "local";
-    case PARAM_CALL:
+    case CALL_PARAM:
       return "param_call";
-    case PARAM_INNER:
+    case INNER_PARAM:
       return "param_inner";
-    case PARAM_OUTER:
+    case OUTER_PARAM:
       return "param_outer";
     case SPILL:
       return "spill";
@@ -579,32 +579,32 @@ private:
   }
 };
 
-class StoreMIR : public MIR {
+class Store : public MIR {
 public:
   reg::Reg *src, *dest;
   int imm, size;
 
-  StoreMIR(reg::Reg *src, reg::Reg *dest, int imm, int size)
+  Store(reg::Reg *src, reg::Reg *dest, int imm, int size)
       : src(src), dest(dest), imm(imm), size(size) {}
 
   std::vector<reg::Reg *> getRead() override { return {src, dest}; }
 
   MIR *replaceReg(
-      const std::unordered_map<reg::VReg *, reg::MReg *> &replaceMap) override {
+      const std::unordered_map<reg::Virtual *, reg::Machine *> &replaceMap) override {
     reg::Reg *newSrc = src, *newDest = dest;
-    if (auto vsrc = dynamic_cast<reg::VReg *>(src)) {
+    if (auto vsrc = dynamic_cast<reg::Virtual *>(src)) {
       if (replaceMap.find(vsrc) != replaceMap.end())
         newSrc = replaceMap.at(vsrc);
     }
-    if (auto vdest = dynamic_cast<reg::VReg *>(dest)) {
+    if (auto vdest = dynamic_cast<reg::Virtual *>(dest)) {
       if (replaceMap.find(vdest) != replaceMap.end())
         newDest = replaceMap.at(vdest);
     }
-    return new StoreMIR(newSrc, newDest, imm, size);
+    return new Store(newSrc, newDest, imm, size);
   }
 
   std::vector<MIR *> spill(reg::Reg *reg, int offset) override;
-  [[nodiscard]] std::string toString() const override;
+  [[nodiscard]] std::string str() const override;
 };
 
 } // namespace mir

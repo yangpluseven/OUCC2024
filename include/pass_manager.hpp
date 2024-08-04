@@ -13,20 +13,19 @@ public:
   explicit PassManager(const ir::Module *module) : module(module) {}
 
   void run() const {
-    bool modified;
+    bool outterChanged;
     do {
-      modified = false;
-      bool inner;
+      outterChanged = false;
+      bool innerChanged;
       do {
-        inner = false;
-        inner |= BranchOptPass(module).run();
-        inner |= ConstPropPass(module).run();
-        inner |= DCEPass(module).run();
-        modified |= inner;
-      } while (inner);
-      modified |= PromotePass(module).run();
-      modified |= DCEPass(module).run();
-    } while (modified);
+        innerChanged = false;
+        innerChanged |= BranchOpt(module).onModule();
+        innerChanged |= ConstProp(module).onModule();
+        innerChanged |= DeadCodeEli(module).onModule();
+      } while (innerChanged);
+      outterChanged |= MemoryPromote(module).onModule();
+      outterChanged |= DeadCodeEli(module).onModule();
+    } while (outterChanged);
   }
 };
 } // namespace pass

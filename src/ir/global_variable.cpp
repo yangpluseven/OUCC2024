@@ -97,8 +97,8 @@ std::string GlobalVariable::getName() const { return "@" + _name; }
 
 std::string GlobalVariable::getRawName() const { return _name; }
 
-std::string GlobalVariable::toString() const {
-  return getName() + " = global " + value->toString();
+std::string GlobalVariable::str() const {
+  return getName() + " = global " + value->str();
 }
 
 } // namespace ir

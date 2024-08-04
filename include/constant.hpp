@@ -14,7 +14,7 @@ public:
 
   ~Constant() override;
 
-  virtual std::string toString() const = 0;
+  virtual std::string str() const = 0;
   std::string getName() const override = 0;
 };
 
@@ -65,7 +65,7 @@ public:
   ConstantNumber *lt(const ConstantNumber *rhs) const ;
   ConstantNumber *le(const ConstantNumber *rhs) const ;
 
-  std::string toString() const override;
+  std::string str() const override;
 };
 
 class ConstantZero : public Constant {
@@ -73,7 +73,7 @@ public:
   explicit ConstantZero(Type *type);
 
   std::string getName() const override;
-  std::string toString() const override;
+  std::string str() const override;
 };
 
 class ConstantArray : public Constant {
@@ -85,7 +85,7 @@ public:
 
   std::vector<Constant *> &getValues();
 
-  std::string toString() const override;
+  std::string str() const override;
   std::string getName() const override;
 };
 

@@ -55,7 +55,7 @@ size_t BasicBlock::size() const { return _instructions.size(); }
 
 std::string BasicBlock::getName() const { return "b" + std::to_string(_id); }
 
-std::string BasicBlock::toString() const { return getName(); }
+std::string BasicBlock::str() const { return getName(); }
 
 std::vector<Instruction *>::iterator BasicBlock::begin() {
   return _instructions.begin();

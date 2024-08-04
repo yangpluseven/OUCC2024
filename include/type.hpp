@@ -13,7 +13,7 @@ public:
 
   [[nodiscard]] virtual Type *baseType() const = 0;
   [[nodiscard]] virtual size_t getSize() const = 0;
-  [[nodiscard]] virtual std::string toString() const = 0;
+  [[nodiscard]] virtual std::string str() const = 0;
 
   static Type *checkEquality(Type *lhs, const Type *rhs);
 
@@ -28,7 +28,7 @@ public:
   static BasicType *const VOID;
 
   [[nodiscard]] size_t getSize() const override;
-  [[nodiscard]] std::string toString() const override;
+  [[nodiscard]] std::string str() const override;
   [[nodiscard]] Type *baseType() const override;
 
 private:
@@ -47,7 +47,7 @@ public:
 
   [[nodiscard]] Type *baseType() const override;
   [[nodiscard]] size_t getSize() const override;
-  [[nodiscard]] std::string toString() const override;
+  [[nodiscard]] std::string str() const override;
 };
 
 class ArrayType : public Type {
@@ -64,7 +64,7 @@ public:
   Type *getScalarType();
   std::vector<ArrayType *> getArrayTypes();
   std::vector<size_t> getArraySizes();
-  [[nodiscard]] std::string toString() const override;
+  [[nodiscard]] std::string str() const override;
 };
 
 } // namespace ir

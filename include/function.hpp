@@ -20,7 +20,7 @@ public:
   Argument(Type *type, std::string name);
 
   std::string getName() const override;
-  std::string toString() const;
+  std::string str() const;
 };
 
 class Function : public Value {
@@ -34,15 +34,15 @@ public:
 
   bool isDeclare() const;
 
-  Function *addArg(Argument *arg);
+  Function *pushArg(Argument *arg);
 
-  bool add(BasicBlock *block);
+  bool pushBlock(BasicBlock *block);
 
-  void add(int index, BasicBlock *block);
+  void insertBlock(int index, BasicBlock *block);
 
-  bool add(int index, const std::vector<BasicBlock *> &newBlocks);
+  bool insertBlock(int index, const std::vector<BasicBlock *> &newBlocks);
 
-  BasicBlock *remove(int index);
+  BasicBlock *erase(int index);
 
   size_t size() const;
 
@@ -62,7 +62,7 @@ public:
   std::string getName() const override;
   std::string getRawName() const;
   std::vector<Argument *> &getArgs();
-  std::string toString() const;
+  std::string str() const;
 };
 
 } // namespace ir

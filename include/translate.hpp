@@ -12,13 +12,13 @@ namespace mir {
 class MIROpUtil {
 public:
   static void loadImmToIReg(std::vector<MIR *> &irs, reg::Reg *reg, int imm) {
-    irs.push_back(new LiMIR(reg, imm));
+    irs.push_back(new LoadImm(reg, imm));
   }
 
   static void loadImmToFReg(std::vector<MIR *> &irs, reg::Reg *reg, int imm) {
-    auto midReg = new reg::VReg(ir::BasicType::I32);
+    auto midReg = new reg::Virtual(ir::BasicType::I32);
     loadImmToIReg(irs, midReg, imm);
-    irs.push_back(new RrMIR(RrMIR::MV, reg, midReg));
+    irs.push_back(new RR(RR::MV, reg, midReg));
   }
 
   static void loadImmToReg(std::vector<MIR *> &irs, reg::Reg *reg, int imm) {
@@ -78,102 +78,102 @@ public:
 
 class MIRBinTranslator {
 private:
-  static void transAddRegImmF(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc, float imm);
-  static void transAddRegRegF(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc1, reg::VReg *vsrc2) {
-    irs.push_back(new RrrMIR(RrrMIR::ADD, target, vsrc1, vsrc2));
+  static void transAddRegImmF(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc, float imm);
+  static void transAddRegRegF(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc1, reg::Virtual *vsrc2) {
+    irs.push_back(new RRR(RRR::ADD, target, vsrc1, vsrc2));
   }
-  static void transAddRegRegI(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc1, reg::VReg *vsrc2) {
-    irs.push_back(new RrrMIR(RrrMIR::ADD, target, vsrc1, vsrc2));
+  static void transAddRegRegI(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc1, reg::Virtual *vsrc2) {
+    irs.push_back(new RRR(RRR::ADD, target, vsrc1, vsrc2));
   }
-  static void transDivImmRegF(std::vector<MIR *> &irs, reg::VReg *target,
-                              float imm, reg::VReg *vsrc);
-  static void transDivImmRegI(std::vector<MIR *> &irs, reg::VReg *target,
-                              int imm, reg::VReg *vsrc);
-  static void transDivRegImmF(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc, float imm);
-  static void transDivRegImmI(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc, int imm);
+  static void transDivImmRegF(std::vector<MIR *> &irs, reg::Virtual *target,
+                              float imm, reg::Virtual *vsrc);
+  static void transDivImmRegI(std::vector<MIR *> &irs, reg::Virtual *target,
+                              int imm, reg::Virtual *vsrc);
+  static void transDivRegImmF(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc, float imm);
+  static void transDivRegImmI(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc, int imm);
 
-  static void transDivRegRegF(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc1, reg::VReg *vsrc2) {
-    irs.push_back(new RrrMIR(RrrMIR::DIV, target, vsrc1, vsrc2));
+  static void transDivRegRegF(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc1, reg::Virtual *vsrc2) {
+    irs.push_back(new RRR(RRR::DIV, target, vsrc1, vsrc2));
   }
-  static void transDivRegRegI(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc1, reg::VReg *vsrc2) {
-    irs.push_back(new RrrMIR(RrrMIR::DIVW, target, vsrc1, vsrc2));
+  static void transDivRegRegI(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc1, reg::Virtual *vsrc2) {
+    irs.push_back(new RRR(RRR::DIVW, target, vsrc1, vsrc2));
   }
-  static void transModImmReg(std::vector<MIR *> &irs, reg::VReg *target,
-                             int imm, reg::VReg *vsrc);
-  static void transModRegImm(std::vector<MIR *> &irs, reg::VReg *target,
-                             reg::VReg *vsrc, int imm);
-  static void transModRegReg(std::vector<MIR *> &irs, reg::VReg *target,
-                             reg::VReg *vsrc1, reg::VReg *vsrc2) {
-    irs.push_back(new RrrMIR(RrrMIR::REMW, target, vsrc1, vsrc2));
+  static void transModImmReg(std::vector<MIR *> &irs, reg::Virtual *target,
+                             int imm, reg::Virtual *vsrc);
+  static void transModRegImm(std::vector<MIR *> &irs, reg::Virtual *target,
+                             reg::Virtual *vsrc, int imm);
+  static void transModRegReg(std::vector<MIR *> &irs, reg::Virtual *target,
+                             reg::Virtual *vsrc1, reg::Virtual *vsrc2) {
+    irs.push_back(new RRR(RRR::REMW, target, vsrc1, vsrc2));
   }
-  static void transMulRegImmF(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc, float imm);
-  static void transMulRegImmI(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc, int imm);
-  static void transMulRegRegF(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc1, reg::VReg *vsrc2) {
-    irs.push_back(new RrrMIR(RrrMIR::MUL, target, vsrc1, vsrc2));
+  static void transMulRegImmF(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc, float imm);
+  static void transMulRegImmI(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc, int imm);
+  static void transMulRegRegF(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc1, reg::Virtual *vsrc2) {
+    irs.push_back(new RRR(RRR::MUL, target, vsrc1, vsrc2));
   }
-  static void transMulRegRegI(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc1, reg::VReg *vsrc2) {
-    irs.push_back(new RrrMIR(RrrMIR::MULW, target, vsrc1, vsrc2));
+  static void transMulRegRegI(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc1, reg::Virtual *vsrc2) {
+    irs.push_back(new RRR(RRR::MULW, target, vsrc1, vsrc2));
   }
-  static void transSubImmRegF(std::vector<MIR *> &irs, reg::VReg *target,
-                              float imm, reg::VReg *vsrc);
-  static void transSubImmRegI(std::vector<MIR *> &irs, reg::VReg *target,
-                              int imm, reg::VReg *vsrc);
-  static void transSubRegImmF(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc, float imm);
-  static void transSubRegImmI(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc, int imm);
-  static void transSubRegRegF(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc1, reg::VReg *vsrc2) {
-    irs.push_back(new RrrMIR(RrrMIR::SUB, target, vsrc1, vsrc2));
+  static void transSubImmRegF(std::vector<MIR *> &irs, reg::Virtual *target,
+                              float imm, reg::Virtual *vsrc);
+  static void transSubImmRegI(std::vector<MIR *> &irs, reg::Virtual *target,
+                              int imm, reg::Virtual *vsrc);
+  static void transSubRegImmF(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc, float imm);
+  static void transSubRegImmI(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc, int imm);
+  static void transSubRegRegF(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc1, reg::Virtual *vsrc2) {
+    irs.push_back(new RRR(RRR::SUB, target, vsrc1, vsrc2));
   }
-  static void transSubRegRegI(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc1, reg::VReg *vsrc2) {
-    irs.push_back(new RrrMIR(RrrMIR::SUBW, target, vsrc1, vsrc2));
+  static void transSubRegRegI(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc1, reg::Virtual *vsrc2) {
+    irs.push_back(new RRR(RRR::SUBW, target, vsrc1, vsrc2));
   }
 
 public:
-  static void transAddRegImmI(std::vector<MIR *> &irs, reg::VReg *target,
-                              reg::VReg *vsrc, int imm);
+  static void transAddRegImmI(std::vector<MIR *> &irs, reg::Virtual *target,
+                              reg::Virtual *vsrc, int imm);
   static void transBinImmReg(
       std::vector<MIR *> &irs,
-      const std::unordered_map<ir::Instruction *, reg::VReg *> &instRegMap,
-      ir::BinaryOperator *binOp, ir::ConstantNumber *value, reg::VReg *reg);
+      const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
+      ir::BinaryOperator *binOp, ir::ConstantNumber *value, reg::Virtual *reg);
   static void transBinRegImm(
       std::vector<MIR *> &irs,
-      const std::unordered_map<ir::Instruction *, reg::VReg *> &instRegMap,
-      ir::BinaryOperator *binOp, reg::VReg *reg, ir::ConstantNumber *value);
+      const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
+      ir::BinaryOperator *binOp, reg::Virtual *reg, ir::ConstantNumber *value);
   static void transBinRegReg(
       std::vector<MIR *> &irs,
-      const std::unordered_map<ir::Instruction *, reg::VReg *> &instRegMap,
-      ir::BinaryOperator *binOp, reg::VReg *reg1, reg::VReg *reg2);
+      const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
+      ir::BinaryOperator *binOp, reg::Virtual *reg1, reg::Virtual *reg2);
 };
 
 class MIROpTranslator {
 public:
   static void transBranch(
       std::vector<MIR *> &irs,
-      std::unordered_map<ir::Instruction *, reg::VReg *> const &instRegMap,
+      std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
       ir::BranchInst *branchInst);
   static void
   transBin(std::vector<MIR *> &irs,
-           std::unordered_map<ir::Instruction *, reg::VReg *> const &instRegMap,
+           std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
            std::unordered_map<ir::Argument *, std::pair<bool, int>> const
                &argOffsets,
            ir::BinaryOperator *binOp);
   static int transCall(
       std::vector<MIR *> &irs,
-      std::unordered_map<ir::Instruction *, reg::VReg *> const &instRegMap,
+      std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
       std::unordered_map<ir::Argument *, std::pair<bool, int>> const
           &argOffsets,
       ir::CallInst *callInst,

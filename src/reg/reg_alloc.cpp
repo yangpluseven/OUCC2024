@@ -6,7 +6,7 @@ std::vector<Block *> FuncRegAlloc::calcBlocks() const {
   auto const &irs = _func->getIRs();
   std::unordered_map<ir::BasicBlock *, int> lableIdMap;
   for (int i = 0; i < irs.size(); i++) {
-    if (auto const labelMIR = dynamic_cast<mir::LabelMIR *>(irs.at(i))) {
+    if (auto const labelMIR = dynamic_cast<mir::Label *>(irs.at(i))) {
       lableIdMap[labelMIR->getBlock()] = i;
     }
   }
@@ -15,13 +15,13 @@ std::vector<Block *> FuncRegAlloc::calcBlocks() const {
   std::unordered_map<int, int> jumpIdMap;
   std::unordered_map<int, bool> isBranchMap;
   for (int i = 0; i < irs.size(); i++) {
-    if (auto const bMIR = dynamic_cast<mir::BMIR *>(irs.at(i))) {
+    if (auto const bMIR = dynamic_cast<mir::Branch *>(irs.at(i))) {
       begins.insert(i + 1);
       jumpIdMap[i] = lableIdMap.at(bMIR->block);
       isBranchMap[i] = bMIR->hasCond();
       continue;
     }
-    if (dynamic_cast<mir::LabelMIR *>(irs.at(i))) {
+    if (dynamic_cast<mir::Label *>(irs.at(i))) {
       begins.insert(i);
     }
   }
@@ -90,9 +90,9 @@ FuncRegAlloc::calcLifespans() {
 }
 
 void FuncRegAlloc::popFrame() {
-  std::vector<MReg *> toSaveRegs;
+  std::vector<Machine *> toSaveRegs;
   if (_callAddrSize != 0) {
-    toSaveRegs.push_back(MReg::RA);
+    toSaveRegs.push_back(Machine::RA);
   }
   toSaveRegs.insert(toSaveRegs.end(), _iCallerRegs.begin(), _iCallerRegs.end());
   toSaveRegs.insert(toSaveRegs.end(), _fCallerRegs.begin(), _fCallerRegs.end());
@@ -103,11 +103,11 @@ void FuncRegAlloc::popFrame() {
   if (totalSize > 0) {
     if (totalSize < 2048) {
       _func->addMIR(
-          new mir::RriMIR(mir::RriMIR::ADDI, MReg::SP, MReg::SP, totalSize));
+          new mir::RRI(mir::RRI::ADDI, Machine::SP, Machine::SP, totalSize));
     } else {
-      _func->addMIR(new mir::LiMIR(MReg::T0, totalSize));
+      _func->addMIR(new mir::LoadImm(Machine::T0, totalSize));
       _func->addMIR(
-          new mir::RrrMIR(mir::RrrMIR::ADD, MReg::SP, MReg::SP, MReg::T0));
+          new mir::RRR(mir::RRR::ADD, Machine::SP, Machine::SP, Machine::T0));
     }
   }
   for (int i = 0; i < toSaveRegs.size(); i++) {
@@ -119,7 +119,7 @@ void FuncRegAlloc::popFrame() {
       continue;
     }
     _func->addMIR(
-        new mir::LoadMIR(toSaveReg, MReg::SP, -8 * (i + 1),
+        new mir::Load(toSaveReg, Machine::SP, -8 * (i + 1),
                          toSaveReg->getType() == ir::BasicType::I32 ? 8 : 4));
   }
 }
@@ -127,29 +127,29 @@ void FuncRegAlloc::popFrame() {
 void FuncRegAlloc::pushFrame() {
   auto &irs = _func->getIRs();
   std::vector<mir::MIR *> headIRs;
-  std::vector<MReg *> toSaveRegs;
+  std::vector<Machine *> toSaveRegs;
   if (_callAddrSize != 0) {
-    toSaveRegs.push_back(MReg::RA);
+    toSaveRegs.push_back(Machine::RA);
   }
   toSaveRegs.insert(toSaveRegs.end(), _iCallerRegs.begin(), _iCallerRegs.end());
   toSaveRegs.insert(toSaveRegs.end(), _fCallerRegs.begin(), _fCallerRegs.end());
   toSaveRegs.insert(toSaveRegs.end(), _iCalleeRegs.begin(), _iCalleeRegs.end());
   toSaveRegs.insert(toSaveRegs.end(), _fCalleeRegs.begin(), _fCalleeRegs.end());
   for (int i = 0; i < toSaveRegs.size(); i++) {
-    MReg *toSaveReg = toSaveRegs[i];
+    Machine *toSaveReg = toSaveRegs[i];
     headIRs.push_back(
-        new mir::StoreMIR(toSaveReg, MReg::SP, -8 * (i + 1),
+        new mir::Store(toSaveReg, Machine::SP, -8 * (i + 1),
                           toSaveReg->getType() == ir::BasicType::I32 ? 8 : 4));
   }
   int totalSize = static_cast<int>(toSaveRegs.size()) * 8 + _funcParamSize +
                   _alignSize + _spillSize + _localSize;
   if (totalSize > 0 && totalSize <= 255) {
     headIRs.push_back(
-        new mir::RriMIR(mir::RriMIR::ADDI, MReg::SP, MReg::SP, -totalSize));
+        new mir::RRI(mir::RRI::ADDI, Machine::SP, Machine::SP, -totalSize));
   } else if (totalSize > 255) {
-    headIRs.push_back(new mir::LiMIR(MReg::T0, totalSize));
+    headIRs.push_back(new mir::LoadImm(Machine::T0, totalSize));
     headIRs.push_back(
-        new mir::RrrMIR(mir::RrrMIR::SUB, MReg::SP, MReg::SP, MReg::T0));
+        new mir::RRR(mir::RRR::SUB, Machine::SP, Machine::SP, Machine::T0));
   }
   irs.insert(irs.begin(), headIRs.begin(), headIRs.end());
 }
@@ -161,29 +161,29 @@ void FuncRegAlloc::solveSpill() {
     toContinueOuter = false;
     std::unordered_map<Reg *, std::unordered_set<Reg *>> conflictMap =
         calcConflictMap();
-    std::unordered_set<VReg *> allocatedVRegs;
-    std::unordered_map<VReg *, MReg *> vRegToMRegMap;
-    std::unordered_map<VReg *, int> spilledRegs;
+    std::unordered_set<Virtual *> allocatedVRegs;
+    std::unordered_map<Virtual *, Machine *> vRegToMRegMap;
+    std::unordered_map<Virtual *, int> spilledRegs;
     bool toContinueInner;
     do {
       toContinueInner = false;
       for (const auto &p : conflictMap) {
-        if (auto const vreg = dynamic_cast<VReg *>(p.first)) {
+        if (auto const vreg = dynamic_cast<Virtual *>(p.first)) {
           allocatedVRegs.insert(vreg);
           bool toSpill = true;
-          const std::vector<MReg *> &regs =
-              vreg->getType() == ir::BasicType::FLOAT ? MReg::F_REGS
-                                                      : MReg::I_REGS;
-          std::unordered_set<MReg *> usedRegs;
+          const std::vector<Machine *> &regs =
+              vreg->getType() == ir::BasicType::FLOAT ? Machine::F_REGS
+                                                      : Machine::I_REGS;
+          std::unordered_set<Machine *> usedRegs;
           for (auto const reg : conflictMap.at(vreg)) {
-            if (auto const vreg1 = dynamic_cast<VReg *>(reg)) {
+            if (auto const vreg1 = dynamic_cast<Virtual *>(reg)) {
               if (vRegToMRegMap.find(vreg1) != vRegToMRegMap.end()) {
-                MReg *mreg = vRegToMRegMap.at(vreg1);
+                Machine *mreg = vRegToMRegMap.at(vreg1);
                 usedRegs.insert(mreg);
               }
               continue;
             }
-            if (auto const mreg = dynamic_cast<MReg *>(reg)) {
+            if (auto const mreg = dynamic_cast<Machine *>(reg)) {
               usedRegs.insert(mreg);
               continue;
             }
@@ -199,7 +199,7 @@ void FuncRegAlloc::solveSpill() {
             break;
           }
           if (toSpill) {
-            VReg *toSpillReg = nullptr;
+            Virtual *toSpillReg = nullptr;
             int maxVal = 0;
             for (const auto reg : allocatedVRegs) {
               if (conflictMap.at(reg).size() > maxVal) {
@@ -223,7 +223,7 @@ void FuncRegAlloc::solveSpill() {
       }
     } while (toContinueInner);
     for (const auto &toSpill : spilledRegs) {
-      VReg *reg = toSpill.first;
+      Virtual *reg = toSpill.first;
       int offset = toSpill.second;
       std::vector<mir::MIR *> newIRs;
       for (const auto ir : _func->getIRs()) {
@@ -272,37 +272,37 @@ FuncRegAlloc::calcConflictMap() {
 
 void FuncRegAlloc::makeFrameInfo() {
   _funcParamSize = std::max(_func->maxFuncParamNum -
-                                static_cast<int>(MReg::I_CALLER_REGS.size()),
+                                static_cast<int>(Machine::I_CALLER_REGS.size()),
                             0) *
                    8;
   _localSize = _func->getLocalSize();
-  std::unordered_set<MReg *> usedICalleeRegs;
-  std::unordered_set<MReg *> usedFCalleeRegs;
+  std::unordered_set<Machine *> usedICalleeRegs;
+  std::unordered_set<Machine *> usedFCalleeRegs;
   _callAddrSize = 0;
   for (const auto ir : _func->getIRs()) {
-    if (dynamic_cast<mir::CallMIR *>(ir)) {
+    if (dynamic_cast<mir::Call *>(ir)) {
       _callAddrSize = 8;
     }
     for (const auto reg : ir->getRegs()) {
-      if (auto const mreg = dynamic_cast<MReg *>(reg)) {
-        if (std::find(MReg::I_CALLEE_REGS.begin(), MReg::I_CALLEE_REGS.end(),
-                      mreg) != MReg::I_CALLEE_REGS.end()) {
+      if (auto const mreg = dynamic_cast<Machine *>(reg)) {
+        if (std::find(Machine::I_CALLEE_REGS.begin(), Machine::I_CALLEE_REGS.end(),
+                      mreg) != Machine::I_CALLEE_REGS.end()) {
           usedICalleeRegs.insert(mreg);
           continue;
         }
-        if (std::find(MReg::F_CALLEE_REGS.begin(), MReg::F_CALLEE_REGS.end(),
-                      mreg) != MReg::F_CALLEE_REGS.end()) {
+        if (std::find(Machine::F_CALLEE_REGS.begin(), Machine::F_CALLEE_REGS.end(),
+                      mreg) != Machine::F_CALLEE_REGS.end()) {
           usedFCalleeRegs.insert(mreg);
         }
       }
     }
   }
-  for (const auto reg : MReg::I_CALLEE_REGS) {
+  for (const auto reg : Machine::I_CALLEE_REGS) {
     if (usedICalleeRegs.find(reg) != usedICalleeRegs.end()) {
       _iCalleeRegs.push_back(reg);
     }
   }
-  for (const auto reg : MReg::F_CALLEE_REGS) {
+  for (const auto reg : Machine::F_CALLEE_REGS) {
     if (usedFCalleeRegs.find(reg) != usedFCalleeRegs.end()) {
       _fCalleeRegs.push_back(reg);
     }
@@ -337,26 +337,26 @@ void FuncRegAlloc::calcUseDef(std::vector<Block *> &blocks) const {
   for (const auto block : blocks) {
     for (int i = block->getBegin(); i < block->getEnd(); i++) {
       mir::MIR *mir = irs.at(i);
-      if (auto const callMIR = dynamic_cast<mir::CallMIR *>(mir)) {
+      if (auto const callMIR = dynamic_cast<mir::Call *>(mir)) {
         int iSize = 0, fSize = 0;
         for (const auto arg : callMIR->func->getArgs()) {
           if (arg->getType() == ir::BasicType::FLOAT &&
-              fSize < MReg::F_CALLER_REGS.size()) {
-            if (!block->containsInDef(MReg::F_CALLER_REGS.at(fSize))) {
-              block->addUse(MReg::F_CALLER_REGS.at(fSize));
+              fSize < Machine::F_CALLER_REGS.size()) {
+            if (!block->containsInDef(Machine::F_CALLER_REGS.at(fSize))) {
+              block->addUse(Machine::F_CALLER_REGS.at(fSize));
             }
             fSize++;
-          } else if (iSize < MReg::I_CALLER_REGS.size()) {
-            if (!block->containsInDef(MReg::I_CALLER_REGS.at(iSize))) {
-              block->addUse(MReg::I_CALLER_REGS.at(iSize));
+          } else if (iSize < Machine::I_CALLER_REGS.size()) {
+            if (!block->containsInDef(Machine::I_CALLER_REGS.at(iSize))) {
+              block->addUse(Machine::I_CALLER_REGS.at(iSize));
             }
             iSize++;
           }
         }
-        for (const auto reg : MReg::I_CALLER_REGS) {
+        for (const auto reg : Machine::I_CALLER_REGS) {
           block->addDef(reg);
         }
-        for (const auto reg : MReg::F_CALLER_REGS) {
+        for (const auto reg : Machine::F_CALLER_REGS) {
           block->addDef(reg);
         }
       }
@@ -376,33 +376,33 @@ void FuncRegAlloc::replaceFakeMIRs() {
   auto &irs = _func->getIRs();
   for (int i = 0; i < irs.size(); i++) {
     mir::MIR *mir = irs[i];
-    if (const auto addRegLocalMIR = dynamic_cast<mir::AddRegLocalMIR *>(mir)) {
+    if (const auto addRegLocalMIR = dynamic_cast<mir::RegAddImm *>(mir)) {
       int totalSize =
           _funcParamSize + _alignSize + _spillSize + addRegLocalMIR->imm;
       if (totalSize < 2048) {
-        irs[i] = new mir::RriMIR(mir::RriMIR::ADDI, addRegLocalMIR->dest,
-                                 MReg::SP, totalSize);
+        irs[i] = new mir::RRI(mir::RRI::ADDI, addRegLocalMIR->dest,
+                                 Machine::SP, totalSize);
       } else {
-        irs[i] = new mir::LiMIR(MReg::T0, totalSize);
+        irs[i] = new mir::LoadImm(Machine::T0, totalSize);
         irs.insert(irs.begin() + i + 1,
-                   new mir::RrrMIR(mir::RrrMIR::ADD, addRegLocalMIR->dest,
-                                   MReg::SP, MReg::T0));
+                   new mir::RRR(mir::RRR::ADD, addRegLocalMIR->dest,
+                                   Machine::SP, Machine::T0));
         i++;
       }
       continue;
     }
-    if (const auto loadItemMIR = dynamic_cast<mir::LoadItemMIR *>(mir)) {
+    if (const auto loadItemMIR = dynamic_cast<mir::LoadFrom *>(mir)) {
       int totalSize = 0, size = 0;
-      const auto item = loadItemMIR->item;
-      if (item == mir::LoadItemMIR::SPILL) {
+      const auto item = loadItemMIR->from;
+      if (item == mir::LoadFrom::SPILL) {
         totalSize = _funcParamSize + _alignSize + loadItemMIR->imm;
-      } else if (item == mir::LoadItemMIR::LOCAL) {
+      } else if (item == mir::LoadFrom::LOCAL) {
         size = 4;
         totalSize = _funcParamSize + _alignSize + _spillSize + loadItemMIR->imm;
-      } else if (item == mir::LoadItemMIR::PARAM_INNER) {
+      } else if (item == mir::LoadFrom::INNER_PARAM) {
         totalSize = _funcParamSize + _alignSize + _spillSize + _localSize +
                     _savedRegSize + loadItemMIR->imm;
-      } else if (item == mir::LoadItemMIR::PARAM_OUTER) {
+      } else if (item == mir::LoadFrom::OUTER_PARAM) {
         totalSize = _funcParamSize + _alignSize + _spillSize + _localSize +
                     _savedRegSize + _paramInnerSize + _callAddrSize +
                     loadItemMIR->imm;
@@ -419,33 +419,33 @@ void FuncRegAlloc::replaceFakeMIRs() {
         }
       }
       if (totalSize < 2048) {
-        irs[i] = new mir::LoadMIR(loadItemMIR->dest, MReg::SP, totalSize, size);
+        irs[i] = new mir::Load(loadItemMIR->dest, Machine::SP, totalSize, size);
       } else {
-        irs[i] = new mir::LiMIR(MReg::T0, totalSize);
+        irs[i] = new mir::LoadImm(Machine::T0, totalSize);
         irs.insert(
             irs.begin() + i + 1,
-            new mir::RrrMIR(mir::RrrMIR::ADD, MReg::T0, MReg::SP, MReg::T0));
+            new mir::RRR(mir::RRR::ADD, Machine::T0, Machine::SP, Machine::T0));
         irs.insert(irs.begin() + i + 2,
-                   new mir::LoadMIR(loadItemMIR->dest, MReg::T0, 0, size));
+                   new mir::Load(loadItemMIR->dest, Machine::T0, 0, size));
         i += 2;
       }
       continue;
     }
-    if (const auto storeItemMIR = dynamic_cast<mir::StoreItemMIR *>(mir)) {
+    if (const auto storeItemMIR = dynamic_cast<mir::StoreTo *>(mir)) {
       int totalSize = 0, size = 0;
-      const auto item = storeItemMIR->item;
-      if (item == mir::StoreItemMIR::PARAM_CALL) {
+      const auto item = storeItemMIR->to;
+      if (item == mir::StoreTo::CALL_PARAM) {
         totalSize = storeItemMIR->imm;
-      } else if (item == mir::StoreItemMIR::SPILL) {
+      } else if (item == mir::StoreTo::SPILL) {
         totalSize = _funcParamSize + _alignSize + storeItemMIR->imm;
-      } else if (item == mir::StoreItemMIR::LOCAL) {
+      } else if (item == mir::StoreTo::LOCAL) {
         size = 4;
         totalSize =
             _funcParamSize + _alignSize + _spillSize + storeItemMIR->imm;
-      } else if (item == mir::StoreItemMIR::PARAM_INNER) {
+      } else if (item == mir::StoreTo::INNER_PARAM) {
         totalSize = _funcParamSize + _alignSize + _spillSize + _localSize +
                     _savedRegSize + storeItemMIR->imm;
-      } else if (item == mir::StoreItemMIR::PARAM_OUTER) {
+      } else if (item == mir::StoreTo::OUTER_PARAM) {
         totalSize = _funcParamSize + _alignSize + _spillSize + _localSize +
                     _savedRegSize + _paramInnerSize + _callAddrSize +
                     storeItemMIR->imm;
@@ -463,38 +463,38 @@ void FuncRegAlloc::replaceFakeMIRs() {
       }
       if (totalSize < 2048) {
         irs[i] =
-            new mir::StoreMIR(storeItemMIR->src, MReg::SP, totalSize, size);
+            new mir::Store(storeItemMIR->src, Machine::SP, totalSize, size);
       } else {
-        irs[i] = new mir::LiMIR(MReg::T0, totalSize);
+        irs[i] = new mir::LoadImm(Machine::T0, totalSize);
         irs.insert(
             irs.begin() + i + 1,
-            new mir::RrrMIR(mir::RrrMIR::ADD, MReg::T0, MReg::SP, MReg::T0));
+            new mir::RRR(mir::RRR::ADD, Machine::T0, Machine::SP, Machine::T0));
         irs.insert(irs.begin() + i + 2,
-                   new mir::StoreMIR(storeItemMIR->src, MReg::T0, 0, size));
+                   new mir::Store(storeItemMIR->src, Machine::T0, 0, size));
         i += 2;
       }
     }
   }
 }
 
-std::unordered_map<VReg *, MReg *> FuncRegAlloc::calcVRegToMReg() {
+std::unordered_map<Virtual *, Machine *> FuncRegAlloc::calcVRegToMReg() {
   std::unordered_map<Reg *, std::unordered_set<Reg *>> conflictMap =
       calcConflictMap();
-  std::unordered_map<VReg *, MReg *> vRegToMReg;
+  std::unordered_map<Virtual *, Machine *> vRegToMReg;
   for (const auto &p : conflictMap) {
-    if (auto const vreg = dynamic_cast<VReg *>(p.first)) {
-      const std::vector<MReg *> &regs =
-          vreg->getType() == ir::BasicType::FLOAT ? MReg::F_REGS : MReg::I_REGS;
-      std::unordered_set<MReg *> usedRegs;
+    if (auto const vreg = dynamic_cast<Virtual *>(p.first)) {
+      const std::vector<Machine *> &regs =
+          vreg->getType() == ir::BasicType::FLOAT ? Machine::F_REGS : Machine::I_REGS;
+      std::unordered_set<Machine *> usedRegs;
       for (const auto reg : conflictMap.at(vreg)) {
-        if (auto const vreg1 = dynamic_cast<VReg *>(reg)) {
-          MReg *mreg = vRegToMReg[vreg1];
+        if (auto const vreg1 = dynamic_cast<Virtual *>(reg)) {
+          Machine *mreg = vRegToMReg[vreg1];
           if (mreg) {
             usedRegs.insert(mreg);
           }
           continue;
         }
-        if (auto const mreg = dynamic_cast<MReg *>(reg)) {
+        if (auto const mreg = dynamic_cast<Machine *>(reg)) {
           usedRegs.insert(mreg);
           continue;
         }

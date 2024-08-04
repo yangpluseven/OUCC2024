@@ -3,47 +3,47 @@
 namespace mir {
 
 void MIRBinTranslator::transAddRegImmF(std::vector<MIR *> &irs,
-                                       reg::VReg *target, reg::VReg *vsrc,
+                                       reg::Virtual *target, reg::Virtual *vsrc,
                                        float imm) {
-  auto midReg = new reg::VReg(ir::BasicType::FLOAT);
+  auto midReg = new reg::Virtual(ir::BasicType::FLOAT);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transAddRegRegF(irs, target, vsrc, midReg);
 }
 
 void MIRBinTranslator::transDivImmRegF(std::vector<MIR *> &irs,
-                                       reg::VReg *target, float imm,
-                                       reg::VReg *vsrc) {
+                                       reg::Virtual *target, float imm,
+                                       reg::Virtual *vsrc) {
 
-  auto midReg = new reg::VReg(ir::BasicType::FLOAT);
+  auto midReg = new reg::Virtual(ir::BasicType::FLOAT);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transDivRegRegF(irs, target, midReg, vsrc);
 }
 
 void MIRBinTranslator::transDivImmRegI(std::vector<MIR *> &irs,
-                                       reg::VReg *target, int imm,
-                                       reg::VReg *vsrc) {
-  auto midReg = new reg::VReg(ir::BasicType::I32);
+                                       reg::Virtual *target, int imm,
+                                       reg::Virtual *vsrc) {
+  auto midReg = new reg::Virtual(ir::BasicType::I32);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transDivRegRegI(irs, target, midReg, vsrc);
 }
 
 void MIRBinTranslator::transDivRegImmF(std::vector<MIR *> &irs,
-                                       reg::VReg *target, reg::VReg *vsrc,
+                                       reg::Virtual *target, reg::Virtual *vsrc,
                                        float imm) {
-  auto midReg = new reg::VReg(ir::BasicType::FLOAT);
+  auto midReg = new reg::Virtual(ir::BasicType::FLOAT);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transDivRegRegF(irs, target, vsrc, midReg);
 }
 
 void MIRBinTranslator::transDivRegImmI(std::vector<MIR *> &irs,
-                                       reg::VReg *target, reg::VReg *vsrc,
+                                       reg::Virtual *target, reg::Virtual *vsrc,
                                        int imm) {
   if (imm == 1) {
-    irs.push_back(new RrMIR(RrMIR::MV, target, vsrc));
+    irs.push_back(new RR(RR::MV, target, vsrc));
     return;
   }
   if (imm == -1) {
-    irs.push_back(new RrMIR(RrMIR::NEG, target, vsrc));
+    irs.push_back(new RR(RR::NEG, target, vsrc));
     return;
   }
   int div = imm;
@@ -58,175 +58,175 @@ void MIRBinTranslator::transDivRegImmI(std::vector<MIR *> &irs,
     shift++;
   }
   int magic = static_cast<int>((1L << (shift + 32)) / div + 1);
-  auto midReg1 = new reg::VReg(ir::BasicType::I32);
-  auto midReg2 = new reg::VReg(ir::BasicType::I32);
-  auto midReg3 = new reg::VReg(ir::BasicType::I32);
-  auto midReg4 = new reg::VReg(ir::BasicType::I32);
+  auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+  auto midReg2 = new reg::Virtual(ir::BasicType::I32);
+  auto midReg3 = new reg::Virtual(ir::BasicType::I32);
+  auto midReg4 = new reg::Virtual(ir::BasicType::I32);
   MIROpUtil::loadImmToReg(irs, midReg1, magic);
   if (magic >= 0) {
-    irs.push_back(new RrrMIR(RrrMIR::MUL, midReg2, vsrc, midReg1));
-    irs.push_back(new RriMIR(RriMIR::SRLI, midReg2, midReg2, 32));
+    irs.push_back(new RRR(RRR::MUL, midReg2, vsrc, midReg1));
+    irs.push_back(new RRI(RRI::SRLI, midReg2, midReg2, 32));
   } else {
-    irs.push_back(new RrrMIR(RrrMIR::MUL, midReg2, vsrc, midReg1));
-    irs.push_back(new RriMIR(RriMIR::SRLI, midReg2, midReg2, 32));
-    irs.push_back(new RrrMIR(RrrMIR::ADD, midReg2, midReg2, vsrc));
+    irs.push_back(new RRR(RRR::MUL, midReg2, vsrc, midReg1));
+    irs.push_back(new RRI(RRI::SRLI, midReg2, midReg2, 32));
+    irs.push_back(new RRR(RRR::ADD, midReg2, midReg2, vsrc));
   }
   if (shift != 0) {
-    irs.push_back(new RriMIR(RriMIR::SRAIW, midReg3, midReg2, shift));
+    irs.push_back(new RRI(RRI::SRAIW, midReg3, midReg2, shift));
   } else {
     midReg3 = midReg2;
   }
   if (isPos) {
-    irs.push_back(new RriMIR(RriMIR::SRLIW, midReg4, vsrc, 31));
-    irs.push_back(new RrrMIR(RrrMIR::ADDW, target, midReg3, midReg4));
+    irs.push_back(new RRI(RRI::SRLIW, midReg4, vsrc, 31));
+    irs.push_back(new RRR(RRR::ADDW, target, midReg3, midReg4));
   } else {
-    irs.push_back(new RriMIR(RriMIR::SRAIW, midReg4, vsrc, 31));
-    irs.push_back(new RrrMIR(RrrMIR::SUBW, target, midReg3, midReg4));
+    irs.push_back(new RRI(RRI::SRAIW, midReg4, vsrc, 31));
+    irs.push_back(new RRR(RRR::SUBW, target, midReg3, midReg4));
   }
 }
 
 void MIRBinTranslator::transModImmReg(std::vector<MIR *> &irs,
-                                      reg::VReg *target, int imm,
-                                      reg::VReg *vsrc) {
-  auto midReg = new reg::VReg(ir::BasicType::I32);
+                                      reg::Virtual *target, int imm,
+                                      reg::Virtual *vsrc) {
+  auto midReg = new reg::Virtual(ir::BasicType::I32);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transModRegReg(irs, target, midReg, vsrc);
 }
 
-void MIRBinTranslator::transModRegImm(std::vector<MIR *> &irs, reg::VReg *target,
-                                      reg::VReg *vsrc, int imm) {
+void MIRBinTranslator::transModRegImm(std::vector<MIR *> &irs, reg::Virtual *target,
+                                      reg::Virtual *vsrc, int imm) {
   if (imm == 1) {
-    irs.push_back(new RrMIR(RrMIR::MV, target, vsrc));
+    irs.push_back(new RR(RR::MV, target, vsrc));
     return;
   }
   if (MIROpUtil::bitcount(imm) == 1) {
-    auto midReg1 = new reg::VReg(ir::BasicType::I32);
+    auto midReg1 = new reg::Virtual(ir::BasicType::I32);
     if (imm == 2) {
-      irs.push_back(new RriMIR(RriMIR::SRLIW, midReg1, vsrc, 31));
+      irs.push_back(new RRI(RRI::SRLIW, midReg1, vsrc, 31));
     } else {
-      irs.push_back(new RriMIR(RriMIR::SRAIW, midReg1, vsrc, 31));
-      irs.push_back(new RriMIR(RriMIR::SRLIW, midReg1, midReg1,
+      irs.push_back(new RRI(RRI::SRAIW, midReg1, vsrc, 31));
+      irs.push_back(new RRI(RRI::SRLIW, midReg1, midReg1,
                                MIROpUtil::leadingZeros(imm) + 1));
     }
-    irs.push_back(new RrrMIR(RrrMIR::ADD, midReg1, midReg1, vsrc));
+    irs.push_back(new RRR(RRR::ADD, midReg1, midReg1, vsrc));
     if (std::abs(imm) < 2048) {
-      irs.push_back(new RriMIR(RriMIR::ANDI, midReg1, midReg1, -imm));
+      irs.push_back(new RRI(RRI::ANDI, midReg1, midReg1, -imm));
     } else {
-      auto midReg2 = new reg::VReg(ir::BasicType::I32);
-      irs.push_back(new LiMIR(midReg1, -imm));
-      irs.push_back(new RrrMIR(RrrMIR::AND, midReg1, midReg1, midReg2));
+      auto midReg2 = new reg::Virtual(ir::BasicType::I32);
+      irs.push_back(new LoadImm(midReg1, -imm));
+      irs.push_back(new RRR(RRR::AND, midReg1, midReg1, midReg2));
     }
-    irs.push_back(new RrrMIR(RrrMIR::SUBW, target, vsrc, midReg1));
+    irs.push_back(new RRR(RRR::SUBW, target, vsrc, midReg1));
     return;
   }
-  auto midReg1 = new reg::VReg(ir::BasicType::I32);
-  auto midReg2 = new reg::VReg(ir::BasicType::I32);
+  auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+  auto midReg2 = new reg::Virtual(ir::BasicType::I32);
   transDivRegImmI(irs, midReg1, vsrc, imm);
   transMulRegImmI(irs, midReg2, midReg1, imm);
-  irs.push_back(new RrrMIR(RrrMIR::SUBW, target, vsrc, midReg2));
+  irs.push_back(new RRR(RRR::SUBW, target, vsrc, midReg2));
 }
 
 void MIRBinTranslator::transMulRegImmF(std::vector<MIR *> &irs,
-                                       reg::VReg *target, reg::VReg *vsrc,
+                                       reg::Virtual *target, reg::Virtual *vsrc,
                                        float imm) {
-  auto midReg = new reg::VReg(ir::BasicType::FLOAT);
+  auto midReg = new reg::Virtual(ir::BasicType::FLOAT);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transMulRegRegF(irs, target, vsrc, midReg);
 }
 
 void MIRBinTranslator::transMulRegImmI(std::vector<MIR *> &irs,
-                                       reg::VReg *target, reg::VReg *vsrc,
+                                       reg::Virtual *target, reg::Virtual *vsrc,
                                        int imm) {
   if (imm == 0) {
     MIROpUtil::loadImmToReg(irs, target, 0);
     return;
   }
   if (imm == 1) {
-    irs.push_back(new RrMIR(RrMIR::MV, target, vsrc));
+    irs.push_back(new RR(RR::MV, target, vsrc));
     return;
   }
   if (imm == -1) {
-    irs.push_back(new RrMIR(RrMIR::NEG, target, vsrc));
+    irs.push_back(new RR(RR::NEG, target, vsrc));
     return;
   }
   if (MIROpUtil::bitcount(imm) == 1) {
     irs.push_back(
-        new RriMIR(RriMIR::SLLIW, target, vsrc, MIROpUtil::trailingZeros(imm)));
+        new RRI(RRI::SLLIW, target, vsrc, MIROpUtil::trailingZeros(imm)));
     return;
   }
   if (MIROpUtil::bitcount(imm) == 2 && imm % 2 == 1) {
-    auto midReg = new reg::VReg(ir::BasicType::I32);
-    irs.push_back(new RriMIR(RriMIR::SLLIW, midReg, vsrc,
+    auto midReg = new reg::Virtual(ir::BasicType::I32);
+    irs.push_back(new RRI(RRI::SLLIW, midReg, vsrc,
                              31 - MIROpUtil::leadingZeros(imm)));
-    irs.push_back(new RrrMIR(RrrMIR::ADDW, target, midReg, vsrc));
+    irs.push_back(new RRR(RRR::ADDW, target, midReg, vsrc));
     return;
   }
   if (MIROpUtil::trailingZeros(imm) == 0 &&
       MIROpUtil::leadingZeros(imm) + MIROpUtil::bitcount(imm) == 32) {
-    auto midReg = new reg::VReg(ir::BasicType::I32);
-    irs.push_back(new RriMIR(RriMIR::SLLIW, midReg, vsrc,
+    auto midReg = new reg::Virtual(ir::BasicType::I32);
+    irs.push_back(new RRI(RRI::SLLIW, midReg, vsrc,
                              32 - MIROpUtil::leadingZeros(imm)));
-    irs.push_back(new RrrMIR(RrrMIR::SUBW, target, midReg, vsrc));
+    irs.push_back(new RRR(RRR::SUBW, target, midReg, vsrc));
     return;
   }
-  auto midReg = new reg::VReg(ir::BasicType::I32);
+  auto midReg = new reg::Virtual(ir::BasicType::I32);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transMulRegRegI(irs, target, vsrc, midReg);
 }
 
 void MIRBinTranslator::transSubImmRegF(std::vector<MIR *> &irs,
-                                       reg::VReg *target, float imm,
-                                       reg::VReg *vsrc) {
-  auto midReg = new reg::VReg(ir::BasicType::FLOAT);
+                                       reg::Virtual *target, float imm,
+                                       reg::Virtual *vsrc) {
+  auto midReg = new reg::Virtual(ir::BasicType::FLOAT);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transSubRegRegF(irs, target, midReg, vsrc);
 }
 
 void MIRBinTranslator::transSubImmRegI(std::vector<MIR *> &irs,
-                                       reg::VReg *target, int imm,
-                                       reg::VReg *vsrc) {
-  auto midReg = new reg::VReg(ir::BasicType::I32);
+                                       reg::Virtual *target, int imm,
+                                       reg::Virtual *vsrc) {
+  auto midReg = new reg::Virtual(ir::BasicType::I32);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transSubRegRegI(irs, target, midReg, vsrc);
 }
 
 void MIRBinTranslator::transSubRegImmF(std::vector<MIR *> &irs,
-                                       reg::VReg *target, reg::VReg *vsrc,
+                                       reg::Virtual *target, reg::Virtual *vsrc,
                                        float imm) {
-  auto midReg = new reg::VReg(ir::BasicType::FLOAT);
+  auto midReg = new reg::Virtual(ir::BasicType::FLOAT);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transSubRegRegF(irs, target, vsrc, midReg);
 }
 
 void MIRBinTranslator::transSubRegImmI(std::vector<MIR *> &irs,
-                                       reg::VReg *target, reg::VReg *vsrc,
+                                       reg::Virtual *target, reg::Virtual *vsrc,
                                        int imm) {
   // TODO check here
   if (-imm >= -2048 && -imm < 2048) {
-    irs.push_back(new RriMIR(RriMIR::ADDI, target, vsrc, -imm));
+    irs.push_back(new RRI(RRI::ADDI, target, vsrc, -imm));
     return;
   }
-  auto midReg = new reg::VReg(ir::BasicType::I32);
+  auto midReg = new reg::Virtual(ir::BasicType::I32);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transSubRegRegI(irs, target, vsrc, midReg);
 }
 
 void MIRBinTranslator::transAddRegImmI(std::vector<MIR *> &irs,
-                                       reg::VReg *target, reg::VReg *vsrc,
+                                       reg::Virtual *target, reg::Virtual *vsrc,
                                        int imm) {
   if (imm >= -2048 && imm < 2048) {
-    irs.push_back(new RriMIR(RriMIR::ADDI, target, vsrc, imm));
+    irs.push_back(new RRI(RRI::ADDI, target, vsrc, imm));
     return;
   }
-  auto midReg = new reg::VReg(ir::BasicType::I32);
+  auto midReg = new reg::Virtual(ir::BasicType::I32);
   MIROpUtil::loadImmToReg(irs, midReg, imm);
   transAddRegRegI(irs, target, vsrc, midReg);
 }
 
 void MIRBinTranslator::transBinImmReg(
     std::vector<MIR *> &irs,
-    const std::unordered_map<ir::Instruction *, reg::VReg *> &instRegMap,
-    ir::BinaryOperator *binOp, ir::ConstantNumber *value, reg::VReg *reg) {
+    const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
+    ir::BinaryOperator *binOp, ir::ConstantNumber *value, reg::Virtual *reg) {
   auto target = instRegMap.at(binOp);
   switch (binOp->op) {
   case ir::BinaryOperator::ADD:
@@ -264,8 +264,8 @@ void MIRBinTranslator::transBinImmReg(
 
 void MIRBinTranslator::transBinRegImm(
     std::vector<MIR *> &irs,
-    const std::unordered_map<ir::Instruction *, reg::VReg *> &instRegMap,
-    ir::BinaryOperator *binOp, reg::VReg *reg, ir::ConstantNumber *value) {
+    const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
+    ir::BinaryOperator *binOp, reg::Virtual *reg, ir::ConstantNumber *value) {
   auto target = instRegMap.at(binOp);
   switch (binOp->op) {
   case ir::BinaryOperator::ADD:
@@ -296,17 +296,17 @@ void MIRBinTranslator::transBinRegImm(
     transSubRegImmF(irs, target, reg, value->floatValue());
     break;
   case ir::BinaryOperator::XOR:
-    auto const midReg = new reg::VReg(ir::BasicType::I32);
+    auto const midReg = new reg::Virtual(ir::BasicType::I32);
     MIROpUtil::loadImmToReg(irs, midReg, value->intValue());
-    irs.push_back(new RrrMIR(RrrMIR::XOR, target, reg, midReg));
+    irs.push_back(new RRR(RRR::XOR, target, reg, midReg));
     break;
   }
 }
 
 void MIRBinTranslator::transBinRegReg(
     std::vector<MIR *> &irs,
-    const std::unordered_map<ir::Instruction *, reg::VReg *> &instRegMap,
-    ir::BinaryOperator *binOp, reg::VReg *reg1, reg::VReg *reg2) {
+    const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
+    ir::BinaryOperator *binOp, reg::Virtual *reg1, reg::Virtual *reg2) {
   auto const target = instRegMap.at(binOp);
   switch (binOp->op) {
   case ir::BinaryOperator::ADD:
@@ -344,21 +344,21 @@ void MIRBinTranslator::transBinRegReg(
 
 void MIROpTranslator::transBranch(
     std::vector<MIR *> &irs,
-    std::unordered_map<ir::Instruction *, reg::VReg *> const &instRegMap,
+    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
     ir::BranchInst *branchInst) {
   if (!branchInst->isConditional()) {
     auto const dest = branchInst->getOperand<ir::BasicBlock>(0);
-    irs.push_back(new BMIR(BMIR::NUL, nullptr, nullptr, dest));
+    irs.push_back(new Branch(Branch::NUL, nullptr, nullptr, dest));
     return;
   }
   auto const cond = branchInst->getOperand<ir::Value>(0);
   auto const trueBlock = branchInst->getOperand<ir::BasicBlock>(1);
   auto const falseBlock = branchInst->getOperand<ir::BasicBlock>(2);
-  reg::VReg *reg;
+  reg::Virtual *reg;
   if (auto const ir = dynamic_cast<ir::Instruction *>(cond)) {
     reg = instRegMap.at(ir);
   } else if (auto const value = dynamic_cast<ir::ConstantNumber *>(cond)) {
-    auto const midReg = new reg::VReg(value->getType());
+    auto const midReg = new reg::Virtual(value->getType());
     if (value->getType() == ir::BasicType::FLOAT) {
       MIROpUtil::loadImmToReg(irs, midReg, value->floatValue());
     } else {
@@ -369,38 +369,38 @@ void MIROpTranslator::transBranch(
     throw std::runtime_error(
         "unsupported branch condition in MIROpTranslator::transBranch");
   }
-  irs.push_back(new BMIR(BMIR::NE, reg, reg::MReg::ZERO, trueBlock));
-  irs.push_back(new BMIR(BMIR::NUL, nullptr, nullptr, falseBlock));
+  irs.push_back(new Branch(Branch::NE, reg, reg::Machine::ZERO, trueBlock));
+  irs.push_back(new Branch(Branch::NUL, nullptr, nullptr, falseBlock));
 }
 
 void MIROpTranslator::transBin(
     std::vector<MIR *> &irs,
-    std::unordered_map<ir::Instruction *, reg::VReg *> const &instRegMap,
+    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
     std::unordered_map<ir::Argument *, std::pair<bool, int>> const &argOffsets,
     ir::BinaryOperator *binOp) {
   auto const operand1 = binOp->getOperand<ir::Value>(0);
   auto const operand2 = binOp->getOperand<ir::Value>(1);
-  reg::VReg *reg1 = nullptr;
+  reg::Virtual *reg1 = nullptr;
   if (auto const arg = dynamic_cast<ir::Argument *>(operand1)) {
-    auto const midReg = new reg::VReg(arg->getType() == ir::BasicType::FLOAT
+    auto const midReg = new reg::Virtual(arg->getType() == ir::BasicType::FLOAT
                                           ? ir::BasicType::FLOAT
                                           : ir::BasicType::I32);
-    irs.push_back(new LoadItemMIR(argOffsets.at(arg).first
-                                      ? LoadItemMIR::PARAM_INNER
-                                      : LoadItemMIR::PARAM_OUTER,
+    irs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                      ? LoadFrom::INNER_PARAM
+                                      : LoadFrom::OUTER_PARAM,
                                   midReg, argOffsets.at(arg).second));
     reg1 = midReg;
   } else if (auto const inst = dynamic_cast<ir::Instruction *>(operand1)) {
     reg1 = instRegMap.at(inst);
   }
-  reg::VReg *reg2 = nullptr;
+  reg::Virtual *reg2 = nullptr;
   if (auto const arg = dynamic_cast<ir::Argument *>(operand2)) {
-    auto const midReg = new reg::VReg(arg->getType() == ir::BasicType::FLOAT
+    auto const midReg = new reg::Virtual(arg->getType() == ir::BasicType::FLOAT
                                           ? ir::BasicType::FLOAT
                                           : ir::BasicType::I32);
-    irs.push_back(new LoadItemMIR(argOffsets.at(arg).first
-                                      ? LoadItemMIR::PARAM_INNER
-                                      : LoadItemMIR::PARAM_OUTER,
+    irs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                      ? LoadFrom::INNER_PARAM
+                                      : LoadFrom::OUTER_PARAM,
                                   midReg, argOffsets.at(arg).second));
     reg2 = midReg;
   } else if (auto const inst = dynamic_cast<ir::Instruction *>(operand2)) {
@@ -421,7 +421,7 @@ void MIROpTranslator::transBin(
     return;
   }
   if (value1 && value2) {
-    auto const midReg = new reg::VReg(value1->getType());
+    auto const midReg = new reg::Virtual(value1->getType());
     auto const type1 = value1->getType();
     if (type1 == ir::BasicType::I32) {
       MIROpUtil::loadImmToReg(irs, midReg, value1->intValue());
@@ -440,7 +440,7 @@ void MIROpTranslator::transBin(
 
 int MIROpTranslator::transCall(
     std::vector<MIR *> &irs,
-    std::unordered_map<ir::Instruction *, reg::VReg *> const &instRegMap,
+    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
     std::unordered_map<ir::Argument *, std::pair<bool, int>> const &argOffsets,
     ir::CallInst *callInst,
     std::unordered_map<ir::AllocaInst *, int> const &localOffsets) {
@@ -450,25 +450,25 @@ int MIROpTranslator::transCall(
   for (int i = 1; i < callInst->size(); i++) {
     auto const param = callInst->getOperand<ir::Value>(i);
     if (param->getType() == ir::BasicType::FLOAT) {
-      if (fSize < reg::MReg::F_CALLER_REGS.size()) {
+      if (fSize < reg::Machine::F_CALLER_REGS.size()) {
         if (auto const arg = dynamic_cast<ir::Argument *>(param)) {
-          saveCalleeIRs.push_back(new LoadItemMIR(
-              argOffsets.at(arg).first ? LoadItemMIR::PARAM_INNER
-                                       : LoadItemMIR::PARAM_OUTER,
-              reg::MReg::F_CALLER_REGS.at(fSize), argOffsets.at(arg).second));
+          saveCalleeIRs.push_back(new LoadFrom(
+              argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
+                                       : LoadFrom::OUTER_PARAM,
+              reg::Machine::F_CALLER_REGS.at(fSize), argOffsets.at(arg).second));
         } else if (auto const allocaInst =
                        dynamic_cast<ir::AllocaInst *>(param)) {
-          saveCalleeIRs.push_back(new RrMIR(RrMIR::MV,
-                                            reg::MReg::F_CALLER_REGS.at(fSize),
+          saveCalleeIRs.push_back(new RR(RR::MV,
+                                            reg::Machine::F_CALLER_REGS.at(fSize),
                                             instRegMap.at(allocaInst)));
         } else if (auto const inst = dynamic_cast<ir::Instruction *>(param)) {
-          saveCalleeIRs.push_back(new RrMIR(RrMIR::MV,
-                                            reg::MReg::F_CALLER_REGS.at(fSize),
+          saveCalleeIRs.push_back(new RR(RR::MV,
+                                            reg::Machine::F_CALLER_REGS.at(fSize),
                                             instRegMap.at(inst)));
         } else if (auto const value =
                        dynamic_cast<ir::ConstantNumber *>(param)) {
           MIROpUtil::loadImmToReg(saveCalleeIRs,
-                                  reg::MReg::F_CALLER_REGS.at(fSize),
+                                  reg::Machine::F_CALLER_REGS.at(fSize),
                                   value->floatValue());
         } else {
           throw std::runtime_error(
@@ -476,41 +476,41 @@ int MIROpTranslator::transCall(
         }
       } else {
         if (auto const arg = dynamic_cast<ir::Argument *>(param)) {
-          auto midReg = new reg::VReg(arg->getType());
-          irs.push_back(new LoadItemMIR(argOffsets.at(arg).first
-                                            ? LoadItemMIR::PARAM_INNER
-                                            : LoadItemMIR::PARAM_OUTER,
+          auto midReg = new reg::Virtual(arg->getType());
+          irs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                            ? LoadFrom::INNER_PARAM
+                                            : LoadFrom::OUTER_PARAM,
                                         midReg, argOffsets.at(arg).second));
-          irs.push_back(new StoreItemMIR(
-              StoreItemMIR::PARAM_CALL, midReg,
+          irs.push_back(new StoreTo(
+              StoreTo::CALL_PARAM, midReg,
               (std::max(iSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0) +
                std::max(fSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0)) *
                   8));
         } else if (auto const inst = dynamic_cast<ir::Instruction *>(param)) {
-          irs.push_back(new StoreItemMIR(
-              StoreItemMIR::PARAM_CALL, instRegMap.at(inst),
+          irs.push_back(new StoreTo(
+              StoreTo::CALL_PARAM, instRegMap.at(inst),
               (std::max(iSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0) +
                std::max(fSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0)) *
                   8));
         } else if (auto const value =
                        dynamic_cast<ir::ConstantNumber *>(param)) {
-          auto const midReg = new reg::VReg(ir::BasicType::I32);
+          auto const midReg = new reg::Virtual(ir::BasicType::I32);
           MIROpUtil::loadImmToReg(irs, midReg, value->floatValue());
-          irs.push_back(new StoreItemMIR(
-              StoreItemMIR::PARAM_CALL, midReg,
+          irs.push_back(new StoreTo(
+              StoreTo::CALL_PARAM, midReg,
               (std::max(iSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0) +
                std::max(fSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0)) *
                   8));
         } else {
@@ -520,34 +520,34 @@ int MIROpTranslator::transCall(
       }
       fSize++;
     } else {
-      if (iSize < reg::MReg::I_CALLER_REGS.size()) {
+      if (iSize < reg::Machine::I_CALLER_REGS.size()) {
         if (auto const global = dynamic_cast<ir::GlobalVariable *>(param)) {
           saveCalleeIRs.push_back(
-              new LlaMIR(reg::MReg::I_CALLER_REGS.at(iSize), global));
+              new LLA(reg::Machine::I_CALLER_REGS.at(iSize), global));
         } else if (auto const allocaInst =
                        dynamic_cast<ir::AllocaInst *>(param)) {
           if (dynamic_cast<ir::PointerType *>(allocaInst->getType())) {
             saveCalleeIRs.push_back(
-                new AddRegLocalMIR(reg::MReg::I_CALLER_REGS.at(iSize),
+                new RegAddImm(reg::Machine::I_CALLER_REGS.at(iSize),
                                    localOffsets.at(allocaInst)));
           } else {
             saveCalleeIRs.push_back(
-                new RrMIR(RrMIR::MV, reg::MReg::I_CALLER_REGS.at(iSize),
+                new RR(RR::MV, reg::Machine::I_CALLER_REGS.at(iSize),
                           instRegMap.at(allocaInst)));
           }
         } else if (auto const arg = dynamic_cast<ir::Argument *>(param)) {
-          saveCalleeIRs.push_back(new LoadItemMIR(
-              argOffsets.at(arg).first ? LoadItemMIR::PARAM_INNER
-                                       : LoadItemMIR::PARAM_OUTER,
-              reg::MReg::I_CALLER_REGS.at(iSize), argOffsets.at(arg).second));
+          saveCalleeIRs.push_back(new LoadFrom(
+              argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
+                                       : LoadFrom::OUTER_PARAM,
+              reg::Machine::I_CALLER_REGS.at(iSize), argOffsets.at(arg).second));
         } else if (auto const inst = dynamic_cast<ir::Instruction *>(param)) {
-          saveCalleeIRs.push_back(new RrMIR(RrMIR::MV,
-                                            reg::MReg::I_CALLER_REGS.at(iSize),
+          saveCalleeIRs.push_back(new RR(RR::MV,
+                                            reg::Machine::I_CALLER_REGS.at(iSize),
                                             instRegMap.at(inst)));
         } else if (auto const value =
                        dynamic_cast<ir::ConstantNumber *>(param)) {
           MIROpUtil::loadImmToReg(saveCalleeIRs,
-                                  reg::MReg::I_CALLER_REGS.at(iSize),
+                                  reg::Machine::I_CALLER_REGS.at(iSize),
                                   value->intValue());
         } else {
           throw std::runtime_error(
@@ -555,54 +555,54 @@ int MIROpTranslator::transCall(
         }
       } else {
         if (auto const allocaInst = dynamic_cast<ir::AllocaInst *>(param)) {
-          auto const midReg = new reg::VReg(ir::BasicType::I32);
+          auto const midReg = new reg::Virtual(ir::BasicType::I32);
           irs.push_back(
-              new AddRegLocalMIR(midReg, localOffsets.at(allocaInst)));
-          irs.push_back(new StoreItemMIR(
-              StoreItemMIR::PARAM_CALL, midReg,
+              new RegAddImm(midReg, localOffsets.at(allocaInst)));
+          irs.push_back(new StoreTo(
+              StoreTo::CALL_PARAM, midReg,
               (std::max(iSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0) +
                std::max(fSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0)) *
                   8));
         } else if (auto const arg = dynamic_cast<ir::Argument *>(param)) {
-          auto const midReg = new reg::VReg(arg->getType());
-          irs.push_back(new LoadItemMIR(argOffsets.at(arg).first
-                                            ? LoadItemMIR::PARAM_INNER
-                                            : LoadItemMIR::PARAM_OUTER,
+          auto const midReg = new reg::Virtual(arg->getType());
+          irs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                            ? LoadFrom::INNER_PARAM
+                                            : LoadFrom::OUTER_PARAM,
                                         midReg, argOffsets.at(arg).second));
-          irs.push_back(new StoreItemMIR(
-              StoreItemMIR::PARAM_CALL, midReg,
+          irs.push_back(new StoreTo(
+              StoreTo::CALL_PARAM, midReg,
               (std::max(iSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0) +
                std::max(fSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0)) *
                   8));
         } else if (auto const inst = dynamic_cast<ir::Instruction *>(param)) {
-          irs.push_back(new StoreItemMIR(
-              StoreItemMIR::PARAM_CALL, instRegMap.at(inst),
+          irs.push_back(new StoreTo(
+              StoreTo::CALL_PARAM, instRegMap.at(inst),
               (std::max(iSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0) +
                std::max(fSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0)) *
                   8));
         } else if (auto const value =
                        dynamic_cast<ir::ConstantNumber *>(param)) {
-          auto const midReg = new reg::VReg(ir::BasicType::I32);
+          auto const midReg = new reg::Virtual(ir::BasicType::I32);
           MIROpUtil::loadImmToReg(irs, midReg, value->intValue());
-          irs.push_back(new StoreItemMIR(
-              StoreItemMIR::PARAM_CALL, midReg,
+          irs.push_back(new StoreTo(
+              StoreTo::CALL_PARAM, midReg,
               (std::max(iSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0) +
                std::max(fSize -
-                            static_cast<int>(reg::MReg::I_CALLER_REGS.size()),
+                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
                         0)) *
                   8));
         } else {
@@ -614,20 +614,20 @@ int MIROpTranslator::transCall(
     }
   }
   irs.insert(irs.end(), saveCalleeIRs.begin(), saveCalleeIRs.end());
-  irs.push_back(new CallMIR(func));
+  irs.push_back(new Call(func));
   if (callInst->getType() != ir::BasicType::VOID) {
     auto const target = instRegMap.at(callInst);
     auto const instType = callInst->getType();
     reg::Reg *reg;
     if (instType == ir::BasicType::I32) {
-      reg = reg::MReg::A0;
+      reg = reg::Machine::A0;
     } else if (instType == ir::BasicType::FLOAT) {
-      reg = reg::MReg::FA0;
+      reg = reg::Machine::FA0;
     } else {
       throw std::runtime_error(
           "unsupported return type in MIROpTranslator::transCall");
     }
-    irs.push_back(new RrMIR(RrMIR::MV, target, reg));
+    irs.push_back(new RR(RR::MV, target, reg));
   }
   return static_cast<int>(callInst->size()) - 1;
 }

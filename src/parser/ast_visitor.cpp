@@ -6,43 +6,43 @@ void ASTVisitor::initBuiltInFuncs() {
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::I32, "getint"));
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::I32, "getch"));
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::I32, "getarray")
-                           ->addArg(new ir::Argument(
+                           ->pushArg(new ir::Argument(
                                new ir::PointerType(ir::BasicType::I32), "a")));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::FLOAT, "getfloat"));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::I32, "getfarray")
-          ->addArg(new ir::Argument(new ir::PointerType(ir::BasicType::FLOAT),
+          ->pushArg(new ir::Argument(new ir::PointerType(ir::BasicType::FLOAT),
                                     "a")));
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::VOID, "putint")
-                           ->addArg(new ir::Argument(ir::BasicType::I32, "a")));
+                           ->pushArg(new ir::Argument(ir::BasicType::I32, "a")));
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::VOID, "putch")
-                           ->addArg(new ir::Argument(ir::BasicType::I32, "a")));
+                           ->pushArg(new ir::Argument(ir::BasicType::I32, "a")));
   _module->addFunction(_symbolTable->makeFunc(ir::BasicType::VOID, "putarray")
-                           ->addArg(new ir::Argument(ir::BasicType::I32, "n"))
-                           ->addArg(new ir::Argument(ir::BasicType::I32, "a")));
+                           ->pushArg(new ir::Argument(ir::BasicType::I32, "n"))
+                           ->pushArg(new ir::Argument(ir::BasicType::I32, "a")));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::VOID, "putfloat")
-          ->addArg(new ir::Argument(ir::BasicType::FLOAT, "a")));
+          ->pushArg(new ir::Argument(ir::BasicType::FLOAT, "a")));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::VOID, "putfarray")
-          ->addArg(new ir::Argument(ir::BasicType::I32, "n"))
-          ->addArg(new ir::Argument(ir::BasicType::FLOAT, "a")));
+          ->pushArg(new ir::Argument(ir::BasicType::I32, "n"))
+          ->pushArg(new ir::Argument(ir::BasicType::FLOAT, "a")));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::VOID, "_sysy_starttime")
-          ->addArg(new ir::Argument(ir::BasicType::I32, "lineno")));
+          ->pushArg(new ir::Argument(ir::BasicType::I32, "lineno")));
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::VOID, "_sysy_stoptime")
-          ->addArg(new ir::Argument(ir::BasicType::I32, "lineno")));
+          ->pushArg(new ir::Argument(ir::BasicType::I32, "lineno")));
 }
 
 void ASTVisitor::initSysCalls() {
   _module->addFunction(
       _symbolTable->makeFunc(ir::BasicType::VOID, "memset")
-          ->addArg(
+          ->pushArg(
               new ir::Argument(new ir::PointerType(ir::BasicType::I32), "addr"))
-          ->addArg(new ir::Argument(ir::BasicType::I32, "value"))
-          ->addArg(new ir::Argument(ir::BasicType::I32, "size")));
+          ->pushArg(new ir::Argument(ir::BasicType::I32, "value"))
+          ->pushArg(new ir::Argument(ir::BasicType::I32, "size")));
 }
 
 void ASTVisitor::checkIfIsProcessed() {
@@ -116,7 +116,7 @@ void ASTVisitor::processValueCond(ir::Value *value) {
       cond = inst;
     } else {
       throw std::runtime_error("Unsupported type: " +
-                               value->getType()->toString());
+                               value->getType()->str());
     }
     _curBlock->add(new ir::BranchInst(_curBlock, cond, this->_trueBlock,
                                       this->_falseBlock));
@@ -143,7 +143,7 @@ ir::Value *ASTVisitor::typeConversion(ir::Value *value,
     else if (targetType == ir::BasicType::FLOAT)
       return new ir::ConstantNumber(model::Number(constant->floatValue()));
     else
-      throw std::runtime_error("Unsupported type: " + targetType->toString());
+      throw std::runtime_error("Unsupported type: " + targetType->str());
   }
   if (targetType == ir::BasicType::I1) {
     if (value->getType() == ir::BasicType::I32) {
@@ -308,7 +308,7 @@ std::any ASTVisitor::visitFuncDef(SysYParser::FuncDefContext *ctx) {
       _symbolTable->makeFunc(funcType, ctx->Ident()->getSymbol()->getText());
   _symbolTable->in();
   _entryBlock = new ir::BasicBlock(_curFunc);
-  _curFunc->add(_entryBlock);
+  _curFunc->pushBlock(_entryBlock);
   _retBlock = new ir::BasicBlock(_curFunc);
   if (_curFunc->getType() == ir::BasicType::I32 ||
       _curFunc->getType() == ir::BasicType::FLOAT) {
@@ -323,13 +323,13 @@ std::any ASTVisitor::visitFuncDef(SysYParser::FuncDefContext *ctx) {
     _retBlock->add(new ir::RetInst(_retBlock));
   } else
     throw std::runtime_error("Unsupported type: " +
-                             _curFunc->getType()->toString());
+                             _curFunc->getType()->str());
   _curBlock = new ir::BasicBlock(_curFunc);
-  _curFunc->add(_curBlock);
+  _curFunc->pushBlock(_curBlock);
   for (auto argCtx : ctx->funcArg()) {
     auto arg = dynamic_cast<ir::Argument *>(
         std::any_cast<ir::Value *>(visitFuncArg(argCtx)));
-    _curFunc->addArg(arg);
+    _curFunc->pushArg(arg);
     auto allocaInst =
         _symbolTable->makeLocal(_entryBlock, arg->getType(), arg->getName());
     _entryBlock->add(allocaInst);
@@ -345,12 +345,12 @@ std::any ASTVisitor::visitFuncDef(SysYParser::FuncDefContext *ctx) {
       retVal = new ir::ConstantNumber(model::Number(0.0f));
     else
       throw std::runtime_error("Unsupported type: " +
-                               _curFunc->getType()->toString());
+                               _curFunc->getType()->str());
 
     _entryBlock->add(new ir::StoreInst(_entryBlock, retVal, _curRetVal));
   }
   _entryBlock->add(new ir::BranchInst(_entryBlock, _curFunc->get(1)));
-  _curFunc->add(_retBlock);
+  _curFunc->pushBlock(_retBlock);
   _module->addFunction(_curFunc);
   _symbolTable->out();
   return std::make_any<ir::Value *>(nullptr);
@@ -553,7 +553,7 @@ ASTVisitor::visitMultiplicativeExp(SysYParser::MultiplicativeExpContext *ctx) {
       } else if (targetType == ir::BasicType::FLOAT) {
         tmp = ir::BinaryOperator::FMUL;
       } else {
-        throw std::runtime_error("Invalid type" + targetType->toString());
+        throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else if (txt == "/") {
       if (targetType == ir::BasicType::I32) {
@@ -561,7 +561,7 @@ ASTVisitor::visitMultiplicativeExp(SysYParser::MultiplicativeExpContext *ctx) {
       } else if (targetType == ir::BasicType::FLOAT) {
         tmp = ir::BinaryOperator::FDIV;
       } else {
-        throw std::runtime_error("Invalid type" + targetType->toString());
+        throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else if (txt == "%") {
       tmp = ir::BinaryOperator::SREM;
@@ -606,7 +606,7 @@ std::any ASTVisitor::visitAdditiveExp(SysYParser::AdditiveExpContext *ctx) {
       } else if (targetType == ir::BasicType::FLOAT) {
         op = ir::BinaryOperator::FADD;
       } else {
-        throw std::runtime_error("Invalid type" + targetType->toString());
+        throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else if (txt == "-") {
       if (targetType == ir::BasicType::I32) {
@@ -614,7 +614,7 @@ std::any ASTVisitor::visitAdditiveExp(SysYParser::AdditiveExpContext *ctx) {
       } else if (targetType == ir::BasicType::FLOAT) {
         op = ir::BinaryOperator::FSUB;
       } else {
-        throw std::runtime_error("Invalid type" + targetType->toString());
+        throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else {
       throw std::runtime_error("Invalid operation: " +
@@ -646,7 +646,7 @@ std::any ASTVisitor::visitRelationalExp(SysYParser::RelationalExpContext *ctx) {
       } else if (targetType == ir::BasicType::FLOAT) {
         inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::OLT, iterVal, nextVal);
       } else {
-        throw std::runtime_error("Invalid type" + targetType->toString());
+        throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else if (txt == ">") {
       if (targetType == ir::BasicType::I32) {
@@ -654,7 +654,7 @@ std::any ASTVisitor::visitRelationalExp(SysYParser::RelationalExpContext *ctx) {
       } else if (targetType == ir::BasicType::FLOAT) {
         inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::OGT, iterVal, nextVal);
       } else {
-        throw std::runtime_error("Invalid type" + targetType->toString());
+        throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else if (txt == "<=") {
       if (targetType == ir::BasicType::I32) {
@@ -662,7 +662,7 @@ std::any ASTVisitor::visitRelationalExp(SysYParser::RelationalExpContext *ctx) {
       } else if (targetType == ir::BasicType::FLOAT) {
         inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::OLE, iterVal, nextVal);
       } else {
-        throw std::runtime_error("Invalid type" + targetType->toString());
+        throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else if (txt == ">=") {
       if (targetType == ir::BasicType::I32) {
@@ -670,7 +670,7 @@ std::any ASTVisitor::visitRelationalExp(SysYParser::RelationalExpContext *ctx) {
       } else if (targetType == ir::BasicType::FLOAT) {
         inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::OGE, iterVal, nextVal);
       } else {
-        throw std::runtime_error("Invalid type" + targetType->toString());
+        throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else {
       throw std::runtime_error("Invalid operation: " +
@@ -700,7 +700,7 @@ std::any ASTVisitor::visitEqualityExp(SysYParser::EqualityExpContext *ctx) {
       } else if (targetType == ir::BasicType::FLOAT) {
         inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::OEQ, iterVal, nextVal);
       } else {
-        throw std::runtime_error("Invalid type" + targetType->toString());
+        throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else if (txt == "!=") {
       if (targetType == ir::BasicType::I32) {
@@ -708,7 +708,7 @@ std::any ASTVisitor::visitEqualityExp(SysYParser::EqualityExpContext *ctx) {
       } else if (targetType == ir::BasicType::FLOAT) {
         inst = new ir::FCmpInst(_curBlock, ir::FCmpInst::UNE, iterVal, nextVal);
       } else {
-        throw std::runtime_error("Invalid type" + targetType->toString());
+        throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else {
       throw std::runtime_error("Invalid operation: " +

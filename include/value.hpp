@@ -51,11 +51,12 @@ public:
   explicit User(Type *type);
   ~User() override = default; // TODO: Implement destructor
   size_t size() const;
-  void add(Use *use);
-  void add(int index, Use *use);
-  Use *remove(int index);
-  Use *remove(const Value *value);
+  void insert(Use *use);
+  void insert(int index, Use *use);
+  Use *erase(int index);
+  Use *erase(const Value *value);
   Use *get(int index) const;
+  void set(int index, Use *use);
 
   template <typename T, std::enable_if_t<
               std::is_base_of_v<Value, T>> * = nullptr>
@@ -69,8 +70,7 @@ public:
     return getOperand<T>(size() - 1);
   }
 
-  bool isEmpty() const;
-  void set(int index, Use *use);
+  bool empty() const;
 };
 
 } // namespace ir
