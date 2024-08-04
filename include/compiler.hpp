@@ -10,6 +10,7 @@
 class Compiler {
 private:
   static ir::Module *_module;
+  static std::unordered_set<ir::GlobalVariable *> _globals;
   static std::unordered_map<std::string, mir::MachineFunction *> _funcs;
 
 public:
@@ -20,28 +21,10 @@ public:
   static void compile();
   static void emitLLVM();
   static void emitMIR();
+  static void emitAssemble();
+  static void writeGlobals();
+  static void writeFuncs();
   static void setModule(ir::Module *module) { _module = module; }
-};
-
-class CodeGenerator {
-private:
-  std::unordered_set<ir::GlobalVariable *> _globals;
-  std::unordered_map<std::string, mir::MachineFunction *> _funcs;
-
-  void buildGlobals(std::ostringstream &builder) const;
-  void buildFuncs(std::ostringstream &builder) const;
-
-public:
-  CodeGenerator(std::unordered_set<ir::GlobalVariable *> globals,
-                std::unordered_map<std::string, mir::MachineFunction *> funcs)
-      : _globals(std::move(globals)), _funcs(std::move(funcs)) {}
-
-  std::string getOutPut() const {
-    std::ostringstream builder;
-    buildGlobals(builder);
-    buildFuncs(builder);
-    return std::move(builder.str());
-  }
 };
 
 #endif // COMPILER_HPP

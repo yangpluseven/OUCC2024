@@ -15,6 +15,7 @@ std::unordered_map<std::string, std::string> Compiler::optionValues{
 
 ir::Module *Compiler::_module;
 std::unordered_map<std::string, mir::MachineFunction *> Compiler::_funcs;
+std::unordered_set<ir::GlobalVariable *> Compiler::_globals;
 
 void Compiler::compile() {
   const std::string filePath = optionValues[""];
@@ -41,7 +42,7 @@ void Compiler::compile() {
     return;
   }
   mir::Generator mirGenerator(_module);
-  std::unordered_set<ir::GlobalVariable *> globals = mirGenerator.getGlobals();
+  _globals = mirGenerator.getGlobals();
   _funcs = mirGenerator.getFuncs();
   if (optionValues["-emit-mir"] == "1") {
     emitMIR();
@@ -53,15 +54,7 @@ void Compiler::compile() {
   if (optionValues["-S"] == "1") {
     reg::ModuleRegAlloc regAlloc(_funcs);
     regAlloc.allocate();
-    CodeGenerator codeGenerator(std::move(globals), std::move(_funcs));
-    std::string output = codeGenerator.getOutPut();
-    const std::string filename = optionValues["-o"];
-    std::ofstream writer(filename);
-    writer << output;
-    writer.close();
-    if (writer.fail()) {
-      throw std::runtime_error("Cannot write to file: " + filename);
-    }
+    emitAssemble();
   }
 }
 
@@ -115,15 +108,23 @@ void Compiler::emitMIR() {
   }
 }
 
-void CodeGenerator::buildFuncs(std::ostringstream &builder) const {
-  builder << "\t.text\n";
+void Compiler::emitAssemble() {
+  writeGlobals();
+  writeFuncs();
+}
+
+
+void Compiler::writeFuncs() {
+  const std::string filename = optionValues["-o"];
+  std::ofstream writer(filename, std::ios::app);
+  writer << "\t.text\n";
   for (const auto &[key, func] : _funcs) {
-    builder << "\t.align 8\n";
-    builder << "\t.global " << func->getRawName() << '\n';
-    builder << func->getRawName() << ":\n";
+    writer << "\t.align 8\n";
+    writer << "\t.global " << func->getRawName() << '\n';
+    writer << func->getRawName() << ":\n";
     for (const auto ir : func->getIRs()) {
       if (!dynamic_cast<const mir::Label *>(ir)) {
-        builder << '\t';
+        writer << '\t';
       }
       std::string irStr = ir->str();
       size_t pos = 0;
@@ -131,15 +132,23 @@ void CodeGenerator::buildFuncs(std::ostringstream &builder) const {
         irStr.insert(pos + 1, "\t");
         pos += 2;
       }
-      builder << irStr << '\n';
+      writer << irStr << '\n';
     }
-    builder << "\tret\n";
+    writer << "\tret\n";
+  }
+  writer.close();
+  if (writer.fail()) {
+    throw std::runtime_error("Cannot write to file: " + filename);
   }
 }
 
-void CodeGenerator::buildGlobals(std::ostringstream &builder) const {
+
+
+void Compiler::writeGlobals() {
   std::vector<ir::GlobalVariable *> symbolsInData;
   std::vector<ir::GlobalVariable *> symbolsInBss;
+  const std::string filename = optionValues["-o"];
+  std::ofstream writer(filename);
   for (const auto &global : _globals) {
     if (!global->isSingle() && global->isInBss()) {
       symbolsInBss.push_back(global);
@@ -148,28 +157,28 @@ void CodeGenerator::buildGlobals(std::ostringstream &builder) const {
     }
   }
   if (!symbolsInBss.empty()) {
-    builder << "\t.bss\n";
+    writer << "\t.bss\n";
   }
   for (const auto &global : symbolsInBss) {
     const int size = static_cast<int>(global->getSize() / 8);
-    builder << "\t.align 8\n";
-    builder << "\t.size " << global->getRawName() << ", "
-            << std::to_string(size) << '\n';
-    builder << global->getRawName() << ":\n";
-    builder << "\t.space " << std::to_string(size) << '\n';
+    writer << "\t.align 8\n";
+    writer << "\t.size " << global->getRawName() << ", " << std::to_string(size)
+           << '\n';
+    writer << global->getRawName() << ":\n";
+    writer << "\t.space " << std::to_string(size) << '\n';
   }
   if (!symbolsInData.empty()) {
-    builder << "\t.data\n";
+    writer << "\t.data\n";
   }
   for (const auto &global : symbolsInData) {
     const int size = static_cast<int>(global->getSize()) / 8;
-    builder << "\t.align 8\n";
-    builder << "\t.size " << global->getRawName() << ", "
-            << std::to_string(size) << '\n';
-    builder << global->getRawName() << ":\n";
+    writer << "\t.align 8\n";
+    writer << "\t.size " << global->getRawName() << ", " << std::to_string(size)
+           << '\n';
+    writer << global->getRawName() << ":\n";
     const int num = size / 4;
     if (global->isSingle()) {
-      builder << "\t.word ";
+      writer << "\t.word ";
       std::string value;
       const auto type = global->getType();
       if (type == ir::BasicType::FLOAT) {
@@ -181,14 +190,14 @@ void CodeGenerator::buildGlobals(std::ostringstream &builder) const {
         throw std::runtime_error(
             "Unsupported type in CodeGenerator::buildGlobals");
       }
-      builder << value << '\n';
+      writer << value << '\n';
     } else {
       auto type = global->getType();
       while (auto arrayType = dynamic_cast<const ir::ArrayType *>(type)) {
         type = arrayType->baseType();
       }
       for (int i = 0; i < num; i++) {
-        builder << "\t.word ";
+        writer << "\t.word ";
         std::string value;
         if (type == ir::BasicType::FLOAT) {
           float f = global->getFloat(i);
@@ -199,9 +208,13 @@ void CodeGenerator::buildGlobals(std::ostringstream &builder) const {
           throw std::runtime_error(
               "Unsupported type in CodeGenerator::buildGlobals");
         }
-        builder << value << '\n';
+        writer << value << '\n';
       }
     }
+  }
+  writer.close();
+  if (writer.fail()) {
+    throw std::runtime_error("Cannot write to file: " + filename);
   }
 }
 
@@ -211,8 +224,10 @@ void test() {
   auto *block0 = new ir::BasicBlock(func);
   auto *block1 = new ir::BasicBlock(func);
   ir::Instruction *alloca0 = new ir::AllocaInst(block0, ir::BasicType::I32);
-  ir::Instruction *store0 = new ir::StoreInst(block0, new ir::ConstantNumber(model::Number(0)), alloca0);
-  ir::Instruction *sotre1 = new ir::StoreInst(block0, new ir::ConstantNumber(model::Number(10)), alloca0);
+  ir::Instruction *store0 = new ir::StoreInst(
+      block0, new ir::ConstantNumber(model::Number(0)), alloca0);
+  ir::Instruction *sotre1 = new ir::StoreInst(
+      block0, new ir::ConstantNumber(model::Number(10)), alloca0);
   ir::Instruction *branch0 = new ir::BranchInst(block0, block1);
   block0->add(alloca0);
   block0->add(store0);
