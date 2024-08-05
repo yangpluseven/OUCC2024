@@ -288,7 +288,7 @@ std::any ASTVisitor::visitArrayVarDef(SysYParser::ArrayVarDefContext *ctx) {
         for (auto k = j + 1; k < dimensions.size(); k++)
           num *= dimensions[k];
         int index = entry.first / num % dimensions[j];
-        auto inst = new ir::GetElementPtrInst(
+        auto inst = new ir::GetPtrInst(
             _curBlock, ptr,
             {new ir::ConstantNumber(model::Number(0)),
              new ir::ConstantNumber(model::Number(index))});
@@ -546,31 +546,31 @@ ASTVisitor::visitMultiplicativeExp(SysYParser::MultiplicativeExpContext *ctx) {
       }
       continue;
     }
-    ir::Binary::Op tmp;
+    ir::BinaryInst::Op tmp;
     if (txt == "*") {
       if (targetType == ir::BasicType::I32) {
-        tmp = ir::Binary::MUL;
+        tmp = ir::BinaryInst::MUL;
       } else if (targetType == ir::BasicType::FLOAT) {
-        tmp = ir::Binary::FMUL;
+        tmp = ir::BinaryInst::FMUL;
       } else {
         throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else if (txt == "/") {
       if (targetType == ir::BasicType::I32) {
-        tmp = ir::Binary::SDIV;
+        tmp = ir::BinaryInst::SDIV;
       } else if (targetType == ir::BasicType::FLOAT) {
-        tmp = ir::Binary::FDIV;
+        tmp = ir::BinaryInst::FDIV;
       } else {
         throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else if (txt == "%") {
-      tmp = ir::Binary::SREM;
+      tmp = ir::BinaryInst::SREM;
     } else {
       throw std::runtime_error("Invalid operation: " +
                                ctx->children[1]->getText());
     }
     ir::Instruction *inst =
-        new ir::Binary(_curBlock, tmp, iterVal, nextVal);
+        new ir::BinaryInst(_curBlock, tmp, iterVal, nextVal);
     _curBlock->insert(inst);
     iterVal = inst;
   }
@@ -599,20 +599,20 @@ std::any ASTVisitor::visitAdditiveExp(SysYParser::AdditiveExpContext *ctx) {
         throw std::runtime_error("Invalid operation: " + txt);
       continue;
     }
-    ir::Binary::Op op;
+    ir::BinaryInst::Op op;
     if (txt == "+") {
       if (targetType == ir::BasicType::I32) {
-        op = ir::Binary::ADD;
+        op = ir::BinaryInst::ADD;
       } else if (targetType == ir::BasicType::FLOAT) {
-        op = ir::Binary::FADD;
+        op = ir::BinaryInst::FADD;
       } else {
         throw std::runtime_error("Invalid type" + targetType->str());
       }
     } else if (txt == "-") {
       if (targetType == ir::BasicType::I32) {
-        op = ir::Binary::SUB;
+        op = ir::BinaryInst::SUB;
       } else if (targetType == ir::BasicType::FLOAT) {
-        op = ir::Binary::FSUB;
+        op = ir::BinaryInst::FSUB;
       } else {
         throw std::runtime_error("Invalid type" + targetType->str());
       }
@@ -620,7 +620,7 @@ std::any ASTVisitor::visitAdditiveExp(SysYParser::AdditiveExpContext *ctx) {
       throw std::runtime_error("Invalid operation: " +
                                ctx->children[1]->getText());
     }
-    auto inst = new ir::Binary(_curBlock, op, iterVal, nextVal);
+    auto inst = new ir::BinaryInst(_curBlock, op, iterVal, nextVal);
 
     _curBlock->insert(inst);
     iterVal = inst;
@@ -830,8 +830,8 @@ std::any ASTVisitor::visitArrayVarExp(SysYParser::ArrayVarExpContext *ctx) {
     auto index = std::any_cast<ir::Value *>(ASTVisitor::visitAdditiveExp(dim));
     index = typeConversion(index, ir::BasicType::I32);
     ir::Instruction *inst =
-        isFirstDim ? new ir::GetElementPtrInst(_curBlock, ptr, {index})
-                   : new ir::GetElementPtrInst(
+        isFirstDim ? new ir::GetPtrInst(_curBlock, ptr, {index})
+                   : new ir::GetPtrInst(
                          _curBlock, ptr,
                          {new ir::ConstantNumber(model::Number(0)), index});
     _curBlock->insert(inst);
@@ -861,7 +861,7 @@ std::any ASTVisitor::visitScalarVarExp(SysYParser::ScalarVarExpContext *ctx) {
   if (auto arr = dynamic_cast<ir::ArrayType *>(type->baseType())) {
     std::vector<ir::Value *> indices(arr->getArraySizes().size(),
                                      new ir::ConstantNumber(model::Number(0)));
-    ir::Instruction *inst = new ir::GetElementPtrInst(_curBlock, ptr, indices);
+    ir::Instruction *inst = new ir::GetPtrInst(_curBlock, ptr, indices);
     _curBlock->insert(inst);
     return std::make_any<ir::Value *>(inst);
   }
@@ -897,12 +897,12 @@ std::any ASTVisitor::visitUnaryExp(SysYParser::UnaryExpContext *ctx) {
       if (t == ir::BasicType::I1) {
         inst = new ir::SExtInst(_curBlock, ir::BasicType::I32, value);
       } else if (t == ir::BasicType::I32) {
-        inst = new ir::Binary(_curBlock, ir::Binary::SUB,
+        inst = new ir::BinaryInst(_curBlock, ir::BinaryInst::SUB,
                                       new ir::ConstantNumber(model::Number(0)),
                                       value);
       } else if (t == ir::BasicType::FLOAT) {
-        inst = new ir::Binary(
-            _curBlock, ir::Binary::FSUB,
+        inst = new ir::BinaryInst(
+            _curBlock, ir::BinaryInst::FSUB,
             new ir::ConstantNumber(model::Number(0.0f)), value);
       } else {
         throw std::runtime_error("Invalid unary operator: " + txt);
@@ -912,7 +912,7 @@ std::any ASTVisitor::visitUnaryExp(SysYParser::UnaryExpContext *ctx) {
     } else if (txt == "!") {
       ir::Instruction *inst;
       if (t == ir::BasicType::I1) {
-        inst = new ir::Binary(_curBlock, ir::Binary::XOR, value,
+        inst = new ir::BinaryInst(_curBlock, ir::BinaryInst::XOR, value,
                                       new ir::ConstantNumber(true));
       } else if (t == ir::BasicType::I32) {
         inst = new ir::ICmpInst(_curBlock, ir::ICmpInst::EQ, value,
@@ -966,9 +966,9 @@ std::any ASTVisitor::visitLVal(SysYParser::LValContext *ctx) {
   for (ir::Value *dim : dims) {
     ir::Instruction *inst;
     if (isArg && isFirst) {
-      inst = new ir::GetElementPtrInst(_curBlock, ptr, {dim});
+      inst = new ir::GetPtrInst(_curBlock, ptr, {dim});
     } else {
-      inst = new ir::GetElementPtrInst(
+      inst = new ir::GetPtrInst(
           _curBlock, ptr, {new ir::ConstantNumber(model::Number(0)), dim});
     }
     _curBlock->insert(inst);

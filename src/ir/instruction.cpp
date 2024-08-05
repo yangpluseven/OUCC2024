@@ -95,7 +95,7 @@ std::string CallInst::str() const {
          func->getName() + ss.str();
 }
 
-Type *GetElementPtrInst::calcType(Value *value, size_t indexSize) {
+Type *GetPtrInst::calcType(Value *value, size_t indexSize) {
   auto type = value->getType();
   if (dynamic_cast<GlobalVariable *>(value))
     type = new PointerType(type);
@@ -105,21 +105,21 @@ Type *GetElementPtrInst::calcType(Value *value, size_t indexSize) {
   return new PointerType(type);
 }
 
-GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
+GetPtrInst::GetPtrInst(BasicBlock *block, Value *ptr,
                                      std::initializer_list<Value *> indexes)
   : Instruction(block, calcType(ptr, indexes.size()), {ptr}) {
   for (const auto index : indexes)
     insert(new Use(this, index));
 }
 
-GetElementPtrInst::GetElementPtrInst(BasicBlock *block, Value *ptr,
+GetPtrInst::GetPtrInst(BasicBlock *block, Value *ptr,
                                      std::vector<Value *> &indexes)
   : Instruction(block, calcType(ptr, indexes.size()), {ptr}) {
   for (const auto index : indexes)
     insert(new Use(this, index));
 }
 
-std::string GetElementPtrInst::str() const {
+std::string GetPtrInst::str() const {
   auto ptr = getOperand<Value>(0);
   auto tempPtr = new PointerType(ptr->getType());
   std::stringstream ss;
@@ -223,12 +223,12 @@ std::string StoreInst::str() const {
          pointer->getType()->str() + " " + pointer->getName();
 }
 
-Binary::Binary(BasicBlock *block, Op op, Value *lhs, Value *rhs)
+BinaryInst::BinaryInst(BasicBlock *block, Op op, Value *lhs, Value *rhs)
   : Instruction(block, Type::checkEquality(lhs->getType(), rhs->getType()), {lhs, rhs}),
     op(op) {
 }
 
-std::string Binary::str() const {
+std::string BinaryInst::str() const {
   auto lhs = getOperand<Value>(0);
   auto rhs = getOperand<Value>(1);
   auto type = Type::checkEquality(lhs->getType(), rhs->getType());
@@ -236,7 +236,7 @@ std::string Binary::str() const {
          lhs->getName() + ", " + rhs->getName();
 }
 
-std::string Binary::_opToString(Op v) noexcept {
+std::string BinaryInst::_opToString(Op v) noexcept {
   switch (v) {
   case ADD:
     return "add";

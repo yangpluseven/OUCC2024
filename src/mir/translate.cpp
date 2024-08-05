@@ -93,8 +93,9 @@ void MIRBinTranslator::transModImmReg(std::vector<MIR *> &irs,
   transModRegReg(irs, target, midReg, vsrc);
 }
 
-void MIRBinTranslator::transModRegImm(std::vector<MIR *> &irs, reg::Virtual *target,
-                                      reg::Virtual *vsrc, int imm) {
+void MIRBinTranslator::transModRegImm(std::vector<MIR *> &irs,
+                                      reg::Virtual *target, reg::Virtual *vsrc,
+                                      int imm) {
   if (imm == 1) {
     irs.push_back(new RR(RR::MV, target, vsrc));
     return;
@@ -106,7 +107,7 @@ void MIRBinTranslator::transModRegImm(std::vector<MIR *> &irs, reg::Virtual *tar
     } else {
       irs.push_back(new RRI(RRI::SRAIW, midReg1, vsrc, 31));
       irs.push_back(new RRI(RRI::SRLIW, midReg1, midReg1,
-                               MIROpUtil::leadingZeros(imm) + 1));
+                            MIROpUtil::leadingZeros(imm) + 1));
     }
     irs.push_back(new RRR(RRR::ADD, midReg1, midReg1, vsrc));
     if (std::abs(imm) < 2048) {
@@ -156,16 +157,16 @@ void MIRBinTranslator::transMulRegImmI(std::vector<MIR *> &irs,
   }
   if (MIROpUtil::bitcount(imm) == 2 && imm % 2 == 1) {
     auto midReg = new reg::Virtual(ir::BasicType::I32);
-    irs.push_back(new RRI(RRI::SLLIW, midReg, vsrc,
-                             31 - MIROpUtil::leadingZeros(imm)));
+    irs.push_back(
+        new RRI(RRI::SLLIW, midReg, vsrc, 31 - MIROpUtil::leadingZeros(imm)));
     irs.push_back(new RRR(RRR::ADDW, target, midReg, vsrc));
     return;
   }
   if (MIROpUtil::trailingZeros(imm) == 0 &&
       MIROpUtil::leadingZeros(imm) + MIROpUtil::bitcount(imm) == 32) {
     auto midReg = new reg::Virtual(ir::BasicType::I32);
-    irs.push_back(new RRI(RRI::SLLIW, midReg, vsrc,
-                             32 - MIROpUtil::leadingZeros(imm)));
+    irs.push_back(
+        new RRI(RRI::SLLIW, midReg, vsrc, 32 - MIROpUtil::leadingZeros(imm)));
     irs.push_back(new RRR(RRR::SUBW, target, midReg, vsrc));
     return;
   }
@@ -226,34 +227,34 @@ void MIRBinTranslator::transAddRegImmI(std::vector<MIR *> &irs,
 void MIRBinTranslator::transBinImmReg(
     std::vector<MIR *> &irs,
     const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-    ir::Binary *binOp, ir::ConstantNumber *value, reg::Virtual *reg) {
+    ir::BinaryInst *binOp, ir::ConstantNumber *value, reg::Virtual *reg) {
   auto target = instRegMap.at(binOp);
   switch (binOp->op) {
-  case ir::Binary::ADD:
+  case ir::BinaryInst::ADD:
     transAddRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::Binary::FADD:
+  case ir::BinaryInst::FADD:
     transAddRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::Binary::SDIV:
+  case ir::BinaryInst::SDIV:
     transDivImmRegI(irs, target, value->intValue(), reg);
     break;
-  case ir::Binary::FDIV:
+  case ir::BinaryInst::FDIV:
     transDivImmRegF(irs, target, value->floatValue(), reg);
     break;
-  case ir::Binary::SREM:
+  case ir::BinaryInst::SREM:
     transModImmReg(irs, target, value->intValue(), reg);
     break;
-  case ir::Binary::MUL:
+  case ir::BinaryInst::MUL:
     transMulRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::Binary::FMUL:
+  case ir::BinaryInst::FMUL:
     transMulRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::Binary::SUB:
+  case ir::BinaryInst::SUB:
     transSubImmRegI(irs, target, value->intValue(), reg);
     break;
-  case ir::Binary::FSUB:
+  case ir::BinaryInst::FSUB:
     transSubImmRegF(irs, target, value->floatValue(), reg);
     break;
   default:
@@ -265,37 +266,37 @@ void MIRBinTranslator::transBinImmReg(
 void MIRBinTranslator::transBinRegImm(
     std::vector<MIR *> &irs,
     const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-    ir::Binary *binOp, reg::Virtual *reg, ir::ConstantNumber *value) {
+    ir::BinaryInst *binOp, reg::Virtual *reg, ir::ConstantNumber *value) {
   auto target = instRegMap.at(binOp);
   switch (binOp->op) {
-  case ir::Binary::ADD:
+  case ir::BinaryInst::ADD:
     transAddRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::Binary::FADD:
+  case ir::BinaryInst::FADD:
     transAddRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::Binary::SDIV:
+  case ir::BinaryInst::SDIV:
     transDivRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::Binary::FDIV:
+  case ir::BinaryInst::FDIV:
     transDivRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::Binary::SREM:
+  case ir::BinaryInst::SREM:
     transModRegImm(irs, target, reg, value->intValue());
     break;
-  case ir::Binary::MUL:
+  case ir::BinaryInst::MUL:
     transMulRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::Binary::FMUL:
+  case ir::BinaryInst::FMUL:
     transMulRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::Binary::SUB:
+  case ir::BinaryInst::SUB:
     transSubRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::Binary::FSUB:
+  case ir::BinaryInst::FSUB:
     transSubRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::Binary::XOR:
+  case ir::BinaryInst::XOR:
     auto const midReg = new reg::Virtual(ir::BasicType::I32);
     MIROpUtil::loadImmToReg(irs, midReg, value->intValue());
     irs.push_back(new RRR(RRR::XOR, target, reg, midReg));
@@ -306,34 +307,34 @@ void MIRBinTranslator::transBinRegImm(
 void MIRBinTranslator::transBinRegReg(
     std::vector<MIR *> &irs,
     const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-    ir::Binary *binOp, reg::Virtual *reg1, reg::Virtual *reg2) {
+    ir::BinaryInst *binOp, reg::Virtual *reg1, reg::Virtual *reg2) {
   auto const target = instRegMap.at(binOp);
   switch (binOp->op) {
-  case ir::Binary::ADD:
+  case ir::BinaryInst::ADD:
     transAddRegRegI(irs, target, reg1, reg2);
     break;
-  case ir::Binary::FADD:
+  case ir::BinaryInst::FADD:
     transAddRegRegF(irs, target, reg1, reg2);
     break;
-  case ir::Binary::SDIV:
+  case ir::BinaryInst::SDIV:
     transDivRegRegI(irs, target, reg1, reg2);
     break;
-  case ir::Binary::FDIV:
+  case ir::BinaryInst::FDIV:
     transDivRegRegF(irs, target, reg1, reg2);
     break;
-  case ir::Binary::SREM:
+  case ir::BinaryInst::SREM:
     transModRegReg(irs, target, reg1, reg2);
     break;
-  case ir::Binary::MUL:
+  case ir::BinaryInst::MUL:
     transMulRegRegI(irs, target, reg1, reg2);
     break;
-  case ir::Binary::FMUL:
+  case ir::BinaryInst::FMUL:
     transMulRegRegF(irs, target, reg1, reg2);
     break;
-  case ir::Binary::SUB:
+  case ir::BinaryInst::SUB:
     transSubRegRegI(irs, target, reg1, reg2);
     break;
-  case ir::Binary::FSUB:
+  case ir::BinaryInst::FSUB:
     transSubRegRegF(irs, target, reg1, reg2);
     break;
   default:
@@ -342,13 +343,12 @@ void MIRBinTranslator::transBinRegReg(
   }
 }
 
-void MIROpTranslator::transBranch(
-    std::vector<MIR *> &irs,
-    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
-    ir::BranchInst *branchInst) {
+void MIRTranslator::branch(
+    ir::BranchInst *branchInst, std::vector<MIR *> &mirs,
+    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap) {
   if (!branchInst->isConditional()) {
     auto const dest = branchInst->getOperand<ir::BasicBlock>(0);
-    irs.push_back(new Branch(Branch::NUL, nullptr, nullptr, dest));
+    mirs.push_back(new Branch(Branch::NUL, nullptr, nullptr, dest));
     return;
   }
   auto const cond = branchInst->getOperand<ir::Value>(0);
@@ -360,35 +360,35 @@ void MIROpTranslator::transBranch(
   } else if (auto const value = dynamic_cast<ir::ConstantNumber *>(cond)) {
     auto const midReg = new reg::Virtual(value->getType());
     if (value->getType() == ir::BasicType::FLOAT) {
-      MIROpUtil::loadImmToReg(irs, midReg, value->floatValue());
+      MIROpUtil::loadImmToReg(mirs, midReg, value->floatValue());
     } else {
-      MIROpUtil::loadImmToReg(irs, midReg, value->intValue());
+      MIROpUtil::loadImmToReg(mirs, midReg, value->intValue());
     }
     reg = midReg;
   } else {
     throw std::runtime_error(
         "unsupported branch condition in MIROpTranslator::transBranch");
   }
-  irs.push_back(new Branch(Branch::NE, reg, reg::Machine::ZERO, trueBlock));
-  irs.push_back(new Branch(Branch::NUL, nullptr, nullptr, falseBlock));
+  mirs.push_back(new Branch(Branch::NE, reg, reg::Machine::ZERO, trueBlock));
+  mirs.push_back(new Branch(Branch::NUL, nullptr, nullptr, falseBlock));
 }
 
-void MIROpTranslator::transBin(
-    std::vector<MIR *> &irs,
+void MIRTranslator::binary(
+    ir::BinaryInst *binOp, std::vector<MIR *> &mirs,
     std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
-    std::unordered_map<ir::Argument *, std::pair<bool, int>> const &argOffsets,
-    ir::Binary *binOp) {
+    std::unordered_map<ir::Argument *, std::pair<bool, int>> const
+        &argOffsets) {
   auto const operand1 = binOp->getOperand<ir::Value>(0);
   auto const operand2 = binOp->getOperand<ir::Value>(1);
   reg::Virtual *reg1 = nullptr;
   if (auto const arg = dynamic_cast<ir::Argument *>(operand1)) {
     auto const midReg = new reg::Virtual(arg->getType() == ir::BasicType::FLOAT
-                                          ? ir::BasicType::FLOAT
-                                          : ir::BasicType::I32);
-    irs.push_back(new LoadFrom(argOffsets.at(arg).first
-                                      ? LoadFrom::INNER_PARAM
-                                      : LoadFrom::OUTER_PARAM,
-                                  midReg, argOffsets.at(arg).second));
+                                             ? ir::BasicType::FLOAT
+                                             : ir::BasicType::I32);
+    mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                    ? LoadFrom::INNER_PARAM
+                                    : LoadFrom::OUTER_PARAM,
+                                midReg, argOffsets.at(arg).second));
     reg1 = midReg;
   } else if (auto const inst = dynamic_cast<ir::Instruction *>(operand1)) {
     reg1 = instRegMap.at(inst);
@@ -396,53 +396,52 @@ void MIROpTranslator::transBin(
   reg::Virtual *reg2 = nullptr;
   if (auto const arg = dynamic_cast<ir::Argument *>(operand2)) {
     auto const midReg = new reg::Virtual(arg->getType() == ir::BasicType::FLOAT
-                                          ? ir::BasicType::FLOAT
-                                          : ir::BasicType::I32);
-    irs.push_back(new LoadFrom(argOffsets.at(arg).first
-                                      ? LoadFrom::INNER_PARAM
-                                      : LoadFrom::OUTER_PARAM,
-                                  midReg, argOffsets.at(arg).second));
+                                             ? ir::BasicType::FLOAT
+                                             : ir::BasicType::I32);
+    mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                    ? LoadFrom::INNER_PARAM
+                                    : LoadFrom::OUTER_PARAM,
+                                midReg, argOffsets.at(arg).second));
     reg2 = midReg;
   } else if (auto const inst = dynamic_cast<ir::Instruction *>(operand2)) {
     reg2 = instRegMap.at(inst);
   }
   if (reg1 && reg2) {
-    MIRBinTranslator::transBinRegReg(irs, instRegMap, binOp, reg1, reg2);
+    MIRBinTranslator::transBinRegReg(mirs, instRegMap, binOp, reg1, reg2);
     return;
   }
   auto const value2 = dynamic_cast<ir::ConstantNumber *>(operand2);
   if (reg1 && value2) {
-    MIRBinTranslator::transBinRegImm(irs, instRegMap, binOp, reg1, value2);
+    MIRBinTranslator::transBinRegImm(mirs, instRegMap, binOp, reg1, value2);
     return;
   }
   auto const value1 = dynamic_cast<ir::ConstantNumber *>(operand1);
   if (reg2 && value1) {
-    MIRBinTranslator::transBinImmReg(irs, instRegMap, binOp, value1, reg2);
+    MIRBinTranslator::transBinImmReg(mirs, instRegMap, binOp, value1, reg2);
     return;
   }
   if (value1 && value2) {
     auto const midReg = new reg::Virtual(value1->getType());
     auto const type1 = value1->getType();
     if (type1 == ir::BasicType::I32) {
-      MIROpUtil::loadImmToReg(irs, midReg, value1->intValue());
+      MIROpUtil::loadImmToReg(mirs, midReg, value1->intValue());
     } else if (type1 == ir::BasicType::FLOAT) {
-      MIROpUtil::loadImmToReg(irs, midReg, value1->floatValue());
+      MIROpUtil::loadImmToReg(mirs, midReg, value1->floatValue());
     } else {
       throw std::runtime_error(
           "unsupported constant number type in MIROpTranslator::transBin");
     }
-    MIRBinTranslator::transBinRegImm(irs, instRegMap, binOp, midReg, value2);
+    MIRBinTranslator::transBinRegImm(mirs, instRegMap, binOp, midReg, value2);
     return;
   }
   throw std::runtime_error(
       "unsupported binary operator in MIROpTranslator::transBin");
 }
 
-int MIROpTranslator::transCall(
-    std::vector<MIR *> &irs,
+int MIRTranslator::call(
+    ir::CallInst *callInst, std::vector<MIR *> &mirs,
     std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
     std::unordered_map<ir::Argument *, std::pair<bool, int>> const &argOffsets,
-    ir::CallInst *callInst,
     std::unordered_map<ir::AllocaInst *, int> const &localOffsets) {
   auto func = callInst->getOperand<ir::Function>(0);
   std::vector<MIR *> saveCalleeIRs;
@@ -452,19 +451,20 @@ int MIROpTranslator::transCall(
     if (param->getType() == ir::BasicType::FLOAT) {
       if (fSize < reg::Machine::F_CALLER_REGS.size()) {
         if (auto const arg = dynamic_cast<ir::Argument *>(param)) {
-          saveCalleeIRs.push_back(new LoadFrom(
-              argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
-                                       : LoadFrom::OUTER_PARAM,
-              reg::Machine::F_CALLER_REGS.at(fSize), argOffsets.at(arg).second));
+          saveCalleeIRs.push_back(
+              new LoadFrom(argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
+                                                    : LoadFrom::OUTER_PARAM,
+                           reg::Machine::F_CALLER_REGS.at(fSize),
+                           argOffsets.at(arg).second));
         } else if (auto const allocaInst =
                        dynamic_cast<ir::AllocaInst *>(param)) {
           saveCalleeIRs.push_back(new RR(RR::MV,
-                                            reg::Machine::F_CALLER_REGS.at(fSize),
-                                            instRegMap.at(allocaInst)));
+                                         reg::Machine::F_CALLER_REGS.at(fSize),
+                                         instRegMap.at(allocaInst)));
         } else if (auto const inst = dynamic_cast<ir::Instruction *>(param)) {
           saveCalleeIRs.push_back(new RR(RR::MV,
-                                            reg::Machine::F_CALLER_REGS.at(fSize),
-                                            instRegMap.at(inst)));
+                                         reg::Machine::F_CALLER_REGS.at(fSize),
+                                         instRegMap.at(inst)));
         } else if (auto const value =
                        dynamic_cast<ir::ConstantNumber *>(param)) {
           MIROpUtil::loadImmToReg(saveCalleeIRs,
@@ -477,41 +477,41 @@ int MIROpTranslator::transCall(
       } else {
         if (auto const arg = dynamic_cast<ir::Argument *>(param)) {
           auto midReg = new reg::Virtual(arg->getType());
-          irs.push_back(new LoadFrom(argOffsets.at(arg).first
-                                            ? LoadFrom::INNER_PARAM
-                                            : LoadFrom::OUTER_PARAM,
-                                        midReg, argOffsets.at(arg).second));
-          irs.push_back(new StoreTo(
+          mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                          ? LoadFrom::INNER_PARAM
+                                          : LoadFrom::OUTER_PARAM,
+                                      midReg, argOffsets.at(arg).second));
+          mirs.push_back(new StoreTo(
               StoreTo::CALL_PARAM, midReg,
-              (std::max(iSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0) +
-               std::max(fSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0)) *
+              (std::max(
+                   iSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0) +
+               std::max(
+                   fSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0)) *
                   8));
         } else if (auto const inst = dynamic_cast<ir::Instruction *>(param)) {
-          irs.push_back(new StoreTo(
+          mirs.push_back(new StoreTo(
               StoreTo::CALL_PARAM, instRegMap.at(inst),
-              (std::max(iSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0) +
-               std::max(fSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0)) *
+              (std::max(
+                   iSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0) +
+               std::max(
+                   fSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0)) *
                   8));
         } else if (auto const value =
                        dynamic_cast<ir::ConstantNumber *>(param)) {
           auto const midReg = new reg::Virtual(ir::BasicType::I32);
-          MIROpUtil::loadImmToReg(irs, midReg, value->floatValue());
-          irs.push_back(new StoreTo(
+          MIROpUtil::loadImmToReg(mirs, midReg, value->floatValue());
+          mirs.push_back(new StoreTo(
               StoreTo::CALL_PARAM, midReg,
-              (std::max(iSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0) +
-               std::max(fSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0)) *
+              (std::max(
+                   iSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0) +
+               std::max(
+                   fSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0)) *
                   8));
         } else {
           throw std::runtime_error(
@@ -529,21 +529,22 @@ int MIROpTranslator::transCall(
           if (dynamic_cast<ir::PointerType *>(allocaInst->getType())) {
             saveCalleeIRs.push_back(
                 new RegAddImm(reg::Machine::I_CALLER_REGS.at(iSize),
-                                   localOffsets.at(allocaInst)));
+                              localOffsets.at(allocaInst)));
           } else {
             saveCalleeIRs.push_back(
                 new RR(RR::MV, reg::Machine::I_CALLER_REGS.at(iSize),
-                          instRegMap.at(allocaInst)));
+                       instRegMap.at(allocaInst)));
           }
         } else if (auto const arg = dynamic_cast<ir::Argument *>(param)) {
-          saveCalleeIRs.push_back(new LoadFrom(
-              argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
-                                       : LoadFrom::OUTER_PARAM,
-              reg::Machine::I_CALLER_REGS.at(iSize), argOffsets.at(arg).second));
+          saveCalleeIRs.push_back(
+              new LoadFrom(argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
+                                                    : LoadFrom::OUTER_PARAM,
+                           reg::Machine::I_CALLER_REGS.at(iSize),
+                           argOffsets.at(arg).second));
         } else if (auto const inst = dynamic_cast<ir::Instruction *>(param)) {
           saveCalleeIRs.push_back(new RR(RR::MV,
-                                            reg::Machine::I_CALLER_REGS.at(iSize),
-                                            instRegMap.at(inst)));
+                                         reg::Machine::I_CALLER_REGS.at(iSize),
+                                         instRegMap.at(inst)));
         } else if (auto const value =
                        dynamic_cast<ir::ConstantNumber *>(param)) {
           MIROpUtil::loadImmToReg(saveCalleeIRs,
@@ -556,54 +557,53 @@ int MIROpTranslator::transCall(
       } else {
         if (auto const allocaInst = dynamic_cast<ir::AllocaInst *>(param)) {
           auto const midReg = new reg::Virtual(ir::BasicType::I32);
-          irs.push_back(
-              new RegAddImm(midReg, localOffsets.at(allocaInst)));
-          irs.push_back(new StoreTo(
+          mirs.push_back(new RegAddImm(midReg, localOffsets.at(allocaInst)));
+          mirs.push_back(new StoreTo(
               StoreTo::CALL_PARAM, midReg,
-              (std::max(iSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0) +
-               std::max(fSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0)) *
+              (std::max(
+                   iSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0) +
+               std::max(
+                   fSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0)) *
                   8));
         } else if (auto const arg = dynamic_cast<ir::Argument *>(param)) {
           auto const midReg = new reg::Virtual(arg->getType());
-          irs.push_back(new LoadFrom(argOffsets.at(arg).first
-                                            ? LoadFrom::INNER_PARAM
-                                            : LoadFrom::OUTER_PARAM,
-                                        midReg, argOffsets.at(arg).second));
-          irs.push_back(new StoreTo(
+          mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                          ? LoadFrom::INNER_PARAM
+                                          : LoadFrom::OUTER_PARAM,
+                                      midReg, argOffsets.at(arg).second));
+          mirs.push_back(new StoreTo(
               StoreTo::CALL_PARAM, midReg,
-              (std::max(iSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0) +
-               std::max(fSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0)) *
+              (std::max(
+                   iSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0) +
+               std::max(
+                   fSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0)) *
                   8));
         } else if (auto const inst = dynamic_cast<ir::Instruction *>(param)) {
-          irs.push_back(new StoreTo(
+          mirs.push_back(new StoreTo(
               StoreTo::CALL_PARAM, instRegMap.at(inst),
-              (std::max(iSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0) +
-               std::max(fSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0)) *
+              (std::max(
+                   iSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0) +
+               std::max(
+                   fSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0)) *
                   8));
         } else if (auto const value =
                        dynamic_cast<ir::ConstantNumber *>(param)) {
           auto const midReg = new reg::Virtual(ir::BasicType::I32);
-          MIROpUtil::loadImmToReg(irs, midReg, value->intValue());
-          irs.push_back(new StoreTo(
+          MIROpUtil::loadImmToReg(mirs, midReg, value->intValue());
+          mirs.push_back(new StoreTo(
               StoreTo::CALL_PARAM, midReg,
-              (std::max(iSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0) +
-               std::max(fSize -
-                            static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
-                        0)) *
+              (std::max(
+                   iSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0) +
+               std::max(
+                   fSize - static_cast<int>(reg::Machine::I_CALLER_REGS.size()),
+                   0)) *
                   8));
         } else {
           throw std::runtime_error(
@@ -613,8 +613,8 @@ int MIROpTranslator::transCall(
       iSize++;
     }
   }
-  irs.insert(irs.end(), saveCalleeIRs.begin(), saveCalleeIRs.end());
-  irs.push_back(new Call(func));
+  mirs.insert(mirs.end(), saveCalleeIRs.begin(), saveCalleeIRs.end());
+  mirs.push_back(new Call(func));
   if (callInst->getType() != ir::BasicType::VOID) {
     auto const target = instRegMap.at(callInst);
     auto const instType = callInst->getType();
@@ -627,9 +627,559 @@ int MIROpTranslator::transCall(
       throw std::runtime_error(
           "unsupported return type in MIROpTranslator::transCall");
     }
-    irs.push_back(new RR(RR::MV, target, reg));
+    mirs.push_back(new RR(RR::MV, target, reg));
   }
   return static_cast<int>(callInst->size()) - 1;
+}
+
+void MIRTranslator::getPtr(
+    ir::GetPtrInst *getPtrInst, std::vector<MIR *> &mirs,
+    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+    std::unordered_map<ir::Argument *, std::pair<bool, int>> const &argOffsets,
+    std::unordered_map<ir::AllocaInst *, int> const &localOffsets) {
+  const auto ptr = getPtrInst->getOperand<ir::Value>(0);
+  if (const auto glob = dynamic_cast<ir::GlobalVariable *>(ptr)) {
+    const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg3 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg4 = new reg::Virtual(ir::BasicType::I32);
+    mirs.push_back(new LLA(midReg1, glob));
+    mirs.push_back(new LoadImm(
+        midReg2,
+        static_cast<int>(getPtrInst->getType()->baseType()->getSize()) / 8));
+    auto *oprand = getPtrInst->getLastOperand<ir::Value>();
+    if (const auto arg = dynamic_cast<ir::Argument *>(oprand)) {
+      mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                      ? LoadFrom::INNER_PARAM
+                                      : LoadFrom::OUTER_PARAM,
+                                  midReg3, argOffsets.at(arg).second));
+    } else if (const auto indexInst = dynamic_cast<ir::Instruction *>(oprand)) {
+      mirs.push_back(new RR(RR::MV, midReg3, instRegMap.at(indexInst)));
+    } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(oprand)) {
+      if (value->getType() == ir::BasicType::FLOAT) {
+        const auto midReg = new reg::Virtual(ir::BasicType::I32);
+        float f = value->floatValue();
+        mirs.push_back(new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
+        mirs.push_back(new RR(RR::MV, midReg3, midReg));
+      } else {
+        mirs.push_back(new LoadImm(midReg3, value->intValue()));
+      }
+    } else {
+      throw std::runtime_error(
+          "unsupported getelementptr operand in MIRGenerator::funcToMir");
+    }
+    mirs.push_back(new RRR(RRR::MUL, midReg4, midReg2, midReg3));
+    mirs.push_back(
+        new RRR(RRR::ADD, instRegMap.at(getPtrInst), midReg1, midReg4));
+    return;
+  }
+  if (const auto arg = dynamic_cast<ir::Argument *>(ptr)) {
+    std::pair<bool, int> innerOffset = argOffsets.at(arg);
+    const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg3 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg4 = new reg::Virtual(ir::BasicType::I32);
+    mirs.push_back(new LoadFrom(innerOffset.first ? LoadFrom::INNER_PARAM
+                                                  : LoadFrom::OUTER_PARAM,
+                                midReg1, innerOffset.second));
+    mirs.push_back(new LoadImm(
+        midReg2,
+        static_cast<int>(getPtrInst->getType()->baseType()->getSize()) / 8));
+    auto *oprand = getPtrInst->getLastOperand<ir::Value>();
+    if (const auto indexArg = dynamic_cast<ir::Argument *>(oprand)) {
+      mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                      ? LoadFrom::INNER_PARAM
+                                      : LoadFrom::OUTER_PARAM,
+                                  midReg3, argOffsets.at(indexArg).second));
+    } else if (const auto indexInst = dynamic_cast<ir::Instruction *>(oprand)) {
+      mirs.push_back(new RR(RR::MV, midReg3, instRegMap.at(indexInst)));
+    } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(oprand)) {
+      if (value->getType() == ir::BasicType::FLOAT) {
+        const auto midReg = new reg::Virtual(ir::BasicType::I32);
+        float f = value->floatValue();
+        mirs.push_back(new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
+        mirs.push_back(new RR(RR::MV, midReg3, midReg));
+      } else {
+        mirs.push_back(new LoadImm(midReg3, value->intValue()));
+      }
+    } else {
+      throw std::runtime_error(
+          "unsupported getelementptr operand in MIRGenerator::funcToMir");
+    }
+    mirs.push_back(new RRR(RRR::MUL, midReg4, midReg2, midReg3));
+    mirs.push_back(
+        new RRR(RRR::ADD, instRegMap.at(getPtrInst), midReg1, midReg4));
+    return;
+  }
+  if (const auto allocaInst = dynamic_cast<ir::AllocaInst *>(ptr)) {
+    const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg3 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg4 = new reg::Virtual(ir::BasicType::I32);
+    mirs.push_back(new RegAddImm(midReg1, localOffsets.at(allocaInst)));
+    auto *oprand = getPtrInst->getLastOperand<ir::Value>();
+    if (const auto arg = dynamic_cast<ir::Argument *>(oprand)) {
+      mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                      ? LoadFrom::INNER_PARAM
+                                      : LoadFrom::OUTER_PARAM,
+                                  midReg2, argOffsets.at(arg).second));
+    } else if (const auto indexInst = dynamic_cast<ir::Instruction *>(oprand)) {
+      mirs.push_back(new RR(RR::MV, midReg2, instRegMap.at(indexInst)));
+    } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(oprand)) {
+      if (value->getType() == ir::BasicType::FLOAT) {
+        const auto midReg = new reg::Virtual(ir::BasicType::I32);
+        float f = value->floatValue();
+        mirs.push_back(new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
+        mirs.push_back(new RR(RR::MV, midReg2, midReg));
+      } else {
+        mirs.push_back(new LoadImm(midReg2, value->intValue()));
+      }
+    } else {
+      throw std::runtime_error(
+          "unsupported getelementptr operand in MIRGenerator::funcToMir");
+    }
+    if (getPtrInst->size() == 3) {
+      mirs.push_back(new LoadImm(
+          midReg3,
+          static_cast<int>(ptr->getType()->baseType()->baseType()->getSize()) /
+              8));
+    } else {
+      mirs.push_back(new LoadImm(
+          midReg3,
+          static_cast<int>(ptr->getType()->baseType()->getSize()) / 8));
+    }
+    mirs.push_back(new RRR(RRR::MUL, midReg4, midReg2, midReg3));
+    mirs.push_back(
+        new RRR(RRR::ADD, instRegMap.at(getPtrInst), midReg1, midReg4));
+    return;
+  }
+  if (const auto ptrInst = dynamic_cast<ir::Instruction *>(ptr)) {
+    const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg3 = new reg::Virtual(ir::BasicType::I32);
+    auto *oprand = getPtrInst->getLastOperand<ir::Value>();
+    if (const auto arg = dynamic_cast<ir::Argument *>(oprand)) {
+      mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                      ? LoadFrom::INNER_PARAM
+                                      : LoadFrom::OUTER_PARAM,
+                                  midReg1, argOffsets.at(arg).second));
+    } else if (const auto indexInst = dynamic_cast<ir::Instruction *>(oprand)) {
+      mirs.push_back(new RR(RR::MV, midReg1, instRegMap.at(indexInst)));
+    } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(oprand)) {
+      if (value->getType() == ir::BasicType::FLOAT) {
+        const auto midReg = new reg::Virtual(ir::BasicType::I32);
+        float f = value->floatValue();
+        mirs.push_back(new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
+        mirs.push_back(new RR(RR::MV, midReg1, midReg));
+      } else {
+        mirs.push_back(new LoadImm(midReg1, value->intValue()));
+      }
+    } else {
+      throw std::runtime_error(
+          "unsupported getelementptr operand in MIRGenerator::funcToMir");
+    }
+    if (getPtrInst->size() == 3) {
+      mirs.push_back(new LoadImm(
+          midReg2,
+          static_cast<int>(ptr->getType()->baseType()->baseType()->getSize()) /
+              8));
+    } else {
+      mirs.push_back(new LoadImm(
+          midReg2,
+          static_cast<int>(ptr->getType()->baseType()->getSize()) / 8));
+    }
+    mirs.push_back(new RRR(RRR::MUL, midReg3, midReg1, midReg2));
+    mirs.push_back(new RRR(RRR::ADD, instRegMap.at(getPtrInst),
+                           instRegMap.at(ptrInst), midReg3));
+  }
+}
+
+void MIRTranslator::load(
+    ir::LoadInst *loadInst, std::vector<MIR *> &mirs,
+    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+    std::unordered_map<ir::Argument *, std::pair<bool, int>> const &argOffsets,
+    std::unordered_map<ir::AllocaInst *, int> const &localOffsets) {
+  const auto ptr = loadInst->getOperand<ir::Value>(0);
+  if (const auto glob = dynamic_cast<ir::GlobalVariable *>(ptr)) {
+    const auto midReg = new reg::Virtual(ir::BasicType::I32);
+    mirs.push_back(new LLA(midReg, glob));
+    mirs.push_back(new Load(instRegMap.at(loadInst), midReg, 0, 4));
+    return;
+  }
+  if (const auto arg = dynamic_cast<ir::Argument *>(ptr)) {
+    std::pair<bool, int> innerOffset = argOffsets.at(arg);
+    mirs.push_back(new LoadFrom(innerOffset.first ? LoadFrom::INNER_PARAM
+                                                  : LoadFrom::OUTER_PARAM,
+                                instRegMap.at(loadInst), innerOffset.second));
+  }
+  if (const auto allocaInst = dynamic_cast<ir::AllocaInst *>(ptr)) {
+    const auto midReg = new reg::Virtual(ir::BasicType::I32);
+    mirs.push_back(new RegAddImm(midReg, localOffsets.at(allocaInst)));
+    mirs.push_back(new Load(
+        instRegMap.at(loadInst), midReg, 0,
+        static_cast<int>(allocaInst->getType()->baseType()->getSize()) / 8));
+    return;
+  }
+  if (const auto ptrInst = dynamic_cast<ir::Instruction *>(ptr)) {
+    mirs.push_back(new Load(
+        instRegMap.at(loadInst), instRegMap.at(ptrInst), 0,
+        static_cast<int>(ptrInst->getType()->baseType()->getSize()) / 8));
+  }
+}
+
+void MIRTranslator::ret(
+    ir::RetInst *retInst, std::vector<MIR *> &mirs,
+    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+    std::unordered_map<ir::Argument *, std::pair<bool, int>> const &argOffsets,
+    Label *retLabel) {
+  if (!retInst->empty()) {
+    const auto retVal = retInst->getOperand<ir::Value>(0);
+    if (const auto arg = dynamic_cast<ir::Argument *>(retVal)) {
+      mirs.push_back(new LoadFrom(
+          argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
+                                   : LoadFrom::OUTER_PARAM,
+          retVal->getType() == ir::BasicType::I32 ? reg::Machine::A0
+                                                  : reg::Machine::FA0,
+          argOffsets.at(arg).second));
+    } else if (const auto valueInst = dynamic_cast<ir::Instruction *>(retVal)) {
+      mirs.push_back(new RR(RR::MV,
+                            retVal->getType() == ir::BasicType::I32
+                                ? reg::Machine::A0
+                                : reg::Machine::FA0,
+                            instRegMap.at(valueInst)));
+    } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(retVal)) {
+      const auto type = value->getType();
+      if (type == ir::BasicType::I32) {
+        mirs.push_back(new LoadImm(reg::Machine::A0, value->intValue()));
+      } else if (type == ir::BasicType::FLOAT) {
+        const auto midReg = new reg::Virtual(ir::BasicType::I32);
+        float f = value->floatValue();
+        mirs.push_back(new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
+        mirs.push_back(new RR(RR::MV, reg::Machine::FA0, midReg));
+      } else {
+        throw std::runtime_error(
+            "unsupported ret operand in MIRGenerator::funcToMir");
+      }
+    } else {
+      throw std::runtime_error(
+          "unsupported ret operand in MIRGenerator::funcToMir");
+    }
+  }
+  mirs.push_back(
+      new Branch(Branch::NUL, nullptr, nullptr, retLabel->getBlock()));
+}
+
+void MIRTranslator::store(
+    ir::StoreInst *storeInst, std::vector<MIR *> &mirs,
+    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+    std::unordered_map<ir::Argument *, std::pair<bool, int>> const &argOffsets,
+    std::unordered_map<ir::AllocaInst *, int> const &localOffsets) {
+  const auto value = storeInst->getOperand<ir::Value>(0);
+  const auto ptr = storeInst->getOperand<ir::Value>(1);
+  if (const auto glob = dynamic_cast<ir::GlobalVariable *>(ptr)) {
+    const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
+    mirs.push_back(new LLA(midReg1, glob));
+    if (const auto arg = dynamic_cast<ir::Argument *>(value)) {
+      mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                      ? LoadFrom::INNER_PARAM
+                                      : LoadFrom::OUTER_PARAM,
+                                  midReg2, argOffsets.at(arg).second));
+    } else if (const auto valueInst = dynamic_cast<ir::Instruction *>(value)) {
+      mirs.push_back(new RR(RR::MV, midReg2, instRegMap.at(valueInst)));
+    } else if (const auto v = dynamic_cast<ir::ConstantNumber *>(value)) {
+      if (v->getType() == ir::BasicType::FLOAT) {
+        const auto midReg = new reg::Virtual(ir::BasicType::I32);
+        float f = v->floatValue();
+        mirs.push_back(new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
+        mirs.push_back(new RR(RR::MV, midReg2, midReg));
+      } else {
+        mirs.push_back(new LoadImm(midReg2, v->intValue()));
+      }
+    } else {
+      throw std::runtime_error(
+          "unsupported store operand in MIRGenerator::funcToMir");
+    }
+    mirs.push_back(new Store(midReg2, midReg1, 0, 4));
+    return;
+  }
+  if (const auto arg = dynamic_cast<ir::Argument *>(ptr)) {
+    std::pair<bool, int> innerOffset = argOffsets.at(arg);
+    const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
+    mirs.push_back(new LoadFrom(innerOffset.first ? LoadFrom::INNER_PARAM
+                                                  : LoadFrom::OUTER_PARAM,
+                                midReg1, innerOffset.second));
+    if (const auto argValue = dynamic_cast<ir::Argument *>(value)) {
+      mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                      ? LoadFrom::INNER_PARAM
+                                      : LoadFrom::OUTER_PARAM,
+                                  midReg2, argOffsets.at(argValue).second));
+    } else if (const auto valueInst = dynamic_cast<ir::Instruction *>(value)) {
+      mirs.push_back(new RR(RR::MV, midReg2, instRegMap.at(valueInst)));
+    } else if (const auto v = dynamic_cast<ir::ConstantNumber *>(value)) {
+      if (v->getType() == ir::BasicType::FLOAT) {
+        const auto midReg = new reg::Virtual(ir::BasicType::I32);
+        float f = v->floatValue();
+        mirs.push_back(new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
+        mirs.push_back(new RR(RR::MV, midReg2, midReg));
+      } else {
+        mirs.push_back(new LoadImm(midReg2, v->intValue()));
+      }
+    } else {
+      throw std::runtime_error(
+          "unsupported store operand in MIRGenerator::funcToMir");
+    }
+    mirs.push_back(new Store(midReg2, midReg1, 0, 4));
+  }
+  if (const auto allocaInst = dynamic_cast<ir::AllocaInst *>(ptr)) {
+    const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
+    if (const auto arg = dynamic_cast<ir::Argument *>(value)) {
+      mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                      ? LoadFrom::INNER_PARAM
+                                      : LoadFrom::OUTER_PARAM,
+                                  midReg1, argOffsets.at(arg).second));
+    } else if (const auto valueInst = dynamic_cast<ir::Instruction *>(value)) {
+      mirs.push_back(new RR(RR::MV, midReg1, instRegMap.at(valueInst)));
+    } else if (const auto v = dynamic_cast<ir::ConstantNumber *>(value)) {
+      if (v->getType() == ir::BasicType::FLOAT) {
+        const auto midReg = new reg::Virtual(ir::BasicType::I32);
+        float f = v->floatValue();
+        mirs.push_back(new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
+        mirs.push_back(new RR(RR::MV, midReg1, midReg));
+      } else {
+        mirs.push_back(new LoadImm(midReg1, v->intValue()));
+      }
+    } else {
+      throw std::runtime_error(
+          "unsupported store operand in MIRGenerator::funcToMir");
+    }
+    mirs.push_back(new RegAddImm(midReg2, localOffsets.at(allocaInst)));
+    mirs.push_back(new Store(
+        midReg1, midReg2, 0,
+        static_cast<int>(allocaInst->getType()->baseType()->getSize()) / 8));
+    return;
+  }
+  if (const auto ptrInst = dynamic_cast<ir::Instruction *>(ptr)) {
+    const auto midReg = new reg::Virtual(ir::BasicType::I32);
+    if (const auto arg = dynamic_cast<ir::Argument *>(value)) {
+      mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                      ? LoadFrom::INNER_PARAM
+                                      : LoadFrom::OUTER_PARAM,
+                                  midReg, argOffsets.at(arg).second));
+    } else if (const auto valueInst = dynamic_cast<ir::Instruction *>(value)) {
+      mirs.push_back(new RR(RR::MV, midReg, instRegMap.at(valueInst)));
+    } else if (const auto v = dynamic_cast<ir::ConstantNumber *>(value)) {
+      if (v->getType() == ir::BasicType::FLOAT) {
+        const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+        float f = v->floatValue();
+        mirs.push_back(new LoadImm(midReg1, *reinterpret_cast<int *>(&f)));
+        mirs.push_back(new RR(RR::MV, midReg, midReg1));
+      } else {
+        mirs.push_back(new LoadImm(midReg, v->intValue()));
+      }
+    } else {
+      throw std::runtime_error(
+          "unsupported store operand in MIRGenerator::funcToMir");
+    }
+    mirs.push_back(new Store(
+        midReg, instRegMap.at(ptrInst), 0,
+        static_cast<int>(ptrInst->getType()->baseType()->getSize()) / 8));
+  }
+}
+
+void MIRTranslator::bitCast(
+    ir::BitCastInst *bitCastInst, std::vector<MIR *> &mirs,
+    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+    std::unordered_map<ir::AllocaInst *, int> const &localOffsets) {
+  const auto operand = bitCastInst->getOperand<ir::Instruction>(0);
+  reg::Virtual *srcReg = instRegMap.at(operand);
+  if (const auto allocaInst = dynamic_cast<ir::AllocaInst *>(operand)) {
+    srcReg = new reg::Virtual(ir::BasicType::I32);
+    mirs.push_back(new RegAddImm(srcReg, localOffsets.at(allocaInst)));
+  }
+  mirs.push_back(new RR(RR::MV, instRegMap.at(bitCastInst), srcReg));
+}
+
+void MIRTranslator::iCmp(
+    ir::ICmpInst *iCmpInst, std::vector<MIR *> &mirs,
+    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+    std::unordered_map<ir::Argument *, std::pair<bool, int>> const &argOffsets,
+    std::unordered_map<ir::AllocaInst *, int> const &localOffsets) {
+  reg::Virtual *target = instRegMap.at(iCmpInst);
+  reg::Virtual *operand1;
+  const auto op1 = iCmpInst->getOperand<ir::Value>(0);
+  if (const auto arg = dynamic_cast<ir::Argument *>(op1)) {
+    const auto midReg = new reg::Virtual(arg->getType() == ir::BasicType::FLOAT
+                                             ? ir::BasicType::FLOAT
+                                             : ir::BasicType::I32);
+    mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                    ? LoadFrom::INNER_PARAM
+                                    : LoadFrom::OUTER_PARAM,
+                                midReg, argOffsets.at(arg).second));
+    operand1 = midReg;
+  } else if (const auto valueInst = dynamic_cast<ir::Instruction *>(op1)) {
+    operand1 = instRegMap.at(valueInst);
+  } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(op1)) {
+    const auto midReg = new reg::Virtual(value->getType());
+    mirs.push_back(new LoadImm(midReg, value->intValue()));
+    operand1 = midReg;
+  } else {
+    throw std::runtime_error(
+        "unsupported icmp operand in MIRGenerator::funcToMir");
+  }
+  reg::Virtual *operand2;
+  const auto op2 = iCmpInst->getOperand<ir::Value>(1);
+  if (const auto arg = dynamic_cast<ir::Argument *>(op2)) {
+    const auto midReg = new reg::Virtual(arg->getType() == ir::BasicType::FLOAT
+                                             ? ir::BasicType::FLOAT
+                                             : ir::BasicType::I32);
+    mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                    ? LoadFrom::INNER_PARAM
+                                    : LoadFrom::OUTER_PARAM,
+                                midReg, argOffsets.at(arg).second));
+    operand2 = midReg;
+  } else if (const auto valueInst = dynamic_cast<ir::Instruction *>(op2)) {
+    operand2 = instRegMap.at(valueInst);
+  } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(op2)) {
+    const auto midReg = new reg::Virtual(value->getType());
+    mirs.push_back(new LoadImm(midReg, value->intValue()));
+    operand2 = midReg;
+  } else {
+    throw std::runtime_error(
+        "unsupported icmp operand in MIRGenerator::funcToMir");
+  }
+  const auto midReg = new reg::Virtual(ir::BasicType::I32);
+  switch (iCmpInst->getCond()) {
+  case ir::CmpInst::EQ:
+    mirs.push_back(new RRR(RRR::SUB, midReg, operand1, operand2));
+    mirs.push_back(new RR(RR::SEQZ, target, midReg));
+    break;
+  case ir::CmpInst::NE:
+    mirs.push_back(new RRR(RRR::SUB, midReg, operand1, operand2));
+    mirs.push_back(new RR(RR::SNEZ, target, midReg));
+    break;
+  case ir::CmpInst::SGE:
+    mirs.push_back(new RRR(RRR::SLT, midReg, operand1, operand2));
+    mirs.push_back(new RRI(RRI::XORI, target, midReg, 1));
+    break;
+  case ir::CmpInst::SGT:
+    mirs.push_back(new RRR(RRR::SGT, target, operand1, operand2));
+    break;
+  case ir::CmpInst::SLE:
+    mirs.push_back(new RRR(RRR::SGT, midReg, operand1, operand2));
+    mirs.push_back(new RRI(RRI::XORI, target, midReg, 1));
+    break;
+  case ir::CmpInst::SLT:
+    if (const auto value = dynamic_cast<ir::ConstantNumber *>(op2)) {
+      if (value->intValue() == 0) {
+        mirs.pop_back();
+        const auto mid = new reg::Virtual(value->getType());
+        mirs.push_back(new RRI(RRI::SRAIW, mid, operand1, 31));
+        mirs.push_back(new RRI(RRI::ANDI, target, mid, 1));
+      } else if (value->intValue() >= -2048 && value->intValue() <= 2047) {
+        mirs.pop_back();
+        mirs.push_back(new RRI(RRI::SLTI, target, operand1, value->intValue()));
+      } else {
+        mirs.push_back(new RRR(RRR::SLT, target, operand1, operand2));
+      }
+    } else if (const auto zero = dynamic_cast<ir::ConstantZero *>(op2)) {
+      mirs.pop_back();
+      const auto mid = new reg::Virtual(zero->getType());
+      mirs.push_back(new RRI(RRI::SRAIW, mid, operand1, 31));
+      mirs.push_back(new RRI(RRI::ANDI, target, mid, 1));
+    } else {
+      mirs.push_back(new RRR(RRR::SLT, target, operand1, operand2));
+    }
+
+  default:
+    // TODO need a throw?
+    break;
+  }
+}
+
+void MIRTranslator::fCmp(
+    ir::FCmpInst *fCmpInst, std::vector<MIR *> &mirs,
+    std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+    std::unordered_map<ir::Argument *, std::pair<bool, int>> const &argOffsets,
+    std::unordered_map<ir::AllocaInst *, int> const &localOffsets) {
+  reg::Virtual *target = instRegMap.at(fCmpInst);
+  reg::Virtual *operand1;
+  const auto op1 = fCmpInst->getOperand<ir::Value>(0);
+  if (const auto arg = dynamic_cast<ir::Argument *>(op1)) {
+    const auto midReg = new reg::Virtual(arg->getType() == ir::BasicType::FLOAT
+                                             ? ir::BasicType::FLOAT
+                                             : ir::BasicType::I32);
+    mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                    ? LoadFrom::INNER_PARAM
+                                    : LoadFrom::OUTER_PARAM,
+                                midReg, argOffsets.at(arg).second));
+    operand1 = midReg;
+  } else if (const auto valueInst = dynamic_cast<ir::Instruction *>(op1)) {
+    operand1 = instRegMap.at(valueInst);
+  } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(op1)) {
+    const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg2 = new reg::Virtual(ir::BasicType::FLOAT);
+    float f = value->floatValue();
+    mirs.push_back(new LoadImm(midReg1, *reinterpret_cast<int *>(&f)));
+    mirs.push_back(new RR(RR::MV, midReg2, midReg1));
+    operand1 = midReg2;
+  } else {
+    throw std::runtime_error(
+        "unsupported fcmp operand in MIRGenerator::funcToMir");
+  }
+  reg::Virtual *operand2;
+  const auto op2 = fCmpInst->getOperand<ir::Value>(1);
+  if (const auto arg = dynamic_cast<ir::Argument *>(op2)) {
+    const auto midReg = new reg::Virtual(arg->getType() == ir::BasicType::FLOAT
+                                             ? ir::BasicType::FLOAT
+                                             : ir::BasicType::I32);
+    mirs.push_back(new LoadFrom(argOffsets.at(arg).first
+                                    ? LoadFrom::INNER_PARAM
+                                    : LoadFrom::OUTER_PARAM,
+                                midReg, argOffsets.at(arg).second));
+    operand2 = midReg;
+  } else if (const auto valueInst = dynamic_cast<ir::Instruction *>(op2)) {
+    operand2 = instRegMap.at(valueInst);
+  } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(op2)) {
+    const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
+    const auto midReg2 = new reg::Virtual(ir::BasicType::FLOAT);
+    float f = value->floatValue();
+    mirs.push_back(new LoadImm(midReg1, *reinterpret_cast<int *>(&f)));
+    mirs.push_back(new RR(RR::MV, midReg2, midReg1));
+    operand2 = midReg2;
+  } else {
+    throw std::runtime_error(
+        "unsupported fcmp operand in MIRGenerator::funcToMir");
+  }
+  if (fCmpInst->getCond() == ir::CmpInst::UNE) {
+    mirs.push_back(new RRR(RRR::EQ, target, operand1, operand2));
+    mirs.push_back(new RRI(RRI::XORI, target, target, 1));
+    return;
+  }
+  RRR::Op op;
+  switch (fCmpInst->getCond()) {
+  case ir::CmpInst::OEQ:
+    op = RRR::EQ;
+    break;
+  case ir::CmpInst::OGE:
+    op = RRR::GE;
+    break;
+  case ir::CmpInst::OGT:
+    op = RRR::GT;
+    break;
+  case ir::CmpInst::OLE:
+    op = RRR::LE;
+    break;
+  case ir::CmpInst::OLT:
+    op = RRR::LT;
+    break;
+  default:
+    throw std::runtime_error(
+        "unsupported fcmp operand in MIRGenerator::funcToMir");
+  }
+  mirs.push_back(new RRR(op, target, operand1, operand2));
 }
 
 } // namespace mir

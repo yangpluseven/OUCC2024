@@ -148,36 +148,73 @@ public:
   static void transBinImmReg(
       std::vector<MIR *> &irs,
       const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-      ir::Binary *binOp, ir::ConstantNumber *value, reg::Virtual *reg);
+      ir::BinaryInst *binOp, ir::ConstantNumber *value, reg::Virtual *reg);
   static void transBinRegImm(
       std::vector<MIR *> &irs,
       const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-      ir::Binary *binOp, reg::Virtual *reg, ir::ConstantNumber *value);
+      ir::BinaryInst *binOp, reg::Virtual *reg, ir::ConstantNumber *value);
   static void transBinRegReg(
       std::vector<MIR *> &irs,
       const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-      ir::Binary *binOp, reg::Virtual *reg1, reg::Virtual *reg2);
+      ir::BinaryInst *binOp, reg::Virtual *reg1, reg::Virtual *reg2);
 };
 
-class MIROpTranslator {
+class MIRTranslator {
 public:
-  static void transBranch(
-      std::vector<MIR *> &irs,
+  static void branch(
+      ir::BranchInst *branchInst, std::vector<MIR *> &mirs,
+      std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap);
+  static void binary(
+      ir::BinaryInst *binOp, std::vector<MIR *> &mirs,
       std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
-      ir::BranchInst *branchInst);
-  static void
-  transBin(std::vector<MIR *> &irs,
-           std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
-           std::unordered_map<ir::Argument *, std::pair<bool, int>> const
-               &argOffsets,
-           ir::Binary *binOp);
-  static int transCall(
-      std::vector<MIR *> &irs,
+      std::unordered_map<ir::Argument *, std::pair<bool, int>> const
+          &argOffsets);
+  static int
+  call(ir::CallInst *callInst, std::vector<MIR *> &mirs,
+       std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+       std::unordered_map<ir::Argument *, std::pair<bool, int>> const
+           &argOffsets,
+       std::unordered_map<ir::AllocaInst *, int> const &localOffsets);
+  static void getPtr(
+      ir::GetPtrInst *getPtrInst, std::vector<MIR *> &mirs,
       std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
       std::unordered_map<ir::Argument *, std::pair<bool, int>> const
           &argOffsets,
-      ir::CallInst *callInst,
       std::unordered_map<ir::AllocaInst *, int> const &localOffsets);
+  static void
+  load(ir::LoadInst *loadInst, std::vector<MIR *> &mirs,
+       std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+       std::unordered_map<ir::Argument *, std::pair<bool, int>> const
+           &argOffsets,
+       std::unordered_map<ir::AllocaInst *, int> const &localOffsets);
+  static void
+  ret(ir::RetInst *retInst, std::vector<MIR *> &mirs,
+      std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+      std::unordered_map<ir::Argument *, std::pair<bool, int>> const
+          &argOffsets,
+      Label *retLabel);
+  static void
+  store(ir::StoreInst *storeInst, std::vector<MIR *> &mirs,
+        std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+        std::unordered_map<ir::Argument *, std::pair<bool, int>> const
+            &argOffsets,
+        std::unordered_map<ir::AllocaInst *, int> const &localOffsets);
+  static void bitCast(
+      ir::BitCastInst *bitCastInst, std::vector<MIR *> &mirs,
+      std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+      std::unordered_map<ir::AllocaInst *, int> const &localOffsets);
+  static void
+  iCmp(ir::ICmpInst *iCmpInst, std::vector<MIR *> &mirs,
+       std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+       std::unordered_map<ir::Argument *, std::pair<bool, int>> const
+           &argOffsets,
+       std::unordered_map<ir::AllocaInst *, int> const &localOffsets);
+  static void
+  fCmp(ir::FCmpInst *fCmpInst, std::vector<MIR *> &mirs,
+       std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
+       std::unordered_map<ir::Argument *, std::pair<bool, int>> const
+           &argOffsets,
+       std::unordered_map<ir::AllocaInst *, int> const &localOffsets);
 };
 
 } // namespace mir

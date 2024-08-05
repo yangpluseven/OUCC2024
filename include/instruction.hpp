@@ -53,14 +53,14 @@ public:
   std::string str() const override;
 };
 
-class GetElementPtrInst : public Instruction {
+class GetPtrInst : public Instruction {
 private:
   static Type *calcType(Value *value, size_t indexSize);
 
 public:
-  GetElementPtrInst(BasicBlock *block, Value *ptr,
+  GetPtrInst(BasicBlock *block, Value *ptr,
                     std::initializer_list<Value *> indexes = {});
-  GetElementPtrInst(BasicBlock *block, Value *ptr,
+  GetPtrInst(BasicBlock *block, Value *ptr,
                     std::vector<Value *> &indexes);
   std::string str() const override;
 };
@@ -96,12 +96,12 @@ public:
   std::string str() const override;
 };
 
-class Binary : public Instruction {
+class BinaryInst : public Instruction {
 public:
   enum Op { ADD, FADD, SUB, FSUB, MUL, FMUL, SDIV, FDIV, SREM, XOR };
 
   const Op op;
-  Binary(BasicBlock *block, Op op, Value *lhs, Value *rhs);
+  BinaryInst(BasicBlock *block, Op op, Value *lhs, Value *rhs);
   std::string str() const override;
 
 private:
