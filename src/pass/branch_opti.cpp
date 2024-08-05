@@ -6,7 +6,7 @@ bool BranchOpt::onFunction(ir::Function *function) {
   bool changed = false;
   for (int i = 1; i < function->size(); i++) {
     const auto block = function->get(i);
-    const auto &uses = block->getUses();
+    const auto &uses = block->getUsed();
     if (uses.empty()) {
       if (const auto branchInst =
               dynamic_cast<ir::BranchInst *>(block->getLast())) {

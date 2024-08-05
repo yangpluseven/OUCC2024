@@ -170,7 +170,7 @@ void MemoryPromote::clearPhi(ir::Function *func) {
       bool removed = false;
       auto &phiMap = _globalPhiMap.at(block);
       for (auto it = phiMap.begin(); it != phiMap.end();) {
-        if (it->second->getUses().empty()) {
+        if (it->second->getUsed().empty()) {
           it = phiMap.erase(it);
           removed = true;
         } else {
@@ -203,7 +203,7 @@ void MemoryPromote::clearPhi(ir::Function *func) {
       }
       if (replaceValue) {
         toContinue = true;
-        for (const auto use : replaceValue->getUses()) {
+        for (const auto use : replaceValue->getUsed()) {
           use->setValue(replaceValue);
           const auto replacePhiNode =
               dynamic_cast<ir::PHINode *>(replaceValue);

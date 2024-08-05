@@ -79,7 +79,7 @@ CallInst::CallInst(BasicBlock *block, Function *func,
 std::string CallInst::str() const {
   std::stringstream ss;
   ss << "(";
-  for (int i = 1; i < operands.size(); i++) {
+  for (int i = 1; i < uses.size(); i++) {
     if (i != 1)
       ss << ", ";
     auto param = getOperand<Value>(i);
@@ -184,12 +184,12 @@ void PHINode::setBlockValue(int index, BasicBlock *block) {
 
 std::string PHINode::str() const {
   std::stringstream ss;
-  for (int i = 0; i < operands.size(); i++) {
+  for (int i = 0; i < uses.size(); i++) {
     if (i != 0)
       ss << ", ";
 
-    ss << "[" << operands[i]->getValue()->getName() << ", %"
-        << _useBlockMap.at(operands[i])->str() << "]";
+    ss << "[" << uses[i]->getValue()->getName() << ", %"
+        << _useBlockMap.at(uses[i])->str() << "]";
   }
   return getName() + " = phi " + type->str() + " " + ss.str();
 }
