@@ -226,34 +226,34 @@ void MIRBinTranslator::transAddRegImmI(std::vector<MIR *> &irs,
 void MIRBinTranslator::transBinImmReg(
     std::vector<MIR *> &irs,
     const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-    ir::BinaryOperator *binOp, ir::ConstantNumber *value, reg::Virtual *reg) {
+    ir::Binary *binOp, ir::ConstantNumber *value, reg::Virtual *reg) {
   auto target = instRegMap.at(binOp);
   switch (binOp->op) {
-  case ir::BinaryOperator::ADD:
+  case ir::Binary::ADD:
     transAddRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::BinaryOperator::FADD:
+  case ir::Binary::FADD:
     transAddRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::BinaryOperator::SDIV:
+  case ir::Binary::SDIV:
     transDivImmRegI(irs, target, value->intValue(), reg);
     break;
-  case ir::BinaryOperator::FDIV:
+  case ir::Binary::FDIV:
     transDivImmRegF(irs, target, value->floatValue(), reg);
     break;
-  case ir::BinaryOperator::SREM:
+  case ir::Binary::SREM:
     transModImmReg(irs, target, value->intValue(), reg);
     break;
-  case ir::BinaryOperator::MUL:
+  case ir::Binary::MUL:
     transMulRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::BinaryOperator::FMUL:
+  case ir::Binary::FMUL:
     transMulRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::BinaryOperator::SUB:
+  case ir::Binary::SUB:
     transSubImmRegI(irs, target, value->intValue(), reg);
     break;
-  case ir::BinaryOperator::FSUB:
+  case ir::Binary::FSUB:
     transSubImmRegF(irs, target, value->floatValue(), reg);
     break;
   default:
@@ -265,37 +265,37 @@ void MIRBinTranslator::transBinImmReg(
 void MIRBinTranslator::transBinRegImm(
     std::vector<MIR *> &irs,
     const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-    ir::BinaryOperator *binOp, reg::Virtual *reg, ir::ConstantNumber *value) {
+    ir::Binary *binOp, reg::Virtual *reg, ir::ConstantNumber *value) {
   auto target = instRegMap.at(binOp);
   switch (binOp->op) {
-  case ir::BinaryOperator::ADD:
+  case ir::Binary::ADD:
     transAddRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::BinaryOperator::FADD:
+  case ir::Binary::FADD:
     transAddRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::BinaryOperator::SDIV:
+  case ir::Binary::SDIV:
     transDivRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::BinaryOperator::FDIV:
+  case ir::Binary::FDIV:
     transDivRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::BinaryOperator::SREM:
+  case ir::Binary::SREM:
     transModRegImm(irs, target, reg, value->intValue());
     break;
-  case ir::BinaryOperator::MUL:
+  case ir::Binary::MUL:
     transMulRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::BinaryOperator::FMUL:
+  case ir::Binary::FMUL:
     transMulRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::BinaryOperator::SUB:
+  case ir::Binary::SUB:
     transSubRegImmI(irs, target, reg, value->intValue());
     break;
-  case ir::BinaryOperator::FSUB:
+  case ir::Binary::FSUB:
     transSubRegImmF(irs, target, reg, value->floatValue());
     break;
-  case ir::BinaryOperator::XOR:
+  case ir::Binary::XOR:
     auto const midReg = new reg::Virtual(ir::BasicType::I32);
     MIROpUtil::loadImmToReg(irs, midReg, value->intValue());
     irs.push_back(new RRR(RRR::XOR, target, reg, midReg));
@@ -306,34 +306,34 @@ void MIRBinTranslator::transBinRegImm(
 void MIRBinTranslator::transBinRegReg(
     std::vector<MIR *> &irs,
     const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-    ir::BinaryOperator *binOp, reg::Virtual *reg1, reg::Virtual *reg2) {
+    ir::Binary *binOp, reg::Virtual *reg1, reg::Virtual *reg2) {
   auto const target = instRegMap.at(binOp);
   switch (binOp->op) {
-  case ir::BinaryOperator::ADD:
+  case ir::Binary::ADD:
     transAddRegRegI(irs, target, reg1, reg2);
     break;
-  case ir::BinaryOperator::FADD:
+  case ir::Binary::FADD:
     transAddRegRegF(irs, target, reg1, reg2);
     break;
-  case ir::BinaryOperator::SDIV:
+  case ir::Binary::SDIV:
     transDivRegRegI(irs, target, reg1, reg2);
     break;
-  case ir::BinaryOperator::FDIV:
+  case ir::Binary::FDIV:
     transDivRegRegF(irs, target, reg1, reg2);
     break;
-  case ir::BinaryOperator::SREM:
+  case ir::Binary::SREM:
     transModRegReg(irs, target, reg1, reg2);
     break;
-  case ir::BinaryOperator::MUL:
+  case ir::Binary::MUL:
     transMulRegRegI(irs, target, reg1, reg2);
     break;
-  case ir::BinaryOperator::FMUL:
+  case ir::Binary::FMUL:
     transMulRegRegF(irs, target, reg1, reg2);
     break;
-  case ir::BinaryOperator::SUB:
+  case ir::Binary::SUB:
     transSubRegRegI(irs, target, reg1, reg2);
     break;
-  case ir::BinaryOperator::FSUB:
+  case ir::Binary::FSUB:
     transSubRegRegF(irs, target, reg1, reg2);
     break;
   default:
@@ -377,7 +377,7 @@ void MIROpTranslator::transBin(
     std::vector<MIR *> &irs,
     std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
     std::unordered_map<ir::Argument *, std::pair<bool, int>> const &argOffsets,
-    ir::BinaryOperator *binOp) {
+    ir::Binary *binOp) {
   auto const operand1 = binOp->getOperand<ir::Value>(0);
   auto const operand2 = binOp->getOperand<ir::Value>(1);
   reg::Virtual *reg1 = nullptr;

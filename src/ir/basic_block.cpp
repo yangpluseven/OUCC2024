@@ -18,16 +18,16 @@ Instruction *BasicBlock::getLast() const {
   }
 }
 
-void BasicBlock::add(Instruction *inst) { _instructions.push_back(inst); }
+void BasicBlock::insert(Instruction *inst) { _instructions.push_back(inst); }
 
-void BasicBlock::add(int index, Instruction *inst) {
+void BasicBlock::insert(int index, Instruction *inst) {
   if (index < 0 || index > _instructions.size()) {
     throw std::out_of_range("Index out of range");
   }
   _instructions.insert(_instructions.begin() + index, inst);
 }
 
-void BasicBlock::addAll(int index, const std::vector<Instruction *> &newInsts) {
+void BasicBlock::insert(int index, const std::vector<Instruction *> &newInsts) {
   if (index < 0 || index > _instructions.size()) {
     throw std::out_of_range("Index out of range");
   }

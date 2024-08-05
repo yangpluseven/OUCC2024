@@ -41,7 +41,7 @@ bool BranchOpt::onFunction(ir::Function *function) {
         prevBlock->remove(static_cast<int>(prevBlock->size()) - 1);
         for (const auto inst : *block) {
           inst->setBlock(prevBlock);
-          prevBlock->add(inst);
+          prevBlock->insert(inst);
         }
         if (const auto nextBranchInst =
                 dynamic_cast<ir::BranchInst *>(block->getLast())) {

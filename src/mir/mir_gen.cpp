@@ -60,8 +60,8 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
   std::pair<int, int> callerNums = getCallerNumbers(func);
   auto *mFunc = new MachineFunction(func, locals.first, callerNums.first,
                                     callerNums.second);
+  auto &mirs = mFunc->getMIRs();
   auto retLabelMIR = new Label(new ir::BasicBlock(func));
-  std::unordered_map<reg::Virtual *, reg::Machine *> replaceMap;
   std::unordered_map<ir::Instruction *, reg::Virtual *> instRegMap;
   for (const auto block : *func) {
     for (const auto inst : *block) {
@@ -79,7 +79,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
               phi->getBlockValue(j);
           ir::BasicBlock *tmpBlock = blockValue.first;
           ir::Value *value = blockValue.second;
-          tmpBlock->add(static_cast<int>(tmpBlock->size()) - 1,
+          tmpBlock->insert(static_cast<int>(tmpBlock->size()) - 1,
                         new ir::FakeMvInst(tmpBlock, phi, value));
         }
         block->remove(i);
@@ -89,20 +89,27 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
   }
   std::unordered_map<ir::AllocaInst *, int> localOffsets = locals.second;
   for (const auto block : *func) {
+    if (!mirs.empty()) {
+      const auto lastInst = mirs.back();
+      const auto branch = dynamic_cast<Branch *>(lastInst);
+      if (branch && branch->op == Branch::NUL && branch->block == block) {
+        mirs.pop_back();
+      }
+    }
     mFunc->addMIR(new Label(block));
     for (const auto inst : *block) {
-      if (const auto binaryOp = dynamic_cast<ir::BinaryOperator *>(inst)) {
-        MIROpTranslator::transBin(mFunc->getIRs(), instRegMap, argOffsets,
+      if (const auto binaryOp = dynamic_cast<ir::Binary *>(inst)) {
+        MIROpTranslator::transBin(mirs, instRegMap, argOffsets,
                                   binaryOp);
         continue;
       }
       if (const auto branchInst = dynamic_cast<ir::BranchInst *>(inst)) {
-        MIROpTranslator::transBranch(mFunc->getIRs(), instRegMap, branchInst);
+        MIROpTranslator::transBranch(mirs, instRegMap, branchInst);
         continue;
       }
       if (const auto callInst = dynamic_cast<ir::CallInst *>(inst)) {
         int paramNum = MIROpTranslator::transCall(
-            mFunc->getIRs(), instRegMap, argOffsets, callInst, localOffsets);
+            mirs, instRegMap, argOffsets, callInst, localOffsets);
         mFunc->maxFuncParamNum = std::max(mFunc->maxFuncParamNum, paramNum);
         continue;
       }
@@ -114,39 +121,39 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg3 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg4 = new reg::Virtual(ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LLA(midReg1, glob));
-          mFunc->getIRs().push_back(new LoadImm(
+          mirs.push_back(new LLA(midReg1, glob));
+          mirs.push_back(new LoadImm(
               midReg2, static_cast<int>(
                            getElePtrInst->getType()->baseType()->getSize()) /
                            8));
           auto *oprand = getElePtrInst->getLastOperand<ir::Value>();
           if (const auto arg = dynamic_cast<ir::Argument *>(oprand)) {
-            mFunc->getIRs().push_back(new LoadFrom(
+            mirs.push_back(new LoadFrom(
                 argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                          : LoadFrom::OUTER_PARAM,
                 midReg3, argOffsets.at(arg).second));
           } else if (const auto indexInst =
                          dynamic_cast<ir::Instruction *>(oprand)) {
-            mFunc->getIRs().push_back(
+            mirs.push_back(
                 new RR(RR::MV, midReg3, instRegMap.at(indexInst)));
           } else if (const auto value =
                          dynamic_cast<ir::ConstantNumber *>(oprand)) {
             if (value->getType() == ir::BasicType::FLOAT) {
               const auto midReg = new reg::Virtual(ir::BasicType::I32);
               float f = value->floatValue();
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
-              mFunc->getIRs().push_back(new RR(RR::MV, midReg3, midReg));
+              mirs.push_back(new RR(RR::MV, midReg3, midReg));
             } else {
-              mFunc->getIRs().push_back(new LoadImm(midReg3, value->intValue()));
+              mirs.push_back(new LoadImm(midReg3, value->intValue()));
             }
           } else {
             throw std::runtime_error(
                 "unsupported getelementptr operand in MIRGenerator::funcToMir");
           }
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRR(RRR::MUL, midReg4, midReg2, midReg3));
-          mFunc->getIRs().push_back(new RRR(
+          mirs.push_back(new RRR(
               RRR::ADD, instRegMap.at(getElePtrInst), midReg1, midReg4));
           continue;
         }
@@ -156,42 +163,42 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg3 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg4 = new reg::Virtual(ir::BasicType::I32);
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new LoadFrom(innerOffset.first ? LoadFrom::INNER_PARAM
                                                 : LoadFrom::OUTER_PARAM,
                               midReg1, innerOffset.second));
-          mFunc->getIRs().push_back(new LoadImm(
+          mirs.push_back(new LoadImm(
               midReg2, static_cast<int>(
                            getElePtrInst->getType()->baseType()->getSize()) /
                            8));
           auto *oprand = getElePtrInst->getLastOperand<ir::Value>();
           if (const auto indexArg = dynamic_cast<ir::Argument *>(oprand)) {
-            mFunc->getIRs().push_back(new LoadFrom(
+            mirs.push_back(new LoadFrom(
                 argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                          : LoadFrom::OUTER_PARAM,
                 midReg3, argOffsets.at(indexArg).second));
           } else if (const auto indexInst =
                          dynamic_cast<ir::Instruction *>(oprand)) {
-            mFunc->getIRs().push_back(
+            mirs.push_back(
                 new RR(RR::MV, midReg3, instRegMap.at(indexInst)));
           } else if (const auto value =
                          dynamic_cast<ir::ConstantNumber *>(oprand)) {
             if (value->getType() == ir::BasicType::FLOAT) {
               const auto midReg = new reg::Virtual(ir::BasicType::I32);
               float f = value->floatValue();
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
-              mFunc->getIRs().push_back(new RR(RR::MV, midReg3, midReg));
+              mirs.push_back(new RR(RR::MV, midReg3, midReg));
             } else {
-              mFunc->getIRs().push_back(new LoadImm(midReg3, value->intValue()));
+              mirs.push_back(new LoadImm(midReg3, value->intValue()));
             }
           } else {
             throw std::runtime_error(
                 "unsupported getelementptr operand in MIRGenerator::funcToMir");
           }
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRR(RRR::MUL, midReg4, midReg2, midReg3));
-          mFunc->getIRs().push_back(new RRR(
+          mirs.push_back(new RRR(
               RRR::ADD, instRegMap.at(getElePtrInst), midReg1, midReg4));
           // TODO no continue?
         }
@@ -200,47 +207,47 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg3 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg4 = new reg::Virtual(ir::BasicType::I32);
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RegAddImm(midReg1, localOffsets.at(allocaInst)));
           auto *oprand = getElePtrInst->getLastOperand<ir::Value>();
           if (const auto arg = dynamic_cast<ir::Argument *>(oprand)) {
-            mFunc->getIRs().push_back(new LoadFrom(
+            mirs.push_back(new LoadFrom(
                 argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                          : LoadFrom::OUTER_PARAM,
                 midReg2, argOffsets.at(arg).second));
           } else if (const auto indexInst =
                          dynamic_cast<ir::Instruction *>(oprand)) {
-            mFunc->getIRs().push_back(
+            mirs.push_back(
                 new RR(RR::MV, midReg2, instRegMap.at(indexInst)));
           } else if (const auto value =
                          dynamic_cast<ir::ConstantNumber *>(oprand)) {
             if (value->getType() == ir::BasicType::FLOAT) {
               const auto midReg = new reg::Virtual(ir::BasicType::I32);
               float f = value->floatValue();
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
-              mFunc->getIRs().push_back(new RR(RR::MV, midReg2, midReg));
+              mirs.push_back(new RR(RR::MV, midReg2, midReg));
             } else {
-              mFunc->getIRs().push_back(new LoadImm(midReg2, value->intValue()));
+              mirs.push_back(new LoadImm(midReg2, value->intValue()));
             }
           } else {
             throw std::runtime_error(
                 "unsupported getelementptr operand in MIRGenerator::funcToMir");
           }
           if (getElePtrInst->size() == 3) {
-            mFunc->getIRs().push_back(new LoadImm(
+            mirs.push_back(new LoadImm(
                 midReg3,
                 static_cast<int>(
                     ptr->getType()->baseType()->baseType()->getSize()) /
                     8));
           } else {
-            mFunc->getIRs().push_back(new LoadImm(
+            mirs.push_back(new LoadImm(
                 midReg3,
                 static_cast<int>(ptr->getType()->baseType()->getSize()) / 8));
           }
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRR(RRR::MUL, midReg4, midReg2, midReg3));
-          mFunc->getIRs().push_back(new RRR(
+          mirs.push_back(new RRR(
               RRR::ADD, instRegMap.at(getElePtrInst), midReg1, midReg4));
           continue;
         }
@@ -250,43 +257,43 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg3 = new reg::Virtual(ir::BasicType::I32);
           auto *oprand = getElePtrInst->getLastOperand<ir::Value>();
           if (const auto arg = dynamic_cast<ir::Argument *>(oprand)) {
-            mFunc->getIRs().push_back(new LoadFrom(
+            mirs.push_back(new LoadFrom(
                 argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                          : LoadFrom::OUTER_PARAM,
                 midReg1, argOffsets.at(arg).second));
           } else if (const auto indexInst =
                          dynamic_cast<ir::Instruction *>(oprand)) {
-            mFunc->getIRs().push_back(
+            mirs.push_back(
                 new RR(RR::MV, midReg1, instRegMap.at(indexInst)));
           } else if (const auto value =
                          dynamic_cast<ir::ConstantNumber *>(oprand)) {
             if (value->getType() == ir::BasicType::FLOAT) {
               const auto midReg = new reg::Virtual(ir::BasicType::I32);
               float f = value->floatValue();
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
-              mFunc->getIRs().push_back(new RR(RR::MV, midReg1, midReg));
+              mirs.push_back(new RR(RR::MV, midReg1, midReg));
             } else {
-              mFunc->getIRs().push_back(new LoadImm(midReg1, value->intValue()));
+              mirs.push_back(new LoadImm(midReg1, value->intValue()));
             }
           } else {
             throw std::runtime_error(
                 "unsupported getelementptr operand in MIRGenerator::funcToMir");
           }
           if (getElePtrInst->size() == 3) {
-            mFunc->getIRs().push_back(new LoadImm(
+            mirs.push_back(new LoadImm(
                 midReg2,
                 static_cast<int>(
                     ptr->getType()->baseType()->baseType()->getSize()) /
                     8));
           } else {
-            mFunc->getIRs().push_back(new LoadImm(
+            mirs.push_back(new LoadImm(
                 midReg2,
                 static_cast<int>(ptr->getType()->baseType()->getSize()) / 8));
           }
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRR(RRR::MUL, midReg3, midReg1, midReg2));
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRR(RRR::ADD, instRegMap.at(getElePtrInst),
                          instRegMap.at(ptrInst), midReg3));
         }
@@ -296,30 +303,30 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
         const auto ptr = loadInst->getOperand<ir::Value>(0);
         if (const auto glob = dynamic_cast<ir::GlobalVariable *>(ptr)) {
           const auto midReg = new reg::Virtual(ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LLA(midReg, glob));
-          mFunc->getIRs().push_back(
+          mirs.push_back(new LLA(midReg, glob));
+          mirs.push_back(
               new Load(instRegMap.at(loadInst), midReg, 0, 4));
           continue;
         }
         if (const auto arg = dynamic_cast<ir::Argument *>(ptr)) {
           std::pair<bool, int> innerOffset = argOffsets.at(arg);
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new LoadFrom(innerOffset.first ? LoadFrom::INNER_PARAM
                                                 : LoadFrom::OUTER_PARAM,
                               instRegMap.at(loadInst), innerOffset.second));
         }
         if (const auto allocaInst = dynamic_cast<ir::AllocaInst *>(ptr)) {
           const auto midReg = new reg::Virtual(ir::BasicType::I32);
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RegAddImm(midReg, localOffsets.at(allocaInst)));
-          mFunc->getIRs().push_back(new Load(
+          mirs.push_back(new Load(
               instRegMap.at(loadInst), midReg, 0,
               static_cast<int>(allocaInst->getType()->baseType()->getSize()) /
                   8));
           continue;
         }
         if (const auto ptrInst = dynamic_cast<ir::Instruction *>(ptr)) {
-          mFunc->getIRs().push_back(new Load(
+          mirs.push_back(new Load(
               instRegMap.at(loadInst), instRegMap.at(ptrInst), 0,
               static_cast<int>(ptrInst->getType()->baseType()->getSize()) / 8));
         }
@@ -329,7 +336,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
         if (!retInst->empty()) {
           const auto retVal = retInst->getOperand<ir::Value>(0);
           if (const auto arg = dynamic_cast<ir::Argument *>(retVal)) {
-            mFunc->getIRs().push_back(new LoadFrom(
+            mirs.push_back(new LoadFrom(
                 argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                          : LoadFrom::OUTER_PARAM,
                 retVal->getType() == ir::BasicType::I32 ? reg::Machine::A0
@@ -337,7 +344,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
                 argOffsets.at(arg).second));
           } else if (const auto valueInst =
                          dynamic_cast<ir::Instruction *>(retVal)) {
-            mFunc->getIRs().push_back(new RR(
+            mirs.push_back(new RR(
                 RR::MV,
                 retVal->getType() == ir::BasicType::I32 ? reg::Machine::A0
                                                         : reg::Machine::FA0,
@@ -346,14 +353,14 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
                          dynamic_cast<ir::ConstantNumber *>(retVal)) {
             const auto type = value->getType();
             if (type == ir::BasicType::I32) {
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new LoadImm(reg::Machine::A0, value->intValue()));
             } else if (type == ir::BasicType::FLOAT) {
               const auto midReg = new reg::Virtual(ir::BasicType::I32);
               float f = value->floatValue();
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new RR(RR::MV, reg::Machine::FA0, midReg));
             } else {
               throw std::runtime_error(
@@ -364,7 +371,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
                 "unsupported ret operand in MIRGenerator::funcToMir");
           }
         }
-        mFunc->getIRs().push_back(
+        mirs.push_back(
             new Branch(Branch::NUL, nullptr, nullptr, retLabelMIR->getBlock()));
         continue;
       }
@@ -374,95 +381,95 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
         if (const auto glob = dynamic_cast<ir::GlobalVariable *>(ptr)) {
           const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LLA(midReg1, glob));
+          mirs.push_back(new LLA(midReg1, glob));
           if (const auto arg = dynamic_cast<ir::Argument *>(value)) {
-            mFunc->getIRs().push_back(new LoadFrom(
+            mirs.push_back(new LoadFrom(
                 argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                          : LoadFrom::OUTER_PARAM,
                 midReg2, argOffsets.at(arg).second));
           } else if (const auto valueInst =
                          dynamic_cast<ir::Instruction *>(value)) {
-            mFunc->getIRs().push_back(
+            mirs.push_back(
                 new RR(RR::MV, midReg2, instRegMap.at(valueInst)));
           } else if (const auto v = dynamic_cast<ir::ConstantNumber *>(value)) {
             if (v->getType() == ir::BasicType::FLOAT) {
               const auto midReg = new reg::Virtual(ir::BasicType::I32);
               float f = v->floatValue();
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
-              mFunc->getIRs().push_back(new RR(RR::MV, midReg2, midReg));
+              mirs.push_back(new RR(RR::MV, midReg2, midReg));
             } else {
-              mFunc->getIRs().push_back(new LoadImm(midReg2, v->intValue()));
+              mirs.push_back(new LoadImm(midReg2, v->intValue()));
             }
           } else {
             throw std::runtime_error(
                 "unsupported store operand in MIRGenerator::funcToMir");
           }
-          mFunc->getIRs().push_back(new Store(midReg2, midReg1, 0, 4));
+          mirs.push_back(new Store(midReg2, midReg1, 0, 4));
           continue;
         }
         if (const auto arg = dynamic_cast<ir::Argument *>(ptr)) {
           std::pair<bool, int> innerOffset = argOffsets.at(arg);
           const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new LoadFrom(innerOffset.first ? LoadFrom::INNER_PARAM
                                                 : LoadFrom::OUTER_PARAM,
                               midReg1, innerOffset.second));
           if (const auto argValue = dynamic_cast<ir::Argument *>(value)) {
-            mFunc->getIRs().push_back(new LoadFrom(
+            mirs.push_back(new LoadFrom(
                 argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                          : LoadFrom::OUTER_PARAM,
                 midReg2, argOffsets.at(argValue).second));
           } else if (const auto valueInst =
                          dynamic_cast<ir::Instruction *>(value)) {
-            mFunc->getIRs().push_back(
+            mirs.push_back(
                 new RR(RR::MV, midReg2, instRegMap.at(valueInst)));
           } else if (const auto v = dynamic_cast<ir::ConstantNumber *>(value)) {
             if (v->getType() == ir::BasicType::FLOAT) {
               const auto midReg = new reg::Virtual(ir::BasicType::I32);
               float f = v->floatValue();
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
-              mFunc->getIRs().push_back(new RR(RR::MV, midReg2, midReg));
+              mirs.push_back(new RR(RR::MV, midReg2, midReg));
             } else {
-              mFunc->getIRs().push_back(new LoadImm(midReg2, v->intValue()));
+              mirs.push_back(new LoadImm(midReg2, v->intValue()));
             }
           } else {
             throw std::runtime_error(
                 "unsupported store operand in MIRGenerator::funcToMir");
           }
-          mFunc->getIRs().push_back(new Store(midReg2, midReg1, 0, 4));
+          mirs.push_back(new Store(midReg2, midReg1, 0, 4));
         }
         if (const auto allocaInst = dynamic_cast<ir::AllocaInst *>(ptr)) {
           const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg2 = new reg::Virtual(ir::BasicType::I32);
           if (const auto arg = dynamic_cast<ir::Argument *>(value)) {
-            mFunc->getIRs().push_back(new LoadFrom(
+            mirs.push_back(new LoadFrom(
                 argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                          : LoadFrom::OUTER_PARAM,
                 midReg1, argOffsets.at(arg).second));
           } else if (const auto valueInst =
                          dynamic_cast<ir::Instruction *>(value)) {
-            mFunc->getIRs().push_back(
+            mirs.push_back(
                 new RR(RR::MV, midReg1, instRegMap.at(valueInst)));
           } else if (const auto v = dynamic_cast<ir::ConstantNumber *>(value)) {
             if (v->getType() == ir::BasicType::FLOAT) {
               const auto midReg = new reg::Virtual(ir::BasicType::I32);
               float f = v->floatValue();
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new LoadImm(midReg, *reinterpret_cast<int *>(&f)));
-              mFunc->getIRs().push_back(new RR(RR::MV, midReg1, midReg));
+              mirs.push_back(new RR(RR::MV, midReg1, midReg));
             } else {
-              mFunc->getIRs().push_back(new LoadImm(midReg1, v->intValue()));
+              mirs.push_back(new LoadImm(midReg1, v->intValue()));
             }
           } else {
             throw std::runtime_error(
                 "unsupported store operand in MIRGenerator::funcToMir");
           }
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RegAddImm(midReg2, localOffsets.at(allocaInst)));
-          mFunc->getIRs().push_back(new Store(
+          mirs.push_back(new Store(
               midReg1, midReg2, 0,
               static_cast<int>(allocaInst->getType()->baseType()->getSize()) /
                   8));
@@ -471,29 +478,29 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
         if (const auto ptrInst = dynamic_cast<ir::Instruction *>(ptr)) {
           const auto midReg = new reg::Virtual(ir::BasicType::I32);
           if (const auto arg = dynamic_cast<ir::Argument *>(value)) {
-            mFunc->getIRs().push_back(new LoadFrom(
+            mirs.push_back(new LoadFrom(
                 argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                          : LoadFrom::OUTER_PARAM,
                 midReg, argOffsets.at(arg).second));
           } else if (const auto valueInst =
                          dynamic_cast<ir::Instruction *>(value)) {
-            mFunc->getIRs().push_back(
+            mirs.push_back(
                 new RR(RR::MV, midReg, instRegMap.at(valueInst)));
           } else if (const auto v = dynamic_cast<ir::ConstantNumber *>(value)) {
             if (v->getType() == ir::BasicType::FLOAT) {
               const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
               float f = v->floatValue();
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new LoadImm(midReg1, *reinterpret_cast<int *>(&f)));
-              mFunc->getIRs().push_back(new RR(RR::MV, midReg, midReg1));
+              mirs.push_back(new RR(RR::MV, midReg, midReg1));
             } else {
-              mFunc->getIRs().push_back(new LoadImm(midReg, v->intValue()));
+              mirs.push_back(new LoadImm(midReg, v->intValue()));
             }
           } else {
             throw std::runtime_error(
                 "unsupported store operand in MIRGenerator::funcToMir");
           }
-          mFunc->getIRs().push_back(new Store(
+          mirs.push_back(new Store(
               midReg, instRegMap.at(ptrInst), 0,
               static_cast<int>(ptrInst->getType()->baseType()->getSize()) / 8));
         }
@@ -507,10 +514,10 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
         reg::Virtual *srcReg = instRegMap.at(operand);
         if (const auto allocaInst = dynamic_cast<ir::AllocaInst *>(operand)) {
           srcReg = new reg::Virtual(ir::BasicType::I32);
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RegAddImm(srcReg, localOffsets.at(allocaInst)));
         }
-        mFunc->getIRs().push_back(
+        mirs.push_back(
             new RR(RR::MV, instRegMap.at(bitCastInst), srcReg));
         continue;
       }
@@ -522,7 +529,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg = new reg::Virtual(
               arg->getType() == ir::BasicType::FLOAT ? ir::BasicType::FLOAT
                                                      : ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LoadFrom(
+          mirs.push_back(new LoadFrom(
               argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                        : LoadFrom::OUTER_PARAM,
               midReg, argOffsets.at(arg).second));
@@ -532,7 +539,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           operand1 = instRegMap.at(valueInst);
         } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(op1)) {
           const auto midReg = new reg::Virtual(value->getType());
-          mFunc->getIRs().push_back(new LoadImm(midReg, value->intValue()));
+          mirs.push_back(new LoadImm(midReg, value->intValue()));
           operand1 = midReg;
         } else {
           throw std::runtime_error(
@@ -544,7 +551,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg = new reg::Virtual(
               arg->getType() == ir::BasicType::FLOAT ? ir::BasicType::FLOAT
                                                      : ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LoadFrom(
+          mirs.push_back(new LoadFrom(
               argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                        : LoadFrom::OUTER_PARAM,
               midReg, argOffsets.at(arg).second));
@@ -554,7 +561,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           operand2 = instRegMap.at(valueInst);
         } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(op2)) {
           const auto midReg = new reg::Virtual(value->getType());
-          mFunc->getIRs().push_back(new LoadImm(midReg, value->intValue()));
+          mirs.push_back(new LoadImm(midReg, value->intValue()));
           operand2 = midReg;
         } else {
           throw std::runtime_error(
@@ -563,57 +570,57 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
         const auto midReg = new reg::Virtual(ir::BasicType::I32);
         switch (iCmpInst->getCond()) {
         case ir::CmpInst::EQ:
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRR(RRR::SUB, midReg, operand1, operand2));
-          mFunc->getIRs().push_back(new RR(RR::SEQZ, target, midReg));
+          mirs.push_back(new RR(RR::SEQZ, target, midReg));
           break;
         case ir::CmpInst::NE:
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRR(RRR::SUB, midReg, operand1, operand2));
-          mFunc->getIRs().push_back(new RR(RR::SNEZ, target, midReg));
+          mirs.push_back(new RR(RR::SNEZ, target, midReg));
           break;
         case ir::CmpInst::SGE:
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRR(RRR::SLT, midReg, operand1, operand2));
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRI(RRI::XORI, target, midReg, 1));
           break;
         case ir::CmpInst::SGT:
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRR(RRR::SGT, target, operand1, operand2));
           break;
         case ir::CmpInst::SLE:
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRR(RRR::SGT, midReg, operand1, operand2));
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRI(RRI::XORI, target, midReg, 1));
           break;
         case ir::CmpInst::SLT:
           if (const auto value = dynamic_cast<ir::ConstantNumber *>(op2)) {
             if (value->intValue() == 0) {
-              mFunc->getIRs().pop_back();
+              mirs.pop_back();
               const auto mid = new reg::Virtual(value->getType());
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new RRI(RRI::SRAIW, mid, operand1, 31));
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new RRI(RRI::ANDI, target, mid, 1));
             } else if (value->intValue() >= -2048 &&
                        value->intValue() <= 2047) {
-              mFunc->getIRs().pop_back();
-              mFunc->getIRs().push_back(new RRI(
+              mirs.pop_back();
+              mirs.push_back(new RRI(
                   RRI::SLTI, target, operand1, value->intValue()));
             } else {
-              mFunc->getIRs().push_back(
+              mirs.push_back(
                   new RRR(RRR::SLT, target, operand1, operand2));
             }
           } else if (const auto zero = dynamic_cast<ir::ConstantZero *>(op2)) {
-            mFunc->getIRs().pop_back();
+            mirs.pop_back();
             const auto mid = new reg::Virtual(zero->getType());
-            mFunc->getIRs().push_back(
+            mirs.push_back(
                 new RRI(RRI::SRAIW, mid, operand1, 31));
-            mFunc->getIRs().push_back(new RRI(RRI::ANDI, target, mid, 1));
+            mirs.push_back(new RRI(RRI::ANDI, target, mid, 1));
           } else {
-            mFunc->getIRs().push_back(
+            mirs.push_back(
                 new RRR(RRR::SLT, target, operand1, operand2));
           }
 
@@ -631,7 +638,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg = new reg::Virtual(
               arg->getType() == ir::BasicType::FLOAT ? ir::BasicType::FLOAT
                                                      : ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LoadFrom(
+          mirs.push_back(new LoadFrom(
               argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                        : LoadFrom::OUTER_PARAM,
               midReg, argOffsets.at(arg).second));
@@ -643,9 +650,9 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg2 = new reg::Virtual(ir::BasicType::FLOAT);
           float f = value->floatValue();
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new LoadImm(midReg1, *reinterpret_cast<int *>(&f)));
-          mFunc->getIRs().push_back(new RR(RR::MV, midReg2, midReg1));
+          mirs.push_back(new RR(RR::MV, midReg2, midReg1));
           operand1 = midReg2;
         } else {
           throw std::runtime_error(
@@ -657,7 +664,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg = new reg::Virtual(
               arg->getType() == ir::BasicType::FLOAT ? ir::BasicType::FLOAT
                                                      : ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LoadFrom(
+          mirs.push_back(new LoadFrom(
               argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                        : LoadFrom::OUTER_PARAM,
               midReg, argOffsets.at(arg).second));
@@ -669,18 +676,18 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg2 = new reg::Virtual(ir::BasicType::FLOAT);
           float f = value->floatValue();
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new LoadImm(midReg1, *reinterpret_cast<int *>(&f)));
-          mFunc->getIRs().push_back(new RR(RR::MV, midReg2, midReg1));
+          mirs.push_back(new RR(RR::MV, midReg2, midReg1));
           operand2 = midReg2;
         } else {
           throw std::runtime_error(
               "unsupported fcmp operand in MIRGenerator::funcToMir");
         }
         if (fCmpInst->getCond() == ir::CmpInst::UNE) {
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRR(RRR::EQ, target, operand1, operand2));
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new RRI(RRI::XORI, target, target, 1));
           continue;
         }
@@ -705,7 +712,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           throw std::runtime_error(
               "unsupported fcmp operand in MIRGenerator::funcToMir");
         }
-        mFunc->getIRs().push_back(new RRR(op, target, operand1, operand2));
+        mirs.push_back(new RRR(op, target, operand1, operand2));
         continue;
       }
       if (const auto zExtInst = dynamic_cast<ir::ZExtInst *>(inst)) {
@@ -715,7 +722,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg = new reg::Virtual(
               arg->getType() == ir::BasicType::FLOAT ? ir::BasicType::FLOAT
                                                      : ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LoadFrom(
+          mirs.push_back(new LoadFrom(
               argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                        : LoadFrom::OUTER_PARAM,
               midReg, argOffsets.at(arg).second));
@@ -724,13 +731,13 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           operand = instRegMap.at(valueInst);
         } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(op)) {
           const auto midReg = new reg::Virtual(value->getType());
-          mFunc->getIRs().push_back(new LoadImm(midReg, value->intValue()));
+          mirs.push_back(new LoadImm(midReg, value->intValue()));
           operand = midReg;
         } else {
           throw std::runtime_error(
               "unsupported zext operand in MIRGenerator::funcToMir");
         }
-        mFunc->getIRs().push_back(
+        mirs.push_back(
             new RR(RR::MV, instRegMap.at(zExtInst), operand));
         continue;
       }
@@ -741,7 +748,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg = new reg::Virtual(
               arg->getType() == ir::BasicType::FLOAT ? ir::BasicType::FLOAT
                                                      : ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LoadFrom(
+          mirs.push_back(new LoadFrom(
               argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                        : LoadFrom::OUTER_PARAM,
               midReg, argOffsets.at(arg).second));
@@ -750,13 +757,13 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           operand = instRegMap.at(valueInst);
         } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(op)) {
           const auto midReg = new reg::Virtual(value->getType());
-          mFunc->getIRs().push_back(new LoadImm(midReg, value->intValue()));
+          mirs.push_back(new LoadImm(midReg, value->intValue()));
           operand = midReg;
         } else {
           throw std::runtime_error(
               "unsupported sext operand in MIRGenerator::funcToMir");
         }
-        mFunc->getIRs().push_back(
+        mirs.push_back(
             new RR(RR::NEG, instRegMap.at(sExtInst), operand));
         continue;
       }
@@ -767,7 +774,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg = new reg::Virtual(
               arg->getType() == ir::BasicType::FLOAT ? ir::BasicType::FLOAT
                                                      : ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LoadFrom(
+          mirs.push_back(new LoadFrom(
               argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                        : LoadFrom::OUTER_PARAM,
               midReg, argOffsets.at(arg).second));
@@ -778,15 +785,15 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg1 = new reg::Virtual(ir::BasicType::I32);
           const auto midReg2 = new reg::Virtual(ir::BasicType::FLOAT);
           float f = value->floatValue();
-          mFunc->getIRs().push_back(
+          mirs.push_back(
               new LoadImm(midReg1, *reinterpret_cast<int *>(&f)));
-          mFunc->getIRs().push_back(new RR(RR::MV, midReg2, midReg1));
+          mirs.push_back(new RR(RR::MV, midReg2, midReg1));
           operand = midReg2;
         } else {
           throw std::runtime_error(
               "unsupported fptosi operand in MIRGenerator::funcToMir");
         }
-        mFunc->getIRs().push_back(
+        mirs.push_back(
             new RR(RR::CVT, instRegMap.at(fpTosiInst), operand));
         continue;
       }
@@ -797,7 +804,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg = new reg::Virtual(
               arg->getType() == ir::BasicType::FLOAT ? ir::BasicType::FLOAT
                                                      : ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LoadFrom(
+          mirs.push_back(new LoadFrom(
               argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                        : LoadFrom::OUTER_PARAM,
               midReg, argOffsets.at(arg).second));
@@ -806,13 +813,13 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           operand = instRegMap.at(valueInst);
         } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(op)) {
           const auto midReg = new reg::Virtual(value->getType());
-          mFunc->getIRs().push_back(new LoadImm(midReg, value->intValue()));
+          mirs.push_back(new LoadImm(midReg, value->intValue()));
           operand = midReg;
         } else {
           throw std::runtime_error(
               "unsupported sitofp operand in MIRGenerator::funcToMir");
         }
-        mFunc->getIRs().push_back(
+        mirs.push_back(
             new RR(RR::CVT, instRegMap.at(siTofpInst), operand));
         continue;
       }
@@ -825,7 +832,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg = new reg::Virtual(
               arg->getType() == ir::BasicType::FLOAT ? ir::BasicType::FLOAT
                                                      : ir::BasicType::I32);
-          mFunc->getIRs().push_back(new LoadFrom(
+          mirs.push_back(new LoadFrom(
               argOffsets.at(arg).first ? LoadFrom::INNER_PARAM
                                        : LoadFrom::OUTER_PARAM,
               midReg, argOffsets.at(arg).second));
@@ -836,32 +843,28 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           const auto midReg = new reg::Virtual(value->getType());
           const auto type = midReg->getType();
           if (type == ir::BasicType::I32) {
-            mFunc->getIRs().push_back(new LoadImm(midReg, value->intValue()));
+            mirs.push_back(new LoadImm(midReg, value->intValue()));
           } else if (type == ir::BasicType::FLOAT) {
             const auto tmpMidReg = new reg::Virtual(ir::BasicType::I32);
             float f = value->floatValue();
             // TODO reinterpret_cast
-            mFunc->getIRs().push_back(
+            mirs.push_back(
                 new LoadImm(tmpMidReg, *reinterpret_cast<int *>(&f)));
-            mFunc->getIRs().push_back(new RR(RR::MV, midReg, tmpMidReg));
+            mirs.push_back(new RR(RR::MV, midReg, tmpMidReg));
           } else {
             throw std::runtime_error(
                 "Unsupported type in MIRGenerator::funcToMir");
           }
           vsrc = midReg;
         }
-        mFunc->getIRs().push_back(new RR(RR::MV, target, vsrc));
+        mirs.push_back(new RR(RR::MV, target, vsrc));
         continue;
       }
       throw std::runtime_error(
           "Unsupported instruction in MIRGenerator::funcToMir");
     }
   }
-  mFunc->getIRs().push_back(retLabelMIR);
-  // TODO will this work? and what's more, what does it remove? it's empty.
-  for (auto &ir : mFunc->getIRs()) {
-    ir = ir->replaceReg(replaceMap);
-  }
+  mirs.push_back(retLabelMIR);
   return mFunc;
 }
 

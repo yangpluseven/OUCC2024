@@ -239,7 +239,7 @@ bool MemoryPromote::onFunction(ir::Function *function) {
     for (const auto &p : phiEntry.second) {
       const auto phiNode = p.second;
       const auto block = phiEntry.first;
-      block->add(0, phiNode);
+      block->insert(0, phiNode);
     }
   }
   for (const auto block : *function) {

@@ -148,15 +148,15 @@ public:
   static void transBinImmReg(
       std::vector<MIR *> &irs,
       const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-      ir::BinaryOperator *binOp, ir::ConstantNumber *value, reg::Virtual *reg);
+      ir::Binary *binOp, ir::ConstantNumber *value, reg::Virtual *reg);
   static void transBinRegImm(
       std::vector<MIR *> &irs,
       const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-      ir::BinaryOperator *binOp, reg::Virtual *reg, ir::ConstantNumber *value);
+      ir::Binary *binOp, reg::Virtual *reg, ir::ConstantNumber *value);
   static void transBinRegReg(
       std::vector<MIR *> &irs,
       const std::unordered_map<ir::Instruction *, reg::Virtual *> &instRegMap,
-      ir::BinaryOperator *binOp, reg::Virtual *reg1, reg::Virtual *reg2);
+      ir::Binary *binOp, reg::Virtual *reg1, reg::Virtual *reg2);
 };
 
 class MIROpTranslator {
@@ -170,7 +170,7 @@ public:
            std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,
            std::unordered_map<ir::Argument *, std::pair<bool, int>> const
                &argOffsets,
-           ir::BinaryOperator *binOp);
+           ir::Binary *binOp);
   static int transCall(
       std::vector<MIR *> &irs,
       std::unordered_map<ir::Instruction *, reg::Virtual *> const &instRegMap,

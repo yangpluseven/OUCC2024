@@ -20,12 +20,13 @@ private:
 
 public:
   explicit BasicBlock(Function *func);
+  std::vector<Instruction *> &getInst() { return _instructions; }
 
   bool isEmpty() const;
   Instruction *getLast() const;
-  void add(Instruction *inst);
-  void add(int index, Instruction *inst);
-  void addAll(int index, const std::vector<Instruction *> &newInsts);
+  void insert(Instruction *inst);
+  void insert(int index, Instruction *inst);
+  void insert(int index, const std::vector<Instruction *> &newInsts);
   Instruction *remove(int index);
   Instruction *get(int index) const;
   size_t size() const;

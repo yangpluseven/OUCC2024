@@ -96,12 +96,12 @@ public:
   std::string str() const override;
 };
 
-class BinaryOperator : public Instruction {
+class Binary : public Instruction {
 public:
   enum Op { ADD, FADD, SUB, FSUB, MUL, FMUL, SDIV, FDIV, SREM, XOR };
 
   const Op op;
-  BinaryOperator(BasicBlock *block, Op op, Value *lhs, Value *rhs);
+  Binary(BasicBlock *block, Op op, Value *lhs, Value *rhs);
   std::string str() const override;
 
 private:

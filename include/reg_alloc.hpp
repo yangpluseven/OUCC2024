@@ -99,7 +99,7 @@ public:
   void allocate() {
     solveSpill();
     std::unordered_map<Virtual *, Machine *> vRegToMReg = calcVRegToMReg();
-    auto &vec = _func->getIRs();
+    auto &vec = _func->getMIRs();
     // TODO check here
     for (auto &i : vec) {
       if (!i) {

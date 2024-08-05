@@ -50,7 +50,9 @@ public:
 
   BasicBlock *getFirst() const;
 
-  void insertAfter(const BasicBlock *base, BasicBlock *block);
+  BasicBlock *getLast() const;
+
+  void insertBlock(const BasicBlock *base, BasicBlock *block);
 
   std::vector<BasicBlock *>::iterator begin();
   std::vector<BasicBlock *>::iterator end();

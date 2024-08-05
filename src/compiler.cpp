@@ -122,7 +122,7 @@ void Compiler::writeFuncs() {
     writer << "\t.align 8\n";
     writer << "\t.global " << func->getRawName() << '\n';
     writer << func->getRawName() << ":\n";
-    for (const auto ir : func->getIRs()) {
+    for (const auto ir : func->getMIRs()) {
       if (!dynamic_cast<const mir::Label *>(ir)) {
         writer << '\t';
       }
@@ -229,15 +229,15 @@ void test() {
   ir::Instruction *sotre1 = new ir::StoreInst(
       block0, new ir::ConstantNumber(model::Number(10)), alloca0);
   ir::Instruction *branch0 = new ir::BranchInst(block0, block1);
-  block0->add(alloca0);
-  block0->add(store0);
-  block0->add(sotre1);
-  block0->add(branch0);
+  block0->insert(alloca0);
+  block0->insert(store0);
+  block0->insert(sotre1);
+  block0->insert(branch0);
   func->pushBlock(block0);
   ir::Instruction *load0 = new ir::LoadInst(block1, alloca0);
   ir::Instruction *ret0 = new ir::RetInst(block1, load0);
-  block1->add(load0);
-  block1->add(ret0);
+  block1->insert(load0);
+  block1->insert(ret0);
   func->pushBlock(block1);
   module->addFunction(func);
 

@@ -3,7 +3,7 @@
 
 namespace reg {
 std::vector<Block *> FuncRegAlloc::calcBlocks() const {
-  auto const &irs = _func->getIRs();
+  auto const &irs = _func->getMIRs();
   std::unordered_map<ir::BasicBlock *, int> lableIdMap;
   for (int i = 0; i < irs.size(); i++) {
     if (auto const labelMIR = dynamic_cast<mir::Label *>(irs.at(i))) {
@@ -60,7 +60,7 @@ std::vector<Block *> FuncRegAlloc::calcBlocks() const {
 
 std::unordered_map<Reg *, std::unordered_set<int>>
 FuncRegAlloc::calcLifespans() {
-  auto const &irs = _func->getIRs();
+  auto const &irs = _func->getMIRs();
   std::vector<Block *> blocks = calcBlocks();
   calcUseDef(blocks);
   calcInOut(blocks);
@@ -125,7 +125,7 @@ void FuncRegAlloc::popFrame() {
 }
 
 void FuncRegAlloc::pushFrame() {
-  auto &irs = _func->getIRs();
+  auto &irs = _func->getMIRs();
   std::vector<mir::MIR *> headIRs;
   std::vector<Machine *> toSaveRegs;
   if (_callAddrSize != 0) {
@@ -226,7 +226,7 @@ void FuncRegAlloc::solveSpill() {
       Virtual *reg = toSpill.first;
       int offset = toSpill.second;
       std::vector<mir::MIR *> newIRs;
-      for (const auto ir : _func->getIRs()) {
+      for (const auto ir : _func->getMIRs()) {
         auto vec = ir->getRegs();
         if (std::find(vec.begin(), vec.end(), reg) != vec.end()) {
           auto sp = ir->spill(reg, offset);
@@ -235,8 +235,8 @@ void FuncRegAlloc::solveSpill() {
           newIRs.push_back(ir);
         }
       }
-      _func->getIRs().clear();
-      _func->getIRs().insert(_func->getIRs().begin(), newIRs.begin(),
+      _func->getMIRs().clear();
+      _func->getMIRs().insert(_func->getMIRs().begin(), newIRs.begin(),
                              newIRs.end());
     }
   } while (toContinueOuter);
@@ -247,8 +247,8 @@ FuncRegAlloc::calcConflictMap() {
   std::unordered_map<Reg *, std::unordered_set<int>> lifespans =
       calcLifespans();
   std::vector<std::unordered_set<Reg *>> regsInEackIR;
-  regsInEackIR.reserve(_func->getIRs().size());
-  for (int i = 0; i < _func->getIRs().size(); i++) {
+  regsInEackIR.reserve(_func->getMIRs().size());
+  for (int i = 0; i < _func->getMIRs().size(); i++) {
     regsInEackIR.emplace_back();
   }
   for (const auto &lifespan : lifespans) {
@@ -279,7 +279,7 @@ void FuncRegAlloc::makeFrameInfo() {
   std::unordered_set<Machine *> usedICalleeRegs;
   std::unordered_set<Machine *> usedFCalleeRegs;
   _callAddrSize = 0;
-  for (const auto ir : _func->getIRs()) {
+  for (const auto ir : _func->getMIRs()) {
     if (dynamic_cast<mir::Call *>(ir)) {
       _callAddrSize = 8;
     }
@@ -333,7 +333,7 @@ void FuncRegAlloc::calcInOut(std::vector<Block *> &blocks) {
 }
 
 void FuncRegAlloc::calcUseDef(std::vector<Block *> &blocks) const {
-  auto &irs = _func->getIRs();
+  auto &irs = _func->getMIRs();
   for (const auto block : blocks) {
     for (int i = block->getBegin(); i < block->getEnd(); i++) {
       mir::MIR *mir = irs.at(i);
@@ -373,7 +373,7 @@ void FuncRegAlloc::calcUseDef(std::vector<Block *> &blocks) const {
 }
 
 void FuncRegAlloc::replaceFakeMIRs() {
-  auto &irs = _func->getIRs();
+  auto &irs = _func->getMIRs();
   for (int i = 0; i < irs.size(); i++) {
     mir::MIR *mir = irs[i];
     if (const auto addRegLocalMIR = dynamic_cast<mir::RegAddImm *>(mir)) {

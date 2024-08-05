@@ -8,7 +8,7 @@ bool ConstProp::onFunction(ir::Function *function) {
     for (int i = 0; i < block->size(); i++) {
       const auto inst = block->get(i);
       if (const auto binaryOperator =
-              dynamic_cast<ir::BinaryOperator *>(inst)) {
+              dynamic_cast<ir::Binary *>(inst)) {
         const auto value1 = dynamic_cast<ir::ConstantNumber *>(
             binaryOperator->getOperand<ir::Value>(0));
         if (value1) {
@@ -17,26 +17,26 @@ bool ConstProp::onFunction(ir::Function *function) {
           if (value2) {
             ir::ConstantNumber *newValue = nullptr;
             switch (binaryOperator->op) {
-            case ir::BinaryOperator::ADD:
-            case ir::BinaryOperator::FADD:
+            case ir::Binary::ADD:
+            case ir::Binary::FADD:
               newValue = value1->add(value2);
               break;
-            case ir::BinaryOperator::SUB:
-            case ir::BinaryOperator::FSUB:
+            case ir::Binary::SUB:
+            case ir::Binary::FSUB:
               newValue = value1->sub(value2);
               break;
-            case ir::BinaryOperator::MUL:
-            case ir::BinaryOperator::FMUL:
+            case ir::Binary::MUL:
+            case ir::Binary::FMUL:
               newValue = value1->mul(value2);
               break;
-            case ir::BinaryOperator::SDIV:
-            case ir::BinaryOperator::FDIV:
+            case ir::Binary::SDIV:
+            case ir::Binary::FDIV:
               newValue = value1->div(value2);
               break;
-            case ir::BinaryOperator::SREM:
+            case ir::Binary::SREM:
               newValue = value1->rem(value2);
               break;
-            case ir::BinaryOperator::XOR:
+            case ir::Binary::XOR:
               newValue = value1->exor(value2);
             }
             if (!newValue) {

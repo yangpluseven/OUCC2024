@@ -223,12 +223,12 @@ std::string StoreInst::str() const {
          pointer->getType()->str() + " " + pointer->getName();
 }
 
-BinaryOperator::BinaryOperator(BasicBlock *block, Op op, Value *lhs, Value *rhs)
+Binary::Binary(BasicBlock *block, Op op, Value *lhs, Value *rhs)
   : Instruction(block, Type::checkEquality(lhs->getType(), rhs->getType()), {lhs, rhs}),
     op(op) {
 }
 
-std::string BinaryOperator::str() const {
+std::string Binary::str() const {
   auto lhs = getOperand<Value>(0);
   auto rhs = getOperand<Value>(1);
   auto type = Type::checkEquality(lhs->getType(), rhs->getType());
@@ -236,7 +236,7 @@ std::string BinaryOperator::str() const {
          lhs->getName() + ", " + rhs->getName();
 }
 
-std::string BinaryOperator::_opToString(Op v) noexcept {
+std::string Binary::_opToString(Op v) noexcept {
   switch (v) {
   case ADD:
     return "add";
