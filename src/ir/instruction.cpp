@@ -158,9 +158,6 @@ std::string LoadInst::str() const {
          " " + ptr->getName();
 }
 
-PHINode::PHINode(BasicBlock *block, Type *type) : Instruction(block, type) {
-}
-
 void PHINode::add(BasicBlock *block, Use *use) {
   User::insert(use);
   _useBlockMap[use] = block;
