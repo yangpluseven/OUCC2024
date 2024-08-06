@@ -74,10 +74,10 @@ bool FunctionInline::onFunction(ir::Function *function) {
     changed = true;
     const auto callInst = block->erase(index);
     const auto lastBlock = newBlocks.back();
-    // for test
+
     const auto firstBlock = newBlocks.front();
     newBlocks.erase(newBlocks.begin());
-    // for test
+
     const auto retInst = lastBlock->pop();
     if (!retInst->empty()) {
       const auto retValue = retInst->getOperand<ir::Value>(0);
@@ -88,6 +88,7 @@ bool FunctionInline::onFunction(ir::Function *function) {
     }
     // block->push(new ir::BranchInst(block, newBlocks.front()));
     for (const auto inst : *firstBlock) {
+      inst->setBlock(block);
       block->push(inst);
     }
     function->insertBlock(block, newBlocks);

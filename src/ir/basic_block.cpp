@@ -22,6 +22,21 @@ void BasicBlock::insert(int index, const std::vector<Instruction *> &newInsts) {
                        newInsts.end());
 }
 
+void BasicBlock::insert(const Instruction *base, Instruction *inst) {
+  auto it = std::find(_instructions.begin(), _instructions.end(), base);
+  if (it != _instructions.end()) {
+    _instructions.insert(it + 1, inst);
+  }
+}
+
+void BasicBlock::insert(const Instruction *base,
+                        const std::vector<Instruction *> &newInst) {
+  auto it = std::find(_instructions.begin(), _instructions.end(), base);
+  if (it != _instructions.end()) {
+    _instructions.insert(it + 1, newInst.begin(), newInst.end());
+  }
+}
+
 Instruction *BasicBlock::erase(int index) {
   Instruction *removedInst = _instructions[index];
   _instructions.erase(_instructions.begin() + index);

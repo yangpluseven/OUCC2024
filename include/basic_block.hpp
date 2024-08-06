@@ -28,6 +28,9 @@ public:
   void push(Instruction *inst);
   void insert(int index, Instruction *inst);
   void insert(int index, const std::vector<Instruction *> &newInsts);
+  void insert(const Instruction *base, Instruction *inst);
+  void insert(const Instruction *base,
+              const std::vector<Instruction *> &newInst);
   Instruction *erase(int index);
   Instruction *erase(Instruction *inst);
   Instruction *pop();

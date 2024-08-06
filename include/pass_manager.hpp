@@ -28,10 +28,22 @@ public:
         l0 |= MemoryPromote(module).onModule();
       } while (l0);
       l2 = false;
-      while (FunctionInline(module).onModule()) {
-        l2 = true;
-      }
+      bool l3;
+      do {
+        l3 = false;
+        l3 |= FunctionInline(module).onModule();
+        l3 |= ReducePhi(module).onModule();
+        l2 |= l3;
+      } while(l3);
     } while (l2);
+
+    // ReducePhi(module).onModule();
+    // FunctionInline(module).onModule();
+    // BranchOpt(module).onModule();
+    // ConstProp(module).onModule();
+    // DeadCodeEli(module).onModule();
+    // MemoryPromote(module).onModule();
+
   }
 };
 } // namespace pass

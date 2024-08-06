@@ -34,6 +34,14 @@ std::string Instruction::str() const { return getName(); }
 AllocaInst::AllocaInst(BasicBlock *block, Type *type)
     : Instruction(block, new PointerType(type)) {}
 
+Instruction *
+AllocaInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new AllocaInst(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), type);
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
+
 std::string AllocaInst::str() const {
   return getName() + " = alloca " + type->baseType()->str();
 }
@@ -46,6 +54,14 @@ BranchInst::BranchInst(BasicBlock *block, Value *cond, BasicBlock *ifTrue,
     : Instruction(block, BasicType::VOID, {cond, ifTrue, ifFalse}) {}
 
 bool BranchInst::isConditional() const { return size() == 3; }
+
+Instruction *
+BranchInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned =
+      new BranchInst(dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())));
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
 
 std::string BranchInst::str() const {
   if (isConditional()) {
@@ -71,6 +87,14 @@ CallInst::CallInst(BasicBlock *block, Function *func,
     : Instruction(block, func->getType(), {func}) {
   for (auto param : params)
     insert(new Use(this, param));
+}
+
+Instruction *
+CallInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned =
+      new CallInst(dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())));
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
 }
 
 std::string CallInst::str() const {
@@ -115,6 +139,14 @@ GetPtrInst::GetPtrInst(BasicBlock *block, Value *ptr,
     insert(new Use(this, index));
 }
 
+Instruction *
+GetPtrInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new GetPtrInst(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), getType());
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
+
 std::string GetPtrInst::str() const {
   auto ptr = getOperand<Value>(0);
   auto tempPtr = new PointerType(ptr->getType());
@@ -142,6 +174,14 @@ LoadInst::LoadInst(BasicBlock *block, Value *ptr)
                       ? ptr->getType()
                       : ptr->getType()->baseType(),
                   {ptr}) {}
+
+Instruction *
+LoadInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new LoadInst(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), getType());
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
 
 std::string LoadInst::str() const {
   auto ptr = getOperand<Value>(0);
@@ -175,7 +215,8 @@ void PHINode::setBlockValue(int index, BasicBlock *block) {
 
 Instruction *
 PHINode::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
-  const auto cloned = new PHINode(getBlock(), getType());
+  const auto cloned = new PHINode(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), getType());
   cloned->replaceOperandsFrom(replaceMap, this);
   for (int i = 0; i < cloned->size(); i++) {
     cloned->setBlockValue(
@@ -201,6 +242,14 @@ RetInst::RetInst(BasicBlock *block) : Instruction(block, BasicType::VOID) {}
 RetInst::RetInst(BasicBlock *block, Value *retValue)
     : Instruction(block, BasicType::VOID, {retValue}) {}
 
+Instruction *
+RetInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned =
+      new RetInst(dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())));
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
+
 std::string RetInst::str() const {
   if (empty())
     return "ret void";
@@ -210,6 +259,14 @@ std::string RetInst::str() const {
 
 StoreInst::StoreInst(BasicBlock *block, Value *value, Value *pointer)
     : Instruction(block, BasicType::VOID, {value, pointer}) {}
+
+Instruction *
+StoreInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned =
+      new StoreInst(dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())));
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
 
 std::string StoreInst::str() const {
   auto value = getOperand<Value>(0);
@@ -226,6 +283,14 @@ BinaryInst::BinaryInst(BasicBlock *block, Op op, Value *lhs, Value *rhs)
     : Instruction(block, Type::checkEquality(lhs->getType(), rhs->getType()),
                   {lhs, rhs}),
       op(op) {}
+
+Instruction *
+BinaryInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new BinaryInst(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), getType(), op);
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
 
 std::string BinaryInst::str() const {
   auto lhs = getOperand<Value>(0);
@@ -316,10 +381,26 @@ std::string CmpInst::_condToString(Cond v) {
 FCmpInst::FCmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs)
     : CmpInst(block, cond, lhs, rhs) {}
 
+Instruction *
+FCmpInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new FCmpInst(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), getCond());
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
+
 std::string FCmpInst::getClassName() const { return "fcmp"; }
 
 ICmpInst::ICmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs)
     : CmpInst(block, cond, lhs, rhs) {}
+
+Instruction *
+ICmpInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new ICmpInst(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), getCond());
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
 
 std::string ICmpInst::getClassName() const { return "icmp"; }
 
@@ -340,25 +421,65 @@ std::string CastInst::getClassName() const { return "incomplete{CastInst}"; }
 BitCastInst::BitCastInst(BasicBlock *block, Type *type, Value *operand)
     : CastInst(block, type, operand) {}
 
+Instruction *
+BitCastInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new BitCastInst(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), getType());
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
+
 std::string BitCastInst::getClassName() const { return "bitcast"; }
 
 FPToSIInst::FPToSIInst(BasicBlock *block, Type *type, Value *operand)
     : CastInst(block, type, operand) {}
+
+Instruction *
+FPToSIInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new FPToSIInst(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), getType());
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
 
 std::string FPToSIInst::getClassName() const { return "fptosi"; }
 
 SExtInst::SExtInst(BasicBlock *block, Type *type, Value *operand)
     : CastInst(block, type, operand) {}
 
+Instruction *
+SExtInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new SExtInst(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), getType());
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
+
 std::string SExtInst::getClassName() const { return "sext"; }
 
 SIToFPInst::SIToFPInst(BasicBlock *block, Type *type, Value *operand)
     : CastInst(block, type, operand) {}
 
+Instruction *
+SIToFPInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new SIToFPInst(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), getType());
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
+
 std::string SIToFPInst::getClassName() const { return "sitofp"; }
 
 ZExtInst::ZExtInst(BasicBlock *block, Type *type, Value *operand)
     : CastInst(block, type, operand) {}
+
+Instruction *
+ZExtInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new ZExtInst(
+      dynamic_cast<BasicBlock *>(replaceMap.at(getBlock())), getType());
+  cloned->replaceOperandsFrom(replaceMap, this);
+  return cloned;
+}
 
 std::string ZExtInst::getClassName() const { return "zext"; }
 

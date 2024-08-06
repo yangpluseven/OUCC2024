@@ -37,11 +37,7 @@ public:
   AllocaInst(BasicBlock *block, Type *type);
   std::string str() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new AllocaInst(getBlock(), type);
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class BranchInst : public Instruction {
@@ -54,11 +50,7 @@ public:
   bool isConditional() const;
   std::string str() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new BranchInst(getBlock());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class CallInst : public Instruction {
@@ -69,11 +61,7 @@ public:
   CallInst(BasicBlock *block, Function *func, std::vector<Value *> &params);
   std::string str() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new CallInst(getBlock());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class GetPtrInst : public Instruction {
@@ -88,11 +76,7 @@ public:
   GetPtrInst(BasicBlock *block, Value *ptr, std::vector<Value *> &indexes);
   std::string str() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new GetPtrInst(getBlock(), getType());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class LoadInst : public Instruction {
@@ -101,11 +85,7 @@ public:
   LoadInst(BasicBlock *block, Value *ptr);
   std::string str() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new LoadInst(getBlock(), getType());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class PHINode : public Instruction {
@@ -132,11 +112,7 @@ public:
   RetInst(BasicBlock *block, Value *retValue);
   std::string str() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new RetInst(getBlock());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class StoreInst : public Instruction {
@@ -145,11 +121,7 @@ public:
   StoreInst(BasicBlock *block, Value *value, Value *pointer);
   std::string str() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new StoreInst(getBlock());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class BinaryInst : public Instruction {
@@ -162,11 +134,7 @@ public:
   BinaryInst(BasicBlock *block, Op op, Value *lhs, Value *rhs);
   std::string str() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new BinaryInst(getBlock(), getType(), op);
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 
 private:
   static std::string _opToString(Op v) noexcept;
@@ -182,12 +150,6 @@ public:
   Cond getCond() const;
   std::string str() const override;
   virtual std::string getClassName() const;
-  Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new CmpInst(getBlock(), cond);
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
 
 private:
   Cond cond;
@@ -200,11 +162,7 @@ public:
   FCmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs);
   std::string getClassName() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new FCmpInst(getBlock(), getCond());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class ICmpInst : public CmpInst {
@@ -213,11 +171,7 @@ public:
   ICmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs);
   std::string getClassName() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new ICmpInst(getBlock(), getCond());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class CastInst : public Instruction {
@@ -226,12 +180,6 @@ protected:
   CastInst(BasicBlock *block, Type *type, Value *operand);
   std::string str() const override;
   virtual std::string getClassName() const;
-  Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new CastInst(getBlock(), getType());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
 };
 
 class BitCastInst : public CastInst {
@@ -240,11 +188,7 @@ public:
   BitCastInst(BasicBlock *block, Type *type, Value *operand);
   std::string getClassName() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new BitCastInst(getBlock(), getType());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class FPToSIInst : public CastInst {
@@ -253,11 +197,7 @@ public:
   FPToSIInst(BasicBlock *block, Type *type, Value *operand);
   std::string getClassName() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new FPToSIInst(getBlock(), getType());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class SExtInst : public CastInst {
@@ -266,11 +206,7 @@ public:
   SExtInst(BasicBlock *block, Type *type, Value *operand);
   std::string getClassName() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new SExtInst(getBlock(), getType());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class SIToFPInst : public CastInst {
@@ -279,11 +215,7 @@ public:
   SIToFPInst(BasicBlock *block, Type *type, Value *operand);
   std::string getClassName() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new SIToFPInst(getBlock(), getType());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 class ZExtInst : public CastInst {
@@ -292,11 +224,7 @@ public:
   ZExtInst(BasicBlock *block, Type *type, Value *operand);
   std::string getClassName() const override;
   Instruction *
-  clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
-    const auto cloned = new ZExtInst(getBlock(), getType());
-    cloned->replaceOperandsFrom(replaceMap, this);
-    return cloned;
-  }
+  clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
 };
 
 } // namespace ir

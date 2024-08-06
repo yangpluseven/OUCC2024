@@ -95,6 +95,12 @@ public:
   }
 };
 
+class ReducePhi : public FunctionPass {
+public:
+  explicit ReducePhi(const ir::Module *module) : FunctionPass(module) {}
+  bool onFunction(ir::Function *function) override;
+};
+
 } // namespace pass
 
 #endif // PASS_PASS_HPP
