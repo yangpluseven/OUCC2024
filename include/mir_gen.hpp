@@ -110,13 +110,19 @@ public:
 } // namespace mir
 
 namespace ir {
-class FakeMvInst : public ir::Instruction {
+class FakeMvInst : public Instruction {
 public:
-  FakeMvInst(ir::BasicBlock *block, Value *target, Value *src)
-      : Instruction(block, ir::BasicType::VOID, {target, src}) {}
+  explicit FakeMvInst(BasicBlock *block) : Instruction(block, BasicType::VOID) {}
+  FakeMvInst(BasicBlock *block, Value *target, Value *src)
+      : Instruction(block, BasicType::VOID, {target, src}) {}
   std::string str() const override {
     return "fake mv " + getName() + "\ttarget: " + getOperand<Instruction>(0)->str() + "\tsrc: " +
            getOperand<Value>(1)->getName();
+  }
+  Instruction *clone(std::unordered_map<Value *, Value *> &replaceMap) const override {
+    const auto cloned = new FakeMvInst(dynamic_cast<BasicBlock *> (replaceMap[getBlock()]));
+    cloned->replaceOperandsFrom(replaceMap, this);
+    return cloned;
   }
 };
 } // namespace ir

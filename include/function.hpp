@@ -28,9 +28,14 @@ private:
   std::string _name;
   std::vector<Argument *> _args;
   std::vector<BasicBlock *> _blocks;
+  bool _canInline = false;
 
 public:
   Function(Type *type, std::string name);
+
+  void analyzeInline() { _canInline = true; }
+
+  bool canInline() const { return _canInline; }
 
   bool isDeclare() const;
 
@@ -54,17 +59,20 @@ public:
 
   void insertBlock(const BasicBlock *base, BasicBlock *block);
 
-  std::vector<BasicBlock *>::iterator begin();
-  std::vector<BasicBlock *>::iterator end();
-  std::vector<BasicBlock *>::const_iterator begin() const;
-  std::vector<BasicBlock *>::const_iterator end() const;
-  std::vector<BasicBlock *>::const_iterator cbegin() const;
-  std::vector<BasicBlock *>::const_iterator cend() const;
-
   std::string getName() const override;
   std::string getRawName() const;
   std::vector<Argument *> &getArgs();
   std::string str() const;
+
+  using iterator = std::vector<BasicBlock *>::iterator;
+  using const_iterator = std::vector<BasicBlock *>::const_iterator;
+
+  iterator begin();
+  iterator end();
+  const_iterator begin() const;
+  const_iterator end() const;
+  const_iterator cbegin() const;
+  const_iterator cend() const;
 };
 
 } // namespace ir

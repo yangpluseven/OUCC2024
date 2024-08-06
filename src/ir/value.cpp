@@ -2,8 +2,7 @@
 
 namespace ir {
 
-Use::Use(User *user, Value *value) : user(user), value(value) {
-}
+Use::Use(User *user, Value *value) : user(user), value(value) {}
 
 User *Use::getUser() const { return user; }
 
@@ -13,18 +12,26 @@ void Use::setUser(User *user) { this->user = user; }
 
 void Use::setValue(Value *value) { this->value = value; }
 
-User::User(Type *type) : Value(type) {
-}
+User::User(Type *type) : Value(type) {}
 
-size_t User::size() const { return uses.size(); }
+size_t User::size() const { return useOperands.size(); }
 
 void User::insert(Use *use) { insert(static_cast<int>(size()), use); }
 
 void User::insert(int index, Use *use) {
-  while (index >= uses.size())
-    uses.push_back(nullptr);
-  uses[index] = use;
+  while (index > useOperands.size())
+    useOperands.push_back(nullptr);
+  useOperands.insert(useOperands.begin() + index, use);
   use->getValue()->addUsed(use);
+}
+
+void User::replaceOperandsFrom(
+    const std::unordered_map<Value *, Value *> &replaceMap,
+    const User *other) {
+  for (int i = 0; i < size(); i++) {
+    const auto operand = other->getOperand<Value>(i);
+    set(i, new Use(this, replaceMap.at(operand)));
+  }
 }
 
 Use *User::erase(int index) {
@@ -33,13 +40,13 @@ Use *User::erase(int index) {
     return nullptr;
   }
   use->getValue()->getUsed().erase(use);
-  uses.erase(uses.begin() + index);
+  useOperands.erase(useOperands.begin() + index);
   return use;
 }
 
 Use *User::erase(const Value *value) {
-  for (auto i = 0; i < uses.size(); i++) {
-    if (uses[i]->getValue() == value) {
+  for (auto i = 0; i < useOperands.size(); i++) {
+    if (useOperands[i]->getValue() == value) {
       return erase(i);
     }
   }
@@ -47,23 +54,22 @@ Use *User::erase(const Value *value) {
 }
 
 Use *User::get(int index) const {
-  if (index < 0 || index >= uses.size()) {
+  if (index < 0 || index >= useOperands.size()) {
     return nullptr;
   }
-  return uses[index];
+  return useOperands[index];
 }
 
-bool User::empty() const { return uses.empty(); }
+bool User::empty() const { return useOperands.empty(); }
 
 void User::set(int index, Use *use) {
-  while (index >= uses.size())
-    uses.push_back(nullptr);
-  uses[index] = use;
+  while (index >= useOperands.size())
+    useOperands.push_back(nullptr);
+  useOperands[index] = use;
   use->getValue()->addUsed(use);
 }
 
-Value::Value(Type *type) : type(type) {
-}
+Value::Value(Type *type) : type(type) {}
 
 Type *Value::getType() const { return type; }
 

@@ -76,7 +76,7 @@ CallInst::CallInst(BasicBlock *block, Function *func,
 std::string CallInst::str() const {
   std::stringstream ss;
   ss << "(";
-  for (int i = 1; i < uses.size(); i++) {
+  for (int i = 1; i < useOperands.size(); i++) {
     if (i != 1)
       ss << ", ";
     auto param = getOperand<Value>(i);
@@ -173,25 +173,25 @@ void PHINode::setBlockValue(int index, BasicBlock *block) {
     throw std::runtime_error("Failed to get the use from this index.");
 }
 
-// Instruction *
-// PHINode::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
-//   const auto cloned = new PHINode(getBlock(), getType());
-//   cloned->replaceOperandsFrom(replaceMap, this);
-//   for (int i = 0; i < cloned->size(); i++) {
-//     cloned->setBlockValue(
-//         i, dynamic_cast<BasicBlock *>(replaceMap.at(getUseBlock(i))));
-//   }
-//   return cloned;
-// }
+Instruction *
+PHINode::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
+  const auto cloned = new PHINode(getBlock(), getType());
+  cloned->replaceOperandsFrom(replaceMap, this);
+  for (int i = 0; i < cloned->size(); i++) {
+    cloned->setBlockValue(
+        i, dynamic_cast<BasicBlock *>(replaceMap.at(getUseBlock(i))));
+  }
+  return cloned;
+}
 
 std::string PHINode::str() const {
   std::stringstream ss;
-  for (int i = 0; i < uses.size(); i++) {
+  for (int i = 0; i < useOperands.size(); i++) {
     if (i != 0)
       ss << ", ";
 
-    ss << "[" << uses[i]->getValue()->getName() << ", %"
-       << _useBlockMap.at(uses[i])->str() << "]";
+    ss << "[" << useOperands[i]->getValue()->getName() << ", %"
+       << _useBlockMap.at(useOperands[i])->str() << "]";
   }
   return getName() + " = phi " + type->str() + " " + ss.str();
 }

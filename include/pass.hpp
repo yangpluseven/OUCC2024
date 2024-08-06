@@ -62,8 +62,8 @@ private:
   std::unordered_map<ir::BasicBlock *,
                      std::unordered_map<ir::AllocaInst *, ir::PHINode *>>
       _globalPhiMap;
-  std::unordered_set<ir::AllocaInst *>
-  static analyzePromotableAllocaInsts(ir::Function *function);
+  std::unordered_set<ir::AllocaInst *> static analyzePromotableAllocaInsts(
+      ir::Function *function);
   static bool isPromotable(ir::AllocaInst *allocaInst);
   void insertPhi(ir::Function *func,
                  std::unordered_map<ir::BasicBlock *,
@@ -82,6 +82,13 @@ public:
 
   bool onFunction(ir::Function *function) override;
 };
+
+class FunctionInline : public FunctionPass {
+public:
+  explicit FunctionInline(const ir::Module *module) : FunctionPass(module) {}
+  bool onFunction(ir::Function *function) override;
+};
+
 } // namespace pass
 
 #endif // PASS_PASS_HPP

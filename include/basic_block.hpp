@@ -34,12 +34,15 @@ public:
   std::string getName() const override;
   std::string str() const;
 
-  std::vector<Instruction *>::iterator begin();
-  std::vector<Instruction *>::iterator end();
-  std::vector<Instruction *>::const_iterator begin() const;
-  std::vector<Instruction *>::const_iterator end() const;
-  std::vector<Instruction *>::const_iterator cbegin() const;
-  std::vector<Instruction *>::const_iterator cend() const;
+  using  iterator = std::vector<Instruction *>::iterator;
+  using  const_iterator = std::vector<Instruction *>::const_iterator;
+
+  iterator begin();
+  iterator end();
+  const_iterator begin() const;
+  const_iterator end() const;
+  const_iterator cbegin() const;
+  const_iterator cend() const;
 };
 
 } // namespace ir

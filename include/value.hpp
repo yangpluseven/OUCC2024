@@ -3,6 +3,7 @@
 
 #include "type.hpp"
 #include <memory>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -40,16 +41,16 @@ public:
   void addUsed(Use *use);
   void replaceAllUseAs(Value *value);
   std::unordered_set<Use *> &getUsed();
-  virtual std::string getName() const = 0;
+  virtual std::string getName() const { return ""; };
 };
 
 class User : public Value {
 protected:
-  std::vector<Use *> uses;
+  std::vector<Use *> useOperands;
 
 public:
   explicit User(Type *type);
-  ~User() override = default; // TODO: Implement destructor
+  ~User() override = default;
   size_t size() const;
   void insert(Use *use);
   void insert(int index, Use *use);
@@ -57,7 +58,9 @@ public:
   Use *erase(const Value *value);
   Use *get(int index) const;
   void set(int index, Use *use);
-  const std::vector<Use *> &getUses() const { return uses; }
+  const std::vector<Use *> &getUseOperands() const { return useOperands; }
+  void replaceOperandsFrom(const std::unordered_map<Value *, Value *> &replaceMap,
+                       const User *other);
 
   template <typename T,
             std::enable_if_t<std::is_base_of_v<Value, T>> * = nullptr>
@@ -72,6 +75,16 @@ public:
   }
 
   bool empty() const;
+
+  using iterator = std::vector<Use *>::iterator;
+  using const_iterator = std::vector<Use *>::const_iterator;
+
+  iterator begin() { return useOperands.begin(); }
+  iterator end() { return useOperands.end(); }
+  const_iterator begin() const { return useOperands.begin(); }
+  const_iterator end() const { return useOperands.end(); }
+  const_iterator cbegin() const { return useOperands.cbegin(); }
+  const_iterator cend() const { return useOperands.cend(); }
 };
 
 } // namespace ir
