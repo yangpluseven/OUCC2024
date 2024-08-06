@@ -28,7 +28,7 @@ public:
 
 class Value {
 private:
-  std::unordered_set<Use *> _used;
+  std::unordered_set<Use *> _uses;
 
 protected:
   Type *const type;
@@ -38,9 +38,9 @@ public:
   virtual ~Value() = default;
   Type *getType() const;
   size_t getSize() const;
-  void addUsed(Use *use);
+  void push(Use *use);
   void replaceAllUseAs(Value *value);
-  std::unordered_set<Use *> &getUsed();
+  std::unordered_set<Use *> &getUses();
   virtual std::string getName() const { return ""; };
 };
 

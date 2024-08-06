@@ -85,7 +85,7 @@ void MemoryPromote::replace(
       const auto allocaInst =
           dynamic_cast<ir::AllocaInst *>(storeInst->getOperand<ir::Value>(1));
       if (allocaInst && allocaInsts.find(allocaInst) != allocaInsts.end()) {
-        block->remove(i);
+        block->erase(i);
         i--;
         replaceMap[allocaInst].push(storeInst->getOperand<ir::Value>(0));
         counter[allocaInst] = counter[allocaInst] + 1;
@@ -94,7 +94,7 @@ void MemoryPromote::replace(
       const auto allocaInst =
           dynamic_cast<ir::AllocaInst *>(loadInst->getOperand<ir::Value>(0));
       if (allocaInst && allocaInsts.find(allocaInst) != allocaInsts.end()) {
-        block->remove(i);
+        block->erase(i);
         i--;
         if (replaceMap.find(allocaInst) != replaceMap.end()) {
           loadInst->replaceAllUseAs(replaceMap.at(allocaInst).top());
@@ -170,7 +170,7 @@ void MemoryPromote::clearPhi(ir::Function *func) {
       bool removed = false;
       auto &phiMap = _globalPhiMap.at(block);
       for (auto it = phiMap.begin(); it != phiMap.end();) {
-        if (it->second->getUsed().empty()) {
+        if (it->second->getUses().empty()) {
           it = phiMap.erase(it);
           removed = true;
         } else {
@@ -203,7 +203,7 @@ void MemoryPromote::clearPhi(ir::Function *func) {
       }
       if (replaceValue) {
         toContinue = true;
-        for (const auto use : replaceValue->getUsed()) {
+        for (const auto use : replaceValue->getUses()) {
           use->setValue(replaceValue);
           const auto replacePhiNode =
               dynamic_cast<ir::PHINode *>(replaceValue);
@@ -247,7 +247,7 @@ bool MemoryPromote::onFunction(ir::Function *function) {
       ir::Instruction *inst = block->get(i);
       const auto allocaInst = dynamic_cast<ir::AllocaInst *>(inst);
       if (allocaInst && isPromotable(allocaInst)) {
-        block->remove(i);
+        block->erase(i);
         i--;
       }
     }

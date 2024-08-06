@@ -1,5 +1,6 @@
 #include "basic_block.hpp"
 #include "type.hpp"
+#include <algorithm>
 
 namespace ir {
 
@@ -10,38 +11,38 @@ BasicBlock::BasicBlock(Function *func)
 
 bool BasicBlock::isEmpty() const { return _instructions.empty(); }
 
-void BasicBlock::insert(Instruction *inst) { _instructions.push_back(inst); }
+void BasicBlock::push(Instruction *inst) { _instructions.push_back(inst); }
 
 void BasicBlock::insert(int index, Instruction *inst) {
-  if (index < 0 || index > _instructions.size()) {
-    throw std::out_of_range("Index out of range");
-  }
   _instructions.insert(_instructions.begin() + index, inst);
 }
 
 void BasicBlock::insert(int index, const std::vector<Instruction *> &newInsts) {
-  if (index < 0 || index > _instructions.size()) {
-    throw std::out_of_range("Index out of range");
-  }
   _instructions.insert(_instructions.begin() + index, newInsts.begin(),
                        newInsts.end());
 }
 
-Instruction *BasicBlock::remove(int index) {
-  if (index < 0 || index >= _instructions.size()) {
-    throw std::out_of_range("Index out of range");
-  }
+Instruction *BasicBlock::erase(int index) {
   Instruction *removedInst = _instructions[index];
   _instructions.erase(_instructions.begin() + index);
   return removedInst;
 }
 
-Instruction *BasicBlock::get(int index) const {
-  if (index < 0 || index >= _instructions.size()) {
-    throw std::out_of_range("Index out of range");
-  }
-  return _instructions[index];
+Instruction *BasicBlock::erase(Instruction *inst) {
+  _instructions.erase(
+      std::find(_instructions.begin(), _instructions.end(), inst));
+  return inst;
 }
+
+Instruction *BasicBlock::pop() {
+  if (_instructions.empty())
+    return nullptr;
+  Instruction *removedInst = _instructions.back();
+  _instructions.pop_back();
+  return removedInst;
+}
+
+Instruction *BasicBlock::get(int index) const { return _instructions[index]; }
 
 size_t BasicBlock::size() const { return _instructions.size(); }
 

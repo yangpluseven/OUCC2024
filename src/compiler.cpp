@@ -229,15 +229,15 @@ void test() {
   ir::Instruction *sotre1 = new ir::StoreInst(
       block0, new ir::ConstantNumber(model::Number(10)), alloca0);
   ir::Instruction *branch0 = new ir::BranchInst(block0, block1);
-  block0->insert(alloca0);
-  block0->insert(store0);
-  block0->insert(sotre1);
-  block0->insert(branch0);
+  block0->push(alloca0);
+  block0->push(store0);
+  block0->push(sotre1);
+  block0->push(branch0);
   func->pushBlock(block0);
   ir::Instruction *load0 = new ir::LoadInst(block1, alloca0);
   ir::Instruction *ret0 = new ir::RetInst(block1, load0);
-  block1->insert(load0);
-  block1->insert(ret0);
+  block1->push(load0);
+  block1->push(ret0);
   func->pushBlock(block1);
   module->addFunction(func);
 

@@ -9,8 +9,8 @@ bool DeadCodeEli::onFunction(ir::Function *function) {
       const auto inst = block->get(i);
       const auto callInst = dynamic_cast<ir::CallInst *>(inst);
       const auto storeInst = dynamic_cast<ir::StoreInst *>(inst);
-      if (!(callInst || storeInst) && inst->getUsed().empty()) {
-        block->remove(i);
+      if (!(callInst || storeInst) && inst->getUses().empty()) {
+        block->erase(i);
         i--;
         changed = true;
       }

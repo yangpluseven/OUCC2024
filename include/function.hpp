@@ -33,34 +33,26 @@ private:
 public:
   Function(Type *type, std::string name);
 
-  void analyzeInline() {
-    // TODO
-    _canInline = true;
-  }
-
   bool canInline() const { return _canInline; }
-
   bool isDeclare() const;
 
   Function *pushArg(Argument *arg);
 
   bool pushBlock(BasicBlock *block);
-
   void insertBlock(int index, BasicBlock *block);
-
   void insertBlock(int index, const std::vector<BasicBlock *> &newBlocks);
+  void insertBlock(const BasicBlock *base, BasicBlock *block);
 
   BasicBlock *erase(int index);
-
   size_t size() const;
-
   BasicBlock *get(int index) const;
-
   BasicBlock *getFirst() const;
-
   BasicBlock *getLast() const;
 
-  void insertBlock(const BasicBlock *base, BasicBlock *block);
+  void analyzeInline() {
+    // TODO
+    _canInline = true;
+  }
 
   std::string getName() const override;
   std::string getRawName() const;

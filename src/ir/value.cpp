@@ -22,7 +22,7 @@ void User::insert(int index, Use *use) {
   while (index > useOperands.size())
     useOperands.push_back(nullptr);
   useOperands.insert(useOperands.begin() + index, use);
-  use->getValue()->addUsed(use);
+  use->getValue()->push(use);
 }
 
 void User::replaceOperandsFrom(
@@ -39,7 +39,7 @@ Use *User::erase(int index) {
   if (use == nullptr) {
     return nullptr;
   }
-  use->getValue()->getUsed().erase(use);
+  use->getValue()->getUses().erase(use);
   useOperands.erase(useOperands.begin() + index);
   return use;
 }
@@ -66,7 +66,7 @@ void User::set(int index, Use *use) {
   while (index >= useOperands.size())
     useOperands.push_back(nullptr);
   useOperands[index] = use;
-  use->getValue()->addUsed(use);
+  use->getValue()->push(use);
 }
 
 Value::Value(Type *type) : type(type) {}
@@ -75,16 +75,16 @@ Type *Value::getType() const { return type; }
 
 size_t Value::getSize() const { return type->getSize(); }
 
-void Value::addUsed(Use *use) { _used.insert(use); }
+void Value::push(Use *use) { _uses.insert(use); }
 
 void Value::replaceAllUseAs(Value *value) {
-  for (auto use : _used) {
-    value->_used.insert(use);
+  for (auto use : _uses) {
+    value->_uses.insert(use);
     use->setValue(value);
   }
-  _used.clear();
+  _uses.clear();
 }
 
-std::unordered_set<Use *> &Value::getUsed() { return _used; }
+std::unordered_set<Use *> &Value::getUses() { return _uses; }
 
 } // namespace ir

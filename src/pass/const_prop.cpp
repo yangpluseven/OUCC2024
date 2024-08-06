@@ -44,7 +44,7 @@ bool ConstProp::onFunction(ir::Function *function) {
                                        "ConstPropPass::runOnFunction");
             }
             binaryOperator->replaceAllUseAs(newValue);
-            block->remove(i);
+            block->erase(i);
             i--;
             changed = true;
           }
@@ -88,7 +88,7 @@ bool ConstProp::onFunction(ir::Function *function) {
                                        "ConstPropPass::runOnFunction");
             }
             cmpInst->replaceAllUseAs(newValue);
-            block->remove(i);
+            block->erase(i);
             i--;
             changed = true;
           }

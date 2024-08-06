@@ -25,10 +25,12 @@ public:
   bool isEmpty() const;
   Instruction *getLast() const { return _instructions.back(); }
   Instruction *getFirst() const { return _instructions.back(); }
-  void insert(Instruction *inst);
+  void push(Instruction *inst);
   void insert(int index, Instruction *inst);
   void insert(int index, const std::vector<Instruction *> &newInsts);
-  Instruction *remove(int index);
+  Instruction *erase(int index);
+  Instruction *erase(Instruction *inst);
+  Instruction *pop();
   Instruction *get(int index) const;
   size_t size() const;
 

@@ -6,7 +6,7 @@ bool BranchOpt::onFunction(ir::Function *function) {
   bool changed = false;
   for (int i = 1; i < function->size(); i++) {
     const auto block = function->get(i);
-    const auto &uses = block->getUsed();
+    const auto &uses = block->getUses();
     if (uses.empty()) {
       if (const auto branchInst =
               dynamic_cast<ir::BranchInst *>(block->getLast())) {
@@ -38,10 +38,10 @@ bool BranchOpt::onFunction(ir::Function *function) {
       const auto branchInst = dynamic_cast<ir::BranchInst *>((*it)->getUser());
       if (!branchInst->isConditional()) {
         ir::BasicBlock *prevBlock = branchInst->getBlock();
-        prevBlock->remove(static_cast<int>(prevBlock->size()) - 1);
+        prevBlock->erase(static_cast<int>(prevBlock->size()) - 1);
         for (const auto inst : *block) {
           inst->setBlock(prevBlock);
-          prevBlock->insert(inst);
+          prevBlock->push(inst);
         }
         if (const auto nextBranchInst =
                 dynamic_cast<ir::BranchInst *>(block->getLast())) {

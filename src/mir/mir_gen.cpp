@@ -84,7 +84,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
           tmpBlock->insert(static_cast<int>(tmpBlock->size()) - 1,
                            new ir::FakeMvInst(tmpBlock, phi, value));
         }
-        block->remove(i);
+        block->erase(i);
         i--;
       }
     }
