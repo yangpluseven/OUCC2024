@@ -23,10 +23,9 @@ void Function::insertBlock(int index, BasicBlock *block) {
   _blocks.insert(_blocks.begin() + index, block);
 }
 
-bool Function::insertBlock(int index,
+void Function::insertBlock(int index,
                            const std::vector<BasicBlock *> &newBlocks) {
   _blocks.insert(_blocks.begin() + index, newBlocks.begin(), newBlocks.end());
-  return true;
 }
 
 BasicBlock *Function::erase(int index) {

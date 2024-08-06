@@ -33,7 +33,10 @@ private:
 public:
   Function(Type *type, std::string name);
 
-  void analyzeInline() { _canInline = true; }
+  void analyzeInline() {
+    // TODO
+    _canInline = true;
+  }
 
   bool canInline() const { return _canInline; }
 
@@ -45,7 +48,7 @@ public:
 
   void insertBlock(int index, BasicBlock *block);
 
-  bool insertBlock(int index, const std::vector<BasicBlock *> &newBlocks);
+  void insertBlock(int index, const std::vector<BasicBlock *> &newBlocks);
 
   BasicBlock *erase(int index);
 

@@ -10,14 +10,6 @@ BasicBlock::BasicBlock(Function *func)
 
 bool BasicBlock::isEmpty() const { return _instructions.empty(); }
 
-Instruction *BasicBlock::getLast() const {
-  if (!_instructions.empty()) {
-    return _instructions.back();
-  } else {
-    throw std::out_of_range("No _instructions in the BasicBlock");
-  }
-}
-
 void BasicBlock::insert(Instruction *inst) { _instructions.push_back(inst); }
 
 void BasicBlock::insert(int index, Instruction *inst) {

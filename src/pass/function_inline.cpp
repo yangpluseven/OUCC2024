@@ -36,12 +36,34 @@ std::vector<ir::BasicBlock *> getInline(ir::Function *from, ir::Function *to,
     const auto originBlock = from->get(i);
     const auto newBlock = newBlocks[i];
     for (const auto inst : *originBlock) {
+      const auto newInst = inst->clone(replaceMap);
+      replaceMap[inst] = newInst;
     }
   }
 
   return std::move(newBlocks);
 }
 
-bool FunctionInline::onFunction(ir::Function *function) {}
+bool FunctionInline::onFunction(ir::Function *function) {
+  for (const auto block : *function) {
+    std::vector<ir::BasicBlock *> newBlocks;
+    ir::CallInst *callInst = nullptr;
+    for (const auto inst : *block) {
+      callInst = dynamic_cast<ir::CallInst *>(inst);
+      if (callInst) {
+        const auto callFunc = callInst->getOperand<ir::Function>(0);
+        if (!callFunc->canInline()) {
+          continue;
+        }
+        std::vector<ir::Value *> params;
+        for (int i = 1; i < callInst->size(); i++) {
+          params.push_back(callInst->getOperand<ir::Value>(i));
+        }
+        newBlocks = getInline(callFunc, function, params);
+        break;
+      }
+    }
+  }
+}
 
 } // namespace pass

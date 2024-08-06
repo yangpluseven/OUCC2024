@@ -23,7 +23,8 @@ public:
   std::vector<Instruction *> &getInst() { return _instructions; }
 
   bool isEmpty() const;
-  Instruction *getLast() const;
+  Instruction *getLast() const { return _instructions.back(); }
+  Instruction *getFirst() const { return _instructions.back(); }
   void insert(Instruction *inst);
   void insert(int index, Instruction *inst);
   void insert(int index, const std::vector<Instruction *> &newInsts);
@@ -34,8 +35,8 @@ public:
   std::string getName() const override;
   std::string str() const;
 
-  using  iterator = std::vector<Instruction *>::iterator;
-  using  const_iterator = std::vector<Instruction *>::const_iterator;
+  using iterator = std::vector<Instruction *>::iterator;
+  using const_iterator = std::vector<Instruction *>::const_iterator;
 
   iterator begin();
   iterator end();
