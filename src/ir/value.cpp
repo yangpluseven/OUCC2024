@@ -22,13 +22,13 @@ void User::insert(int index, Use *use) {
   while (index > useOperands.size())
     useOperands.push_back(nullptr);
   useOperands.insert(useOperands.begin() + index, use);
-  use->getValue()->push(use);
+  use->getValue()->insertUse(use);
 }
 
 void User::replaceOperandsFrom(
     const std::unordered_map<Value *, Value *> &replaceMap,
     const User *other) {
-  for (int i = 0; i < size(); i++) {
+  for (int i = 0; i < other->size(); i++) {
     const auto operand = other->getOperand<Value>(i);
     set(i, new Use(this, replaceMap.at(operand)));
   }
@@ -66,7 +66,7 @@ void User::set(int index, Use *use) {
   while (index >= useOperands.size())
     useOperands.push_back(nullptr);
   useOperands[index] = use;
-  use->getValue()->push(use);
+  use->getValue()->insertUse(use);
 }
 
 Value::Value(Type *type) : type(type) {}
@@ -75,11 +75,11 @@ Type *Value::getType() const { return type; }
 
 size_t Value::getSize() const { return type->getSize(); }
 
-void Value::push(Use *use) { _uses.insert(use); }
+void Value::insertUse(Use *use) { _uses.insert(use); }
 
 void Value::replaceAllUseAs(Value *value) {
   for (auto use : _uses) {
-    value->_uses.insert(use);
+    value->insertUse(use);
     use->setValue(value);
   }
   _uses.clear();

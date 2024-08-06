@@ -87,6 +87,12 @@ class FunctionInline : public FunctionPass {
 public:
   explicit FunctionInline(const ir::Module *module) : FunctionPass(module) {}
   bool onFunction(ir::Function *function) override;
+  bool onModule() override {
+    for (const auto function : module->getFunctions()) {
+      function->analyzeInline();
+    }
+    return FunctionPass::onModule();
+  }
 };
 
 } // namespace pass

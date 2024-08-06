@@ -42,10 +42,35 @@ BasicBlock *Function::getFirst() const { return _blocks.front(); }
 
 BasicBlock *Function::getLast() const { return _blocks.back(); }
 
+void Function::analyzeInline() {
+  if (isDeclare()) {
+    _canInline = false;
+    return;
+  }
+  for (const auto block : *this) {
+    for (const auto inst : *block) {
+      if (dynamic_cast<CallInst *>(inst) || dynamic_cast<PHINode *>(inst) ||
+          dynamic_cast<AllocaInst *>(inst)) {
+        _canInline = false;
+        return;
+      }
+    }
+  }
+  _canInline = true;
+}
+
 void Function::insertBlock(const BasicBlock *base, BasicBlock *block) {
   auto it = std::find(_blocks.begin(), _blocks.end(), base);
   if (it != _blocks.end()) {
     _blocks.insert(it + 1, block);
+  }
+}
+
+void Function::insertBlock(const BasicBlock *base,
+                           const std::vector<BasicBlock *> &newBlocks) {
+  auto it = std::find(_blocks.begin(), _blocks.end(), base);
+  if (it != _blocks.end()) {
+    _blocks.insert(it + 1, newBlocks.begin(), newBlocks.end());
   }
 }
 

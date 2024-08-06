@@ -42,6 +42,8 @@ public:
   void insertBlock(int index, BasicBlock *block);
   void insertBlock(int index, const std::vector<BasicBlock *> &newBlocks);
   void insertBlock(const BasicBlock *base, BasicBlock *block);
+  void insertBlock(const BasicBlock *base,
+                   const std::vector<BasicBlock *> &newBlocks);
 
   BasicBlock *erase(int index);
   size_t size() const;
@@ -49,10 +51,7 @@ public:
   BasicBlock *getFirst() const;
   BasicBlock *getLast() const;
 
-  void analyzeInline() {
-    // TODO
-    _canInline = true;
-  }
+  void analyzeInline();
 
   std::string getName() const override;
   std::string getRawName() const;

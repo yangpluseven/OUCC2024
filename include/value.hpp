@@ -38,7 +38,7 @@ public:
   virtual ~Value() = default;
   Type *getType() const;
   size_t getSize() const;
-  void push(Use *use);
+  void insertUse(Use *use);
   void replaceAllUseAs(Value *value);
   std::unordered_set<Use *> &getUses();
   virtual std::string getName() const { return ""; };

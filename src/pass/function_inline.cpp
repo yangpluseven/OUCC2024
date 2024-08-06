@@ -38,6 +38,7 @@ std::vector<ir::BasicBlock *> getInline(ir::Function *from, ir::Function *to,
     for (const auto inst : *originBlock) {
       const auto newInst = inst->clone(replaceMap);
       replaceMap[inst] = newInst;
+      newBlock->push(newInst);
     }
   }
 
@@ -45,6 +46,9 @@ std::vector<ir::BasicBlock *> getInline(ir::Function *from, ir::Function *to,
 }
 
 bool FunctionInline::onFunction(ir::Function *function) {
+  if (function->isDeclare())
+    return false;
+  bool changed = false;
   for (const auto block : *function) {
     std::vector<ir::BasicBlock *> newBlocks;
     int index = -1;
@@ -57,8 +61,8 @@ bool FunctionInline::onFunction(ir::Function *function) {
         }
         index = i;
         std::vector<ir::Value *> params;
-        for (int i = 1; i < callInst->size(); i++) {
-          params.push_back(callInst->getOperand<ir::Value>(i));
+        for (int j = 1; j < callInst->size(); j++) {
+          params.push_back(callInst->getOperand<ir::Value>(j));
         }
         newBlocks = getInline(callFunc, function, params);
         break;
@@ -67,17 +71,28 @@ bool FunctionInline::onFunction(ir::Function *function) {
     if (index == -1 || newBlocks.empty()) {
       continue;
     }
+    changed = true;
     const auto callInst = block->erase(index);
     const auto lastBlock = newBlocks.back();
+    // for test
+    const auto firstBlock = newBlocks.front();
+    newBlocks.erase(newBlocks.begin());
+    // for test
     const auto retInst = lastBlock->pop();
     if (!retInst->empty()) {
       const auto retValue = retInst->getOperand<ir::Value>(0);
       callInst->replaceAllUseAs(retValue);
     }
-    for (int i = index + 1; i < block->size(); i++) {
-      block->erase(i);
+    for (int i = index; i < block->size();) {
+      lastBlock->push(block->erase(i));
     }
+    // block->push(new ir::BranchInst(block, newBlocks.front()));
+    for (const auto inst : *firstBlock) {
+      block->push(inst);
+    }
+    function->insertBlock(block, newBlocks);
   }
+  return changed;
 }
 
 } // namespace pass
