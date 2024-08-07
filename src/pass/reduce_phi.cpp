@@ -17,12 +17,13 @@ bool ReducePhi::onFunction(ir::Function *function) {
             continue;
           }
           // const auto allocaInst = new ir::AllocaInst(block,
-          // constant->getType()); const auto storeInst = new
+          // const auto storeInst = new constant->getType());
           // ir::StoreInst(block, constant, allocaInst);
           // phiNode->replaceAllUseAs(storeInst);
           // block->insert(0, allocaInst);
           // block->insert(phiNode, storeInst);
           // block->erase(phiNode);
+
           phiNode->replaceAllUseAs(constant);
           block->erase(phiNode);
           changed = true;
