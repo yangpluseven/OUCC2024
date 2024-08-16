@@ -10,8 +10,8 @@
 #include <sstream>
 
 std::unordered_map<std::string, std::string> Compiler::optionValues{
-    {"-S", "0"},     {"-O1", "0"},        {"-o", "out"},     {"", "main.sy"},
-    {"-dispf", "0"}, {"-emit-llvm", "0"}, {"-emit-mir", "0"}};
+    {"-S", "0"},     {"-O1", "0"},        {"-o", "out"},      {"", "main.sy"},
+    {"-dispf", "0"}, {"-emit-llvm", "0"}, {"-emit-mir", "0"}, {"-inline", "0"}};
 
 ir::Module *Compiler::_module;
 std::unordered_map<std::string, mir::MachineFunction *> Compiler::_funcs;
@@ -29,10 +29,8 @@ void Compiler::compile() {
   SysYParser::RootContext *root = parser.root();
   parser::ASTVisitor visitor(root);
   _module = visitor.getModule();
-  if (optionValues["-O1"] == "1") {
-    pass::PassManager passManager(_module);
-    passManager.run();
-  }
+  pass::PassManager passManager(_module, optionValues);
+  passManager.run();
   if (optionValues["-emit-llvm"] == "1") {
     emitLLVM();
     if (optionValues["-emit-mir"] == "1" || optionValues["-S"] == "1") {
@@ -113,7 +111,6 @@ void Compiler::emitAssemble() {
   writeFuncs();
 }
 
-
 void Compiler::writeFuncs() {
   const std::string filename = optionValues["-o"];
   std::ofstream writer(filename, std::ios::app);
@@ -141,8 +138,6 @@ void Compiler::writeFuncs() {
     throw std::runtime_error("Cannot write to file: " + filename);
   }
 }
-
-
 
 void Compiler::writeGlobals() {
   std::vector<ir::GlobalVariable *> symbolsInData;
@@ -241,7 +236,7 @@ void test() {
   func->pushBlock(block1);
   module->addFunction(func);
 
-  pass::PassManager passManager(module);
+  pass::PassManager passManager(module, Compiler::optionValues);
   passManager.run();
 
   Compiler::setModule(module);

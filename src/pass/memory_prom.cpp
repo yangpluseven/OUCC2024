@@ -151,9 +151,13 @@ void MemoryPromote::replace(
 }
 
 bool MemoryPromote::isPromotable(ir::AllocaInst *allocaInst) {
+  // return true;
   const auto type = allocaInst->getType();
   if (const auto ptrType = dynamic_cast<ir::PointerType *>(type)) {
     if (dynamic_cast<ir::BasicType *>(ptrType->baseType())) {
+      return true;
+    }
+    if (dynamic_cast<ir::PointerType *>(ptrType->baseType())) {
       return true;
     }
   }
