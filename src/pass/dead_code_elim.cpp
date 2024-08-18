@@ -2,7 +2,7 @@
 
 namespace pass {
 
-bool DeadCodeEli::onFunction(ir::Function *function) {
+bool DeadCodeElim::onFunction(ir::Function *function) {
   bool changed = false;
   for (const auto block : *function) {
     for (int i = 0; i + 1 < block->size(); i++) {

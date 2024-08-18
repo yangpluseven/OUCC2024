@@ -32,8 +32,8 @@ bool ReducePhi::onFunction(ir::Function *function) {
           phiNode->replaceAllUseAs(glob);
           block->erase(phiNode);
           changed = true;
-        } else if (const auto inst = dynamic_cast<ir::Instruction *>(value)) {
-          phiNode->replaceAllUseAs(inst);
+        } else if (const auto valueInst = dynamic_cast<ir::Instruction *>(value)) {
+          phiNode->replaceAllUseAs(valueInst);
           block->erase(phiNode);
           changed = true;
         } else {

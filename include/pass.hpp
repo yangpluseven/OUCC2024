@@ -34,9 +34,9 @@ public:
   virtual bool onFunction(ir::Function *function) = 0;
 };
 
-class BranchOpt : public FunctionPass {
+class BranchOpti : public FunctionPass {
 public:
-  explicit BranchOpt(const ir::Module *module) : FunctionPass(module) {}
+  explicit BranchOpti(const ir::Module *module) : FunctionPass(module) {}
 
   bool onFunction(ir::Function *function) override;
 };
@@ -48,16 +48,16 @@ public:
   bool onFunction(ir::Function *function) override;
 };
 
-class DeadCodeEli : public FunctionPass {
+class DeadCodeElim : public FunctionPass {
 public:
-  explicit DeadCodeEli(const ir::Module *module) : FunctionPass(module) {}
+  explicit DeadCodeElim(const ir::Module *module) : FunctionPass(module) {}
 
-  ~DeadCodeEli() override = default;
+  ~DeadCodeElim() override = default;
 
   bool onFunction(ir::Function *function) override;
 };
 
-class MemoryPromote : public FunctionPass {
+class MemoryProm : public FunctionPass {
 private:
   std::unordered_map<ir::BasicBlock *,
                      std::unordered_map<ir::AllocaInst *, ir::PHINode *>>
@@ -78,7 +78,7 @@ private:
   void clearPhi(ir::Function *func);
 
 public:
-  explicit MemoryPromote(const ir::Module *module) : FunctionPass(module) {}
+  explicit MemoryProm(const ir::Module *module) : FunctionPass(module) {}
 
   bool onFunction(ir::Function *function) override;
 };
@@ -98,6 +98,12 @@ public:
 class ReducePhi : public FunctionPass {
 public:
   explicit ReducePhi(const ir::Module *module) : FunctionPass(module) {}
+  bool onFunction(ir::Function *function) override;
+};
+
+class CommonExpElim : public FunctionPass {
+public:
+  explicit CommonExpElim(const ir::Module *module) : FunctionPass(module) {}
   bool onFunction(ir::Function *function) override;
 };
 

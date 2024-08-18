@@ -6,7 +6,7 @@
 namespace pass {
 
 std::unordered_set<ir::AllocaInst *>
-MemoryPromote::analyzePromotableAllocaInsts(ir::Function *function) {
+MemoryProm::analyzePromotableAllocaInsts(ir::Function *function) {
   std::unordered_set<ir::AllocaInst *> allocaInsts;
   for (const auto block : *function) {
     for (const auto inst : *block) {
@@ -20,7 +20,7 @@ MemoryPromote::analyzePromotableAllocaInsts(ir::Function *function) {
   return std::move(allocaInsts);
 }
 
-void MemoryPromote::insertPhi(
+void MemoryProm::insertPhi(
     ir::Function *func,
     std::unordered_map<ir::BasicBlock *, std::unordered_set<ir::BasicBlock *>>
         &df,
@@ -67,7 +67,7 @@ void MemoryPromote::insertPhi(
   }
 }
 
-void MemoryPromote::replace(
+void MemoryProm::replace(
     ir::BasicBlock *block,
     std::unordered_map<ir::AllocaInst *, std::stack<ir::Value *>> &replaceMap,
     std::unordered_set<ir::AllocaInst *> &allocaInsts,
@@ -150,7 +150,7 @@ void MemoryPromote::replace(
   }
 }
 
-bool MemoryPromote::isPromotable(ir::AllocaInst *allocaInst) {
+bool MemoryProm::isPromotable(ir::AllocaInst *allocaInst) {
   // return true;
   const auto type = allocaInst->getType();
   if (const auto ptrType = dynamic_cast<ir::PointerType *>(type)) {
@@ -164,7 +164,7 @@ bool MemoryPromote::isPromotable(ir::AllocaInst *allocaInst) {
   return false;
 }
 
-void MemoryPromote::clearPhi(ir::Function *func) {
+void MemoryProm::clearPhi(ir::Function *func) {
   bool toContinue;
   do {
     toContinue = false;
@@ -221,7 +221,7 @@ void MemoryPromote::clearPhi(ir::Function *func) {
   } while (toContinue);
 }
 
-bool MemoryPromote::onFunction(ir::Function *function) {
+bool MemoryProm::onFunction(ir::Function *function) {
   if (function->isDeclare()) {
     return false;
   }

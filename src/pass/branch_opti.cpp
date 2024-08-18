@@ -2,7 +2,7 @@
 
 namespace pass {
 
-bool BranchOpt::onFunction(ir::Function *function) {
+bool BranchOpti::onFunction(ir::Function *function) {
   bool changed = false;
   for (int i = 1; i < function->size(); i++) {
     const auto block = function->get(i);
