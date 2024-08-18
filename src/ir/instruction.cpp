@@ -31,6 +31,17 @@ std::string Instruction::getName() const { return "%v" + std::to_string(id); }
 
 std::string Instruction::str() const { return getName(); }
 
+std::string Instruction::baseStr() const {
+  const std::string name = getName();
+  std::string completeStr = str();
+  const size_t pos = completeStr.find(name);
+  if (pos == std::string::npos) {
+    return "";
+  }
+  completeStr.erase(pos, name.length());
+  return completeStr;
+}
+
 AllocaInst::AllocaInst(BasicBlock *block, Type *type)
     : Instruction(block, new PointerType(type)) {}
 
@@ -296,8 +307,15 @@ std::string BinaryInst::str() const {
   auto lhs = getOperand<Value>(0);
   auto rhs = getOperand<Value>(1);
   auto type = Type::checkEquality(lhs->getType(), rhs->getType());
+  auto firstStr = lhs->getName();
+  auto secondStr = rhs->getName();
+  if (op == ADD || op == FADD || op == MUL || op == FMUL || op == XOR) {
+    if (firstStr < secondStr) {
+      std::swap(firstStr, secondStr);
+    }
+  }
   return getName() + " = " + _opToString(op) + " " + type->str() + " " +
-         lhs->getName() + ", " + rhs->getName();
+         firstStr + ", " + secondStr;
 }
 
 std::string BinaryInst::_opToString(Op v) noexcept {

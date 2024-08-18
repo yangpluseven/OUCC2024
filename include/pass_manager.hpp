@@ -49,11 +49,14 @@ public:
         l3 = false;
         if (_activated.at("-inline") == "1")
           l3 |= FunctionInline(_module).onModule();
+        // if (_activated.at("-O1") == "1")
+        //   l3 |= CommonExpElim(_module).onModule();
         l2 |= l3;
       } while (l3);
 
     } while (l2);
 
+    CommonExpElim(_module).onModule();
   }
 };
 } // namespace pass

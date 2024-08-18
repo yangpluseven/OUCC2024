@@ -214,33 +214,9 @@ void Compiler::writeGlobals() {
 }
 
 void test() {
-  auto *module = new ir::Module();
-  auto *func = new ir::Function(ir::BasicType::I32, "main");
-  auto *block0 = new ir::BasicBlock(func);
-  auto *block1 = new ir::BasicBlock(func);
-  ir::Instruction *alloca0 = new ir::AllocaInst(block0, ir::BasicType::I32);
-  ir::Instruction *store0 = new ir::StoreInst(
-      block0, new ir::ConstantNumber(model::Number(0)), alloca0);
-  ir::Instruction *sotre1 = new ir::StoreInst(
-      block0, new ir::ConstantNumber(model::Number(10)), alloca0);
-  ir::Instruction *branch0 = new ir::BranchInst(block0, block1);
-  block0->push(alloca0);
-  block0->push(store0);
-  block0->push(sotre1);
-  block0->push(branch0);
-  func->pushBlock(block0);
-  ir::Instruction *load0 = new ir::LoadInst(block1, alloca0);
-  ir::Instruction *ret0 = new ir::RetInst(block1, load0);
-  block1->push(load0);
-  block1->push(ret0);
-  func->pushBlock(block1);
-  module->addFunction(func);
-
-  pass::PassManager passManager(module, Compiler::optionValues);
-  passManager.run();
-
-  Compiler::setModule(module);
-  Compiler::emitLLVM();
+  ir::AllocaInst *allocaInst = new ir::AllocaInst(nullptr, ir::BasicType::I32);
+  ir::LoadInst inst(nullptr, allocaInst);
+  std::cout << inst.baseStr() << std::endl;
 }
 
 int main(const int argc, char *argv[]) {

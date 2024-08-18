@@ -30,6 +30,7 @@ public:
   virtual std::string str() const;
   virtual Instruction *
   clone(std::unordered_map<Value *, Value *> &replaceMap) const = 0;
+  virtual std::string baseStr() const;
 };
 
 class AllocaInst : public Instruction {
@@ -38,6 +39,7 @@ public:
   std::string str() const override;
   Instruction *
   clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
+  std::string baseStr() const override { return ""; }
 };
 
 class BranchInst : public Instruction {
@@ -62,6 +64,7 @@ public:
   std::string str() const override;
   Instruction *
   clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
+  std::string baseStr() const override { return ""; }
 };
 
 class GetPtrInst : public Instruction {
