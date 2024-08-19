@@ -49,7 +49,7 @@ public:
         l3 = false;
         if (_activated.at("-fi") == "1" || _activated.at("-inline") == "1")
           l3 |= FunctionInline(_module).onModule();
-        if (_activated.at("-cse") == "1" || _activated.at("-O1") == "1")
+        if (_activated.at("-cse") == "1")
           l3 |= CommonExpElim(_module).onModule();
         l2 |= l3;
       } while (l3);

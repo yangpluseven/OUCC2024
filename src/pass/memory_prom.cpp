@@ -86,6 +86,8 @@ void MemoryProm::replace(
           dynamic_cast<ir::AllocaInst *>(storeInst->getOperand<ir::Value>(1));
       if (allocaInst && allocaInsts.find(allocaInst) != allocaInsts.end()) {
         block->erase(i);
+        // TODO
+        inst->clear();
         i--;
         replaceMap[allocaInst].push(storeInst->getOperand<ir::Value>(0));
         counter[allocaInst] = counter[allocaInst] + 1;
@@ -95,6 +97,8 @@ void MemoryProm::replace(
           dynamic_cast<ir::AllocaInst *>(loadInst->getOperand<ir::Value>(0));
       if (allocaInst && allocaInsts.find(allocaInst) != allocaInsts.end()) {
         block->erase(i);
+        // TODO
+        inst->clear();
         i--;
         if (replaceMap.find(allocaInst) != replaceMap.end()) {
           loadInst->replaceAllUseAs(replaceMap.at(allocaInst).top());

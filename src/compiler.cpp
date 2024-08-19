@@ -217,7 +217,7 @@ void Compiler::writeGlobals() {
 }
 
 void test() {
-  ir::AllocaInst *allocaInst = new ir::AllocaInst(nullptr, ir::BasicType::I32);
+  auto *allocaInst = new ir::AllocaInst(nullptr, ir::BasicType::I32);
   ir::LoadInst inst(nullptr, allocaInst);
   std::cout << inst.baseStr() << std::endl;
 }

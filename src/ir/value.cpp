@@ -25,9 +25,15 @@ void User::insert(int index, Use *use) {
   use->getValue()->insertUse(use);
 }
 
+void User::clear() {
+  for (auto use : useOperands) {
+    auto op = use->getValue();
+    op->removeUse(use);
+  }
+}
+
 void User::replaceOperandsFrom(
-    const std::unordered_map<Value *, Value *> &replaceMap,
-    const User *other) {
+    const std::unordered_map<Value *, Value *> &replaceMap, const User *other) {
   for (int i = 0; i < other->size(); i++) {
     const auto operand = other->getOperand<Value>(i);
     set(i, new Use(this, replaceMap.at(operand)));
@@ -77,12 +83,32 @@ size_t Value::getSize() const { return type->getSize(); }
 
 void Value::insertUse(Use *use) { _uses.insert(use); }
 
+void Value::removeUse(Use *use) { _uses.erase(use); }
+
 void Value::replaceAllUseAs(Value *value) {
+  if (_uses.empty()) {
+    return;
+  }
   for (auto use : _uses) {
     value->insertUse(use);
     use->setValue(value);
   }
   _uses.clear();
+}
+
+void Value::clearAllUse() {
+  if (_uses.empty()) {
+    return;
+  }
+  std::vector<Use *> tmpUses;
+  tmpUses.reserve(_uses.size());
+  for (auto use : _uses) {
+    tmpUses.push_back(use);
+  }
+  for (auto use : tmpUses) {
+    auto user = use->getUser();
+    user->erase(this);
+  }
 }
 
 std::unordered_set<Use *> &Value::getUses() { return _uses; }

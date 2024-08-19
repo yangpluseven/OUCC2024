@@ -39,7 +39,9 @@ public:
   Type *getType() const;
   size_t getSize() const;
   void insertUse(Use *use);
+  void removeUse(Use *use);
   void replaceAllUseAs(Value *value);
+  void clearAllUse();
   std::unordered_set<Use *> &getUses();
   virtual std::string getName() const { return ""; };
 };
@@ -54,6 +56,7 @@ public:
   size_t size() const;
   void insert(Use *use);
   void insert(int index, Use *use);
+  void clear();
   Use *erase(int index);
   Use *erase(const Value *value);
   Use *get(int index) const;
