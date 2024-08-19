@@ -7,8 +7,9 @@ bool CommonExpElim::onFunction(ir::Function *function) {
     return false;
   }
   bool changed = false;
-  std::vector<std::unordered_map<unsigned int, ir::Instruction *>> expMap(
+  std::vector expMap(
       10, std::unordered_map<unsigned int, ir::Instruction *>());
+  std::unordered_map<std::string, ir::Instruction *> getPtrMap;
 
   std::vector<ir::Instruction *> toErase;
   for (auto *block : *function) {
@@ -16,6 +17,7 @@ bool CommonExpElim::onFunction(ir::Function *function) {
       map.clear();
     }
     toErase.clear();
+    getPtrMap.clear();
 
     for (auto *inst : *block) {
 
@@ -25,6 +27,21 @@ bool CommonExpElim::onFunction(ir::Function *function) {
         if (expMap[1].find(hashCode) != expMap[1].end()) {
           expMap[1].erase(hashCode);
         }
+      }
+
+      if (dynamic_cast<ir::GetPtrInst *>(inst)) {
+        auto str = inst->baseStr();
+        if (str.empty()) {
+          continue;
+        }
+        if (getPtrMap.find(str) != getPtrMap.end() && getPtrMap.at(str) != nullptr) {
+          inst->replaceAllUseAs(getPtrMap.at(str));
+          toErase.push_back(inst);
+          changed = true;
+        } else {
+          getPtrMap[str] = inst;
+        }
+        continue;
       }
 
       auto classId = inst->getClassId();
@@ -41,6 +58,7 @@ bool CommonExpElim::onFunction(ir::Function *function) {
         expMap[classId][hashCode] = inst;
       }
     }
+
     for (auto *inst : toErase) {
       block->erase(inst);
       inst->clear();

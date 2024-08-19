@@ -29,10 +29,10 @@ public:
     do {
       l3 = false;
 
-      std::vector shouldRun = {true, true, true, true, true, true};
       for (auto *function : _module->getFunctions()) {
         if (function->isDeclare())
           continue;
+        std::vector shouldRun = {true, true, true, true, true, true};
 
         bool l0;
         do {
