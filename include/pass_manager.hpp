@@ -61,7 +61,7 @@ public:
           if (_activated.at("-rp") == "1" || _activated.at("-O1") == "1") {
             l0 |= onFunction(function, rp, shouldRun, 4);
           }
-          if (_activated.at("-cse") == "1") {
+          if (_activated.at("-cse") == "1" || _activated.at("-O1") == "1") {
             l0 |= onFunction(function, cse, shouldRun, 5);
           }
         } while (l0);
@@ -88,8 +88,7 @@ public:
       for (auto &&i : shouldRun) {
         i = true;
       }
-    }
-    else {
+    } else {
       shouldRun[id] = false;
     }
     return changed;
