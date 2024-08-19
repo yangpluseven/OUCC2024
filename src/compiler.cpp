@@ -12,7 +12,9 @@
 std::unordered_map<std::string, std::string> Compiler::optionValues{
     {"-S", "0"},        {"-O1", "0"},     {"-o", "out"},
     {"", "main.sy"},    {"-dispf", "0"},  {"-emit-llvm", "0"},
-    {"-emit-mir", "0"}, {"-inline", "0"}, {"-cse", "0"}};
+    {"-emit-mir", "0"}, {"-inline", "0"}, {"-cse", "0"},
+    {"-bo", "0"}, {"-cp", "0"}, {"-dce", "0"},
+    {"-mp", "0"}, {"-rp", "0"}, {"-fi", "0"}};
 
 ir::Module *Compiler::_module;
 std::unordered_map<std::string, mir::MachineFunction *> Compiler::_funcs;

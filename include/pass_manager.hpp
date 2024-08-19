@@ -28,17 +28,17 @@ public:
 
         do {
           l1 = false;
-          if (_activated.at("-O1") == "1")
+          if (_activated.at("-bo") == "1" || _activated.at("-O1") == "1")
             l1 |= BranchOpti(_module).onModule();
-          if (_activated.at("-O1") == "1")
+          if (_activated.at("-cp") == "1" || _activated.at("-O1") == "1")
             l1 |= ConstProp(_module).onModule();
-          if (_activated.at("-O1") == "1")
+          if (_activated.at("-dce") == "1" || _activated.at("-O1") == "1")
             l1 |= DeadCodeElim(_module).onModule();
         } while (l1);
 
-        if (_activated.at("-O1") == "1")
+        if (_activated.at("-mp") == "1" || _activated.at("-O1") == "1")
           l0 |= MemoryProm(_module).onModule();
-        if (_activated.at("-O1") == "1")
+        if (_activated.at("-rp") == "1" || _activated.at("-O1") == "1")
           l0 |= ReducePhi(_module).onModule();
       } while (l0);
 
@@ -47,7 +47,7 @@ public:
 
       do {
         l3 = false;
-        if (_activated.at("-inline") == "1")
+        if (_activated.at("-fi") == "1" || _activated.at("-inline") == "1")
           l3 |= FunctionInline(_module).onModule();
         if (_activated.at("-cse") == "1" || _activated.at("-O1") == "1")
           l3 |= CommonExpElim(_module).onModule();
