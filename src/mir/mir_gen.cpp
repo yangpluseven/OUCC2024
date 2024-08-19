@@ -268,7 +268,14 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
                                       midReg, argOffsets.at(arg).second));
           vsrc = midReg;
         } else if (const auto tmpInst = dynamic_cast<ir::Instruction *>(src)) {
+          // TODO
+          // if (tmpInst->getUses().size() <= 1) {
+          //   instRegMap[tmpInst] = target;
+          //   continue;
+          // }
+
           vsrc = instRegMap.at(tmpInst);
+
         } else if (const auto value = dynamic_cast<ir::ConstantNumber *>(src)) {
           const auto midReg = new reg::Virtual(value->getType());
           const auto type = midReg->getType();

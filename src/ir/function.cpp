@@ -51,6 +51,9 @@ void Function::analyzeInline() {
     _canInline = false;
     return;
   }
+  if (_canInline) {
+    return;
+  }
   for (const auto block : *this) {
     for (const auto inst : *block) {
       if (dynamic_cast<CallInst *>(inst) || dynamic_cast<PHINode *>(inst) ||
