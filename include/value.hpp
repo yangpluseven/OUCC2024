@@ -29,11 +29,14 @@ public:
 class Value {
 private:
   std::unordered_set<Use *> _uses;
+  static int _counter;
 
 protected:
   Type *const type;
 
 public:
+  int valueId;
+
   explicit Value(Type *type);
   virtual ~Value() = default;
   Type *getType() const;

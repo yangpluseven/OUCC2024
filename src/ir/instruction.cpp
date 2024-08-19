@@ -203,6 +203,8 @@ std::string LoadInst::str() const {
          " " + ptr->getName();
 }
 
+unsigned int LoadInst::hashCode() { return getOperand<Value>(0)->valueId; }
+
 void PHINode::add(BasicBlock *block, Use *use) {
   User::insert(use);
   _useBlockMap[use] = block;
@@ -303,6 +305,13 @@ BinaryInst::clone(std::unordered_map<Value *, Value *> &replaceMap) const {
   return cloned;
 }
 
+unsigned int BinaryInst::hashCode() {
+  unsigned int num1 = (static_cast<unsigned int>(op) + 1) & 0xF;
+  unsigned int num2 = getOperand<Value>(0)->valueId & 0x3FFF;
+  unsigned int num3 = getOperand<Value>(1)->valueId & 0x3FFF;
+  return num1 << 28 | num2 << 14 | num3;
+}
+
 std::string BinaryInst::str() const {
   auto lhs = getOperand<Value>(0);
   auto rhs = getOperand<Value>(1);
@@ -364,6 +373,13 @@ std::string CmpInst::str() const {
 }
 
 std::string CmpInst::getClassName() const { return "incomplete{CmpInst}"; }
+
+unsigned int CmpInst::hashCode() {
+  unsigned int num1 = (static_cast<unsigned int>(cond) + 1) & 0xF;
+  unsigned int num2 = getOperand<Value>(0)->valueId & 0x3FFF;
+  unsigned int num3 = getOperand<Value>(1)->valueId & 0x3FFF;
+  return num1 << 28 | num2 << 14 | num3;
+}
 
 std::string CmpInst::_condToString(Cond v) {
   switch (v) {

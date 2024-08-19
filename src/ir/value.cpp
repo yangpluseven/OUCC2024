@@ -2,6 +2,8 @@
 
 namespace ir {
 
+int Value::_counter = 1;
+
 Use::Use(User *user, Value *value) : user(user), value(value) {}
 
 User *Use::getUser() const { return user; }
@@ -75,7 +77,7 @@ void User::set(int index, Use *use) {
   use->getValue()->insertUse(use);
 }
 
-Value::Value(Type *type) : type(type) {}
+Value::Value(Type *type) : type(type) { valueId = _counter++; }
 
 Type *Value::getType() const { return type; }
 

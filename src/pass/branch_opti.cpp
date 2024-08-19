@@ -3,6 +3,9 @@
 namespace pass {
 
 bool BranchOpti::onFunction(ir::Function *function) {
+  if (function->isDeclare()) {
+    return false;
+  }
   bool changed = false;
   for (int i = 1; i < function->size(); i++) {
     const auto block = function->get(i);

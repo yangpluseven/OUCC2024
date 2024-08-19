@@ -3,6 +3,9 @@
 namespace pass {
 
 bool DeadCodeElim::onFunction(ir::Function *function) {
+  if (function->isDeclare()) {
+    return false;
+  }
   bool changed = false;
   for (const auto block : *function) {
     for (int i = 0; i + 1 < block->size(); i++) {

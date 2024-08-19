@@ -40,6 +40,8 @@ public:
           l0 |= MemoryProm(_module).onModule();
         if (_activated.at("-rp") == "1" || _activated.at("-O1") == "1")
           l0 |= ReducePhi(_module).onModule();
+        if (_activated.at("-cse") == "1")
+          l0 |= CommonExpElim(_module).onModule();
       } while (l0);
 
       l2 = false;
@@ -49,8 +51,6 @@ public:
         l3 = false;
         if (_activated.at("-fi") == "1" || _activated.at("-inline") == "1")
           l3 |= FunctionInline(_module).onModule();
-        if (_activated.at("-cse") == "1")
-          l3 |= CommonExpElim(_module).onModule();
         l2 |= l3;
       } while (l3);
 

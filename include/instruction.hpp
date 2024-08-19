@@ -31,6 +31,9 @@ public:
   virtual Instruction *
   clone(std::unordered_map<Value *, Value *> &replaceMap) const = 0;
   virtual std::string baseStr() const;
+  // TODO
+  virtual unsigned int hashCode() { return 0xFFFFFFFF; }
+  virtual unsigned int getClassId() const { return 0xFFFFFFFF; }
 };
 
 class AllocaInst : public Instruction {
@@ -72,6 +75,7 @@ private:
   static Type *calcType(Value *value, size_t indexSize);
 
 public:
+  // unsigned int getClassId() const override { return 0; }
   explicit GetPtrInst(BasicBlock *block, Type *type)
       : Instruction(block, type) {}
   GetPtrInst(BasicBlock *block, Value *ptr,
@@ -84,11 +88,13 @@ public:
 
 class LoadInst : public Instruction {
 public:
+  unsigned int getClassId() const override { return 1; }
   LoadInst(BasicBlock *block, Type *type) : Instruction(block, type) {}
   LoadInst(BasicBlock *block, Value *ptr);
   std::string str() const override;
   Instruction *
   clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
+  unsigned int hashCode() override;
 };
 
 class PHINode : public Instruction {
@@ -129,6 +135,7 @@ public:
 
 class BinaryInst : public Instruction {
 public:
+  unsigned int getClassId() const override { return 2; }
   enum Op { ADD, FADD, SUB, FSUB, MUL, FMUL, SDIV, FDIV, SREM, XOR };
 
   const Op op;
@@ -138,6 +145,7 @@ public:
   std::string str() const override;
   Instruction *
   clone(std::unordered_map<Value *, Value *> &replaceMap) const override;
+  unsigned int hashCode() override;
 
 private:
   static std::string _opToString(Op v) noexcept;
@@ -153,6 +161,7 @@ public:
   Cond getCond() const;
   std::string str() const override;
   virtual std::string getClassName() const;
+  unsigned int hashCode() override;
 
 private:
   Cond cond;
@@ -161,6 +170,7 @@ private:
 
 class FCmpInst : public CmpInst {
 public:
+  unsigned int getClassId() const override { return 3; }
   FCmpInst(BasicBlock *block, Cond cond) : CmpInst(block, cond) {}
   FCmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs);
   std::string getClassName() const override;
@@ -170,6 +180,7 @@ public:
 
 class ICmpInst : public CmpInst {
 public:
+  unsigned int getClassId() const override { return 4; }
   ICmpInst(BasicBlock *block, Cond cond) : CmpInst(block, cond) {}
   ICmpInst(BasicBlock *block, Cond cond, Value *lhs, Value *rhs);
   std::string getClassName() const override;

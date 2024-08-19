@@ -31,6 +31,7 @@ private:
   bool _canInline = false;
 
 public:
+  // bool changedLastPass = true;
   Function(Type *type, std::string name);
 
   bool canInline() const { return _canInline; }

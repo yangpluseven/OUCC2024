@@ -3,6 +3,9 @@
 namespace pass {
 
 bool ConstProp::onFunction(ir::Function *function) {
+  if (function->isDeclare()) {
+    return false;
+  }
   bool changed = false;
   for (const auto block : *function) {
     for (int i = 0; i < block->size(); i++) {

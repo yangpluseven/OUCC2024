@@ -7,47 +7,38 @@ bool CommonExpElim::onFunction(ir::Function *function) {
     return false;
   }
   bool changed = false;
-  std::unordered_map<std::string, ir::Instruction *> expMap;
+  std::vector<std::unordered_map<unsigned int, ir::Instruction *>> expMap(
+      10, std::unordered_map<unsigned int, ir::Instruction *>());
+
   std::vector<ir::Instruction *> toErase;
   for (auto *block : *function) {
-    expMap.clear();
+    for (auto &map : expMap) {
+      map.clear();
+    }
     toErase.clear();
-    for (auto *inst : *block) {
 
-      // if (dynamic_cast<ir::LoadInst *>(inst)) {
-      //   continue;
-      // }
+    for (auto *inst : *block) {
 
       if (const auto storeInst = dynamic_cast<ir::StoreInst *>(inst)) {
         auto *ptr = storeInst->getOperand<ir::Value>(1);
-        ir::LoadInst tmpLoad(block, ptr);
-        auto str = tmpLoad.baseStr();
-        if (expMap.find(str) != expMap.end()) {
-          expMap.erase(str);
+        auto hashCode = static_cast<unsigned int>(ptr->valueId);
+        if (expMap[1].find(hashCode) != expMap[1].end()) {
+          expMap[1].erase(hashCode);
         }
-        // const auto &uses = ptr->getUses();
-        // for (const auto use : uses) {
-        //   if (const auto *loadInst = dynamic_cast<ir::LoadInst *>(use->getUser())) {
-        //     auto str = loadInst->baseStr();
-        //     if (expMap.find(str) != expMap.end()) {
-        //       expMap.erase(str);
-        //       // TODO can break?
-        //       break;
-        //     }
-        //   }
-        // }
       }
 
-      auto str = inst->baseStr();
-      if (str.empty()) {
+      auto classId = inst->getClassId();
+      if (classId == 0xFFFFFFFF) {
         continue;
       }
-      if (expMap.find(str) != expMap.end() && expMap.at(str) != nullptr) {
-        inst->replaceAllUseAs(expMap.at(str));
+      auto hashCode = inst->hashCode();
+
+      if (expMap[classId].find(hashCode) != expMap[classId].end()) {
+        inst->replaceAllUseAs(expMap[classId].at(hashCode));
         toErase.push_back(inst);
         changed = true;
       } else {
-        expMap[str] = inst;
+        expMap[classId][hashCode] = inst;
       }
     }
     for (auto *inst : toErase) {
