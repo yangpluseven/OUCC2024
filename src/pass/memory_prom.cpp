@@ -256,6 +256,7 @@ bool MemoryProm::onFunction(ir::Function *function) {
       const auto allocaInst = dynamic_cast<ir::AllocaInst *>(inst);
       if (allocaInst && isPromotable(allocaInst)) {
         block->erase(i);
+        allocaInst->clear();
         i--;
       }
     }

@@ -85,6 +85,7 @@ MachineFunction *Generator::funcToMIR(ir::Function *func) {
                            new ir::FakeMvInst(tmpBlock, phi, value));
         }
         block->erase(i);
+        inst->clear();
         i--;
       }
     }

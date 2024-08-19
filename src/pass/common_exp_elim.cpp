@@ -43,6 +43,7 @@ bool CommonExpElim::onFunction(ir::Function *function) {
     }
     for (auto *inst : toErase) {
       block->erase(inst);
+      inst->clear();
     }
   }
   return changed;

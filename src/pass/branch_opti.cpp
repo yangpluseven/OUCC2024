@@ -41,7 +41,8 @@ bool BranchOpti::onFunction(ir::Function *function) {
       const auto branchInst = dynamic_cast<ir::BranchInst *>((*it)->getUser());
       if (!branchInst->isConditional()) {
         ir::BasicBlock *prevBlock = branchInst->getBlock();
-        prevBlock->erase(static_cast<int>(prevBlock->size()) - 1);
+        auto erased = prevBlock->erase(static_cast<int>(prevBlock->size()) - 1);
+        erased->clear();
         for (const auto inst : *block) {
           inst->setBlock(prevBlock);
           prevBlock->push(inst);

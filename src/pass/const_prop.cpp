@@ -48,6 +48,7 @@ bool ConstProp::onFunction(ir::Function *function) {
             }
             binaryOperator->replaceAllUseAs(newValue);
             block->erase(i);
+            inst->clear();
             i--;
             changed = true;
           }
@@ -92,6 +93,7 @@ bool ConstProp::onFunction(ir::Function *function) {
             }
             cmpInst->replaceAllUseAs(newValue);
             block->erase(i);
+            inst->clear();
             i--;
             changed = true;
           }

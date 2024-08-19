@@ -63,8 +63,10 @@ void ASTVisitor::formatLLVM() {
         auto terminal = block->get(j);
         if (dynamic_cast<ir::BranchInst *>(terminal) ||
             dynamic_cast<ir::RetInst *>(terminal)) {
-          while (block->size() > j + 1)
-            block->erase(j);
+          while (block->size() > j + 1) {
+            auto erased = block->erase(j);
+            erased->clear();
+          }
           break;
         }
       }
